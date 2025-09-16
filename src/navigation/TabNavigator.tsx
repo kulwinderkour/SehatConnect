@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
@@ -16,6 +16,11 @@ const Icon = ({ emoji, focused }: { emoji: string; focused: boolean }) => (
 );
 
 export default function TabNavigator() {
+  const renderIcon = useCallback(
+    (emoji: string) =>
+      ({ focused }: { focused: boolean }) => <Icon emoji={emoji} focused={focused} />,
+    []
+  );
   return (
     <Tab.Navigator
       screenOptions={{
@@ -26,11 +31,11 @@ export default function TabNavigator() {
         tabBarInactiveTintColor: '#666',
       }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: ({ focused }) => <Icon emoji="🏠" focused={focused} /> }} />
-      <Tab.Screen name="Consult" component={ConsultationsScreen} options={{ tabBarIcon: ({ focused }) => <Icon emoji="👨‍⚕️" focused={focused} /> }} />
-      <Tab.Screen name="Records" component={RecordsScreen} options={{ tabBarIcon: ({ focused }) => <Icon emoji="📋" focused={focused} /> }} />
-      <Tab.Screen name="Pharmacy" component={PharmacyScreen} options={{ tabBarIcon: ({ focused }) => <Icon emoji="💊" focused={focused} /> }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: ({ focused }) => <Icon emoji="👤" focused={focused} /> }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: renderIcon('🏠') }} />
+      <Tab.Screen name="Consult" component={ConsultationsScreen} options={{ tabBarIcon: renderIcon('👨‍⚕️') }} />
+      <Tab.Screen name="Records" component={RecordsScreen} options={{ tabBarIcon: renderIcon('📋') }} />
+      <Tab.Screen name="Pharmacy" component={PharmacyScreen} options={{ tabBarIcon: renderIcon('💊') }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: renderIcon('👤') }} />
     </Tab.Navigator>
   );
 }

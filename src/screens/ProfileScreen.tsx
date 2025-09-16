@@ -3,16 +3,6 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 
-const MenuItem = ({ left, right = '›' }: any) => (
-  <View style={styles.menuItem}>
-    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Text style={{ marginRight: 15, fontSize: 18 }}>{left}</Text>
-      <Text style={{ color: '#333' }}>{typeof left === 'string' ? '' : ''}</Text>
-    </View>
-    <Text>›</Text>
-  </View>
-);
-
 export default function ProfileScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
