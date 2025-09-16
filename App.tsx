@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import TabNavigator from './src/navigation/TabNavigator';
+import AppNavigator from './src/navigation/AppNavigator';
 import { I18nProvider } from './src/i18n';
 
 export default function App() {
@@ -12,7 +12,7 @@ export default function App() {
         <NavigationContainer>
           <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
-            <TabNavigator />
+            <AppNavigator />
           </SafeAreaView>
         </NavigationContainer>
       </I18nProvider>
