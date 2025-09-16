@@ -5,8 +5,15 @@ import Header from '../components/common/Header';
 
 const QuickAction = ({ icon, title }: { icon: string; title: string }) => (
   <TouchableOpacity style={styles.actionCard} activeOpacity={0.85}>
-    <LinearGradient colors={['#4CAF50', '#2E7D32']} style={styles.actionIcon}>
-      <Text style={{ color: '#fff', fontSize: 18 }}>{icon}</Text>
+    <LinearGradient 
+      colors={['#4CAF50', '#E8F5E8']} 
+      style={styles.outerCircle}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <View style={styles.innerCircle}>
+        <Text style={styles.iconText}>{icon}</Text>
+      </View>
     </LinearGradient>
     <Text style={styles.actionTitle}>{title}</Text>
   </TouchableOpacity>
@@ -17,7 +24,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Header />
       <ScrollView style={{ flex: 1, backgroundColor: '#f8f9fa' }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
-        <View style={styles.quickGrid}>
+        <View style={styles.actionsRow}>
           <QuickAction icon="📹" title="Video Consult" />
           <QuickAction icon="⚡" title="Emergency" />
           <QuickAction icon="🤖" title="AI Checker" />
@@ -53,13 +60,18 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  quickGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 25 },
-  actionCard: {
-    width: '48%', backgroundColor: '#fff', padding: 20, borderRadius: 15, alignItems: 'center', marginBottom: 15,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
+  actionsRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, marginBottom: 25 },
+  actionCard: { width: 76, alignItems: 'center' },
+  outerCircle: {
+    width: 56, height: 56, borderRadius: 28, 
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  actionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 10 },
-  actionTitle: { fontSize: 14, fontWeight: '600', color: '#333' },
+  innerCircle: {
+    width: 44, height: 44, borderRadius: 22, 
+    backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center',
+  },
+  iconText: { fontSize: 22, color: '#0F172A' },
+  actionTitle: { fontSize: 11, fontWeight: '500', color: '#333', textAlign: 'center' },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 15 },
   card: {
     backgroundColor: '#fff', borderRadius: 15, padding: 20, marginBottom: 25,
