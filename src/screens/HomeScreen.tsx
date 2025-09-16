@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
+import { useI18n } from '../i18n';
 
 const QuickAction = ({ icon, title }: { icon: string; title: string }) => (
   <TouchableOpacity style={styles.actionCard} activeOpacity={0.85}>
@@ -20,18 +21,19 @@ const QuickAction = ({ icon, title }: { icon: string; title: string }) => (
 );
 
 export default function HomeScreen() {
+  const { t } = useI18n();
   return (
     <View style={styles.container}>
       <Header />
       <ScrollView style={{ flex: 1, backgroundColor: '#f8f9fa' }} contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
         <View style={styles.actionsRow}>
-          <QuickAction icon="📹" title="Video Consult" />
-          <QuickAction icon="⚡" title="Emergency" />
-          <QuickAction icon="🤖" title="AI Checker" />
-          <QuickAction icon="📅" title="Schedule" />
+          <QuickAction icon="📹" title={t('videoConsult')} />
+          <QuickAction icon="⚡" title={t('emergency')} />
+          <QuickAction icon="🤖" title={t('aiChecker')} />
+          <QuickAction icon="📅" title={t('schedule')} />
         </View>
 
-        <Text style={styles.sectionTitle}>Health Summary</Text>
+        <Text style={styles.sectionTitle}>{t('healthSummary')}</Text>
         <View style={styles.card}>
           {[
             { label: 'Blood Pressure', value: '120/80' },

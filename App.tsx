@@ -11,7 +11,7 @@ export default function App() {
       <I18nProvider>
         <NavigationContainer>
           <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
+            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
             <AppNavigator />
           </SafeAreaView>
         </NavigationContainer>
