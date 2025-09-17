@@ -57,14 +57,13 @@ export default function Header() {
 
   return (
     <>
-      {/* Main header container */}
+      {/* First header section - App title */}
       <LinearGradient 
         colors={gradientConfig.colors} 
         start={gradientConfig.start}
         end={gradientConfig.end}
-        style={styles.headerContainer}
+        style={styles.firstHeaderContainer}
       >
-        {/* Top section with app title and language selector */}
         <View style={styles.topSection}>
           <Text style={styles.appTitle}>{getText('appTitle')}</Text>
           <Pressable 
@@ -75,15 +74,19 @@ export default function Header() {
             <Text style={styles.languageText}>{currentLanguageName} ▾</Text>
           </Pressable>
         </View>
-        
-        {/* Bottom section with user greeting and actions */}
+      </LinearGradient>
+
+      {/* Second header section - User greeting */}
+      <LinearGradient 
+        colors={gradientConfig.colors} 
+        start={gradientConfig.start}
+        end={gradientConfig.end}
+        style={styles.secondHeaderContainer}
+      >
         <View style={styles.bottomSection}>
           <View style={styles.userInfoContainer}>
             <Text style={styles.userGreeting}>
               {getText('greetingHello')} {userProfile.shortName},
-            </Text>
-            <Text style={styles.userSubGreeting}>
-              {getText('greetingHowAreYou')}
             </Text>
             <View style={styles.patientIdContainer}>
               <Text style={styles.patientIdText}>
@@ -93,12 +96,6 @@ export default function Header() {
           </View>
           
           <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionButtonIcon}>🔍</Text>
-            </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               activeOpacity={0.7}
@@ -152,10 +149,20 @@ export default function Header() {
 
 // Custom styles with original design patterns
 const styles = StyleSheet.create({
-  headerContainer: {
+  firstHeaderContainer: {
     paddingHorizontal: 16,
     paddingTop: 11,
-    paddingBottom: 11,
+    paddingBottom: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  secondHeaderContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 4,
+    paddingBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -166,7 +173,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 15,
   },
   appTitle: {
     color: '#fff',
@@ -195,7 +201,7 @@ const styles = StyleSheet.create({
   bottomSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   userInfoContainer: {
     flex: 1,
@@ -217,6 +223,7 @@ const styles = StyleSheet.create({
   },
   patientIdContainer: {
     alignSelf: 'flex-start',
+    marginLeft: -4,
   },
   patientIdText: {
     color: 'rgba(255,255,255,0.8)',
@@ -233,6 +240,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    paddingTop: 8,
   },
   actionButton: {
     width: 40,
