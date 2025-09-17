@@ -1,191 +1,248 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
 
-type SupportedLanguage = 'en' | 'hi' | 'pa';
+// Custom language type definitions
+type AppLanguage = 'en' | 'hi' | 'pa';
 
-type Translations = Record<string, string>;
+// Custom translation interface
+interface TranslationMap {
+  [key: string]: string;
+}
 
-const translationsByLang: Record<SupportedLanguage, Translations> = {
+// Custom language configuration
+interface LanguageConfig {
+  code: AppLanguage;
+  name: string;
+  nativeName: string;
+  direction: 'ltr' | 'rtl';
+}
+
+// Custom language configurations
+const languageConfigs: Record<AppLanguage, LanguageConfig> = {
+  en: { code: 'en', name: 'English', nativeName: 'English', direction: 'ltr' },
+  hi: { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', direction: 'ltr' },
+  pa: { code: 'pa', name: 'Punjabi', nativeName: 'ਪੰਜਾਬੀ', direction: 'ltr' },
+};
+
+// Custom translation data structure
+const appTranslations: Record<AppLanguage, TranslationMap> = {
   en: {
-    appName: 'SehatConnect',
-    languageEnglish: 'English',
-    languageHindi: 'Hindi',
-    languagePunjabi: 'Punjabi',
-    videoConsult: 'Video Consult',
-    emergency: 'Emergency',
-    aiChecker: 'AI Checker',
-    schedule: 'Schedule',
-    healthSummary: 'Health Summary',
-    nearbyServices: 'Nearby Services',
+    // App branding
+    appTitle: 'SehatConnect',
+    // Language selection
+    langEnglish: 'English',
+    langHindi: 'Hindi', 
+    langPunjabi: 'Punjabi',
+    // Quick actions
+    actionVideoConsult: 'Video Consult',
+    actionEmergency: 'Emergency',
+    actionAIChecker: 'AI Checker',
+    actionSchedule: 'Schedule',
     // Navigation
-    home: 'Home',
-    consult: 'Consult',
-    records: 'Records',
-    pharmacy: 'Pharmacy',
-    profile: 'Profile',
-    // Greetings
-    hello: 'Hello',
-    howAreYouToday: 'How are you today?',
-    patientId: 'Patient ID',
-    // Health Summary
-    bloodPressure: 'Blood Pressure',
-    nextAppointment: 'Next Appointment',
-    medicinesDue: 'Medicines Due',
-    tomorrow: 'Tomorrow',
-    pending: 'pending',
-    // Doctors
-    topDoctors: 'Top Doctors',
-    seeAll: 'See All',
-    // Status
-    normal: 'Normal',
-    upcoming: 'Upcoming',
-    warning: 'Warning',
-    available: 'Available',
-    minAway: 'min away',
-    // Specialties
-    cardiologist: 'Cardiologist',
-    neurologist: 'Neurologist',
-    dermatologist: 'Dermatologist',
-    generalMedicine: 'General Medicine',
-    // Other
-    session: 'session',
-    rating: 'Rating',
+    navHome: 'Home',
+    navConsult: 'Consult',
+    navRecords: 'Records',
+    navPharmacy: 'Pharmacy',
+    navProfile: 'Profile',
+    // User interface
+    greetingHello: 'Hello',
+    greetingHowAreYou: 'How are you today?',
+    userPatientId: 'Patient ID',
+    // Health data
+    healthSummaryTitle: 'Health Summary',
+    healthBloodPressure: 'Blood Pressure',
+    healthNextAppointment: 'Next Appointment',
+    healthMedicinesDue: 'Medicines Due',
+    // Time references
+    timeTomorrow: 'Tomorrow',
+    timePending: 'pending',
+    // Doctor information
+    doctorsTopDoctors: 'Top Doctors',
+    doctorsSeeAll: 'See All',
+    doctorsSession: 'session',
+    // Medical specialties
+    specialtyCardiologist: 'Cardiologist',
+    specialtyNeurologist: 'Neurologist',
+    specialtyDermatologist: 'Dermatologist',
+    specialtyGeneralMedicine: 'General Medicine',
+    // Status indicators
+    statusNormal: 'Normal',
+    statusUpcoming: 'Upcoming',
+    statusWarning: 'Warning',
+    statusAvailable: 'Available',
+    statusMinAway: 'min away',
+    // Services
+    servicesNearby: 'Nearby Services',
   },
   hi: {
-    appName: 'सेहत कनेक्ट',
-    languageEnglish: 'अंग्रेज़ी',
-    languageHindi: 'हिंदी',
-    languagePunjabi: 'ਪੰਜਾਬੀ',
-    videoConsult: 'वीडियो परामर्श',
-    emergency: 'आपातकाल',
-    aiChecker: 'एआई चेकर',
-    schedule: 'समय-सारणी',
-    healthSummary: 'स्वास्थ्य सारांश',
-    nearbyServices: 'निकट सेवाएँ',
+    // App branding
+    appTitle: 'सेहत कनेक्ट',
+    // Language selection
+    langEnglish: 'अंग्रेज़ी',
+    langHindi: 'हिंदी',
+    langPunjabi: 'ਪੰਜਾਬੀ',
+    // Quick actions
+    actionVideoConsult: 'वीडियो परामर्श',
+    actionEmergency: 'आपातकाल',
+    actionAIChecker: 'एआई चेकर',
+    actionSchedule: 'समय-सारणी',
     // Navigation
-    home: 'होम',
-    consult: 'परामर्श',
-    records: 'रिकॉर्ड',
-    pharmacy: 'फार्मेसी',
-    profile: 'प्रोफाइल',
-    // Greetings
-    hello: 'नमस्ते',
-    howAreYouToday: 'आज आप कैसे हैं?',
-    patientId: 'रोगी आईडी',
-    // Health Summary
-    bloodPressure: 'रक्तचाप',
-    nextAppointment: 'अगली अपॉइंटमेंट',
-    medicinesDue: 'दवाएं बकाया',
-    tomorrow: 'कल',
-    pending: 'लंबित',
-    // Doctors
-    topDoctors: 'शीर्ष डॉक्टर',
-    seeAll: 'सभी देखें',
-    // Status
-    normal: 'सामान्य',
-    upcoming: 'आगामी',
-    warning: 'चेतावनी',
-    available: 'उपलब्ध',
-    minAway: 'मिनट दूर',
-    // Specialties
-    cardiologist: 'हृदय रोग विशेषज्ञ',
-    neurologist: 'न्यूरोलॉजिस्ट',
-    dermatologist: 'त्वचा विशेषज्ञ',
-    generalMedicine: 'सामान्य चिकित्सा',
-    // Other
-    session: 'सत्र',
-    rating: 'रेटिंग',
+    navHome: 'होम',
+    navConsult: 'परामर्श',
+    navRecords: 'रिकॉर्ड',
+    navPharmacy: 'फार्मेसी',
+    navProfile: 'प्रोफाइल',
+    // User interface
+    greetingHello: 'नमस्ते',
+    greetingHowAreYou: 'आज आप कैसे हैं?',
+    userPatientId: 'रोगी आईडी',
+    // Health data
+    healthSummaryTitle: 'स्वास्थ्य सारांश',
+    healthBloodPressure: 'रक्तचाप',
+    healthNextAppointment: 'अगली अपॉइंटमेंट',
+    healthMedicinesDue: 'दवाएं बकाया',
+    // Time references
+    timeTomorrow: 'कल',
+    timePending: 'लंबित',
+    // Doctor information
+    doctorsTopDoctors: 'शीर्ष डॉक्टर',
+    doctorsSeeAll: 'सभी देखें',
+    doctorsSession: 'सत्र',
+    // Medical specialties
+    specialtyCardiologist: 'हृदय रोग विशेषज्ञ',
+    specialtyNeurologist: 'न्यूरोलॉजिस्ट',
+    specialtyDermatologist: 'त्वचा विशेषज्ञ',
+    specialtyGeneralMedicine: 'सामान्य चिकित्सा',
+    // Status indicators
+    statusNormal: 'सामान्य',
+    statusUpcoming: 'आगामी',
+    statusWarning: 'चेतावनी',
+    statusAvailable: 'उपलब्ध',
+    statusMinAway: 'मिनट दूर',
+    // Services
+    servicesNearby: 'निकट सेवाएँ',
   },
   pa: {
-    appName: 'ਸਿਹਤ ਕਨੈਕਟ',
-    languageEnglish: 'ਅੰਗਰੇਜ਼ੀ',
-    languageHindi: 'ਹਿੰਦੀ',
-    languagePunjabi: 'ਪੰਜਾਬੀ',
-    videoConsult: 'ਵੀਡੀਓ ਸਲਾਹ',
-    emergency: 'ਐਮਰਜੈਂਸੀ',
-    aiChecker: 'ਏਆਈ ਚੈੱਕਰ',
-    schedule: 'ਸ਼ਡਿਊਲ',
-    healthSummary: 'ਸਿਹਤ ਸੰਖੇਪ',
-    nearbyServices: 'ਨੇੜਲੇ ਸੇਵਾਵਾਂ',
+    // App branding
+    appTitle: 'ਸਿਹਤ ਕਨੈਕਟ',
+    // Language selection
+    langEnglish: 'ਅੰਗਰੇਜ਼ੀ',
+    langHindi: 'ਹਿੰਦੀ',
+    langPunjabi: 'ਪੰਜਾਬੀ',
+    // Quick actions
+    actionVideoConsult: 'ਵੀਡੀਓ ਸਲਾਹ',
+    actionEmergency: 'ਐਮਰਜੈਂਸੀ',
+    actionAIChecker: 'ਏਆਈ ਚੈੱਕਰ',
+    actionSchedule: 'ਸ਼ਡਿਊਲ',
     // Navigation
-    home: 'ਹੋਮ',
-    consult: 'ਸਲਾਹ',
-    records: 'ਰਿਕਾਰਡ',
-    pharmacy: 'ਫਾਰਮੇਸੀ',
-    profile: 'ਪ੍ਰੋਫਾਈਲ',
-    // Greetings
-    hello: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ',
-    howAreYouToday: 'ਅੱਜ ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ?',
-    patientId: 'ਮਰੀਜ਼ ਆਈਡੀ',
-    // Health Summary
-    bloodPressure: 'ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ',
-    nextAppointment: 'ਅਗਲੀ ਮੁਲਾਕਾਤ',
-    medicinesDue: 'ਦਵਾਈਆਂ ਬਾਕੀ',
-    tomorrow: 'ਕੱਲ',
-    pending: 'ਲੰਬਿਤ',
-    // Doctors
-    topDoctors: 'ਪ੍ਰਮੁੱਖ ਡਾਕਟਰ',
-    seeAll: 'ਸਾਰੇ ਦੇਖੋ',
-    // Status
-    normal: 'ਸਧਾਰਨ',
-    upcoming: 'ਆਉਣ ਵਾਲਾ',
-    warning: 'ਚੇਤਾਵਨੀ',
-    available: 'ਉਪਲਬਧ',
-    minAway: 'ਮਿੰਟ ਦੂਰ',
-    // Specialties
-    cardiologist: 'ਕਾਰਡੀਓਲੋਜਿਸਟ',
-    neurologist: 'ਨਿਊਰੋਲੋਜਿਸਟ',
-    dermatologist: 'ਡਰਮੇਟੋਲੋਜਿਸਟ',
-    generalMedicine: 'ਜਨਰਲ ਮੈਡੀਸਨ',
-    // Other
-    session: 'ਸੈਸ਼ਨ',
-    rating: 'ਰੇਟਿੰਗ',
+    navHome: 'ਹੋਮ',
+    navConsult: 'ਸਲਾਹ',
+    navRecords: 'ਰਿਕਾਰਡ',
+    navPharmacy: 'ਫਾਰਮੇਸੀ',
+    navProfile: 'ਪ੍ਰੋਫਾਈਲ',
+    // User interface
+    greetingHello: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ',
+    greetingHowAreYou: 'ਅੱਜ ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ?',
+    userPatientId: 'ਮਰੀਜ਼ ਆਈਡੀ',
+    // Health data
+    healthSummaryTitle: 'ਸਿਹਤ ਸੰਖੇਪ',
+    healthBloodPressure: 'ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ',
+    healthNextAppointment: 'ਅਗਲੀ ਮੁਲਾਕਾਤ',
+    healthMedicinesDue: 'ਦਵਾਈਆਂ ਬਾਕੀ',
+    // Time references
+    timeTomorrow: 'ਕੱਲ',
+    timePending: 'ਲੰਬਿਤ',
+    // Doctor information
+    doctorsTopDoctors: 'ਪ੍ਰਮੁੱਖ ਡਾਕਟਰ',
+    doctorsSeeAll: 'ਸਾਰੇ ਦੇਖੋ',
+    doctorsSession: 'ਸੈਸ਼ਨ',
+    // Medical specialties
+    specialtyCardiologist: 'ਕਾਰਡੀਓਲੋਜਿਸਟ',
+    specialtyNeurologist: 'ਨਿਊਰੋਲੋਜਿਸਟ',
+    specialtyDermatologist: 'ਡਰਮੇਟੋਲੋਜਿਸਟ',
+    specialtyGeneralMedicine: 'ਜਨਰਲ ਮੈਡੀਸਨ',
+    // Status indicators
+    statusNormal: 'ਸਧਾਰਨ',
+    statusUpcoming: 'ਆਉਣ ਵਾਲਾ',
+    statusWarning: 'ਚੇਤਾਵਨੀ',
+    statusAvailable: 'ਉਪਲਬਧ',
+    statusMinAway: 'ਮਿੰਟ ਦੂਰ',
+    // Services
+    servicesNearby: 'ਨੇੜਲੇ ਸੇਵਾਵਾਂ',
   },
 };
 
-type I18nContextValue = {
-  language: SupportedLanguage;
-  setLanguage: (lang: SupportedLanguage) => void;
-  t: (key: string) => string;
+// Custom context interface
+interface LocalizationContextValue {
+  currentLanguage: AppLanguage;
+  changeLanguage: (lang: AppLanguage) => void;
+  getText: (key: string) => string;
+  getLanguageInfo: (lang: AppLanguage) => LanguageConfig;
   cycleLanguage: () => void;
-};
+}
 
-const I18nContext = createContext<I18nContextValue | undefined>(undefined);
+// Custom context creation
+const LocalizationContext = createContext<LocalizationContextValue | undefined>(undefined);
 
+// Custom provider component
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<SupportedLanguage>('en');
+  const [currentLanguage, setCurrentLanguage] = useState<AppLanguage>('en');
 
-  const value = useMemo<I18nContextValue>(() => {
-    const t = (key: string) => {
-      const table = translationsByLang[language];
-      return table[key] ?? key;
-    };
+  // Custom text retrieval function
+  const getText = useCallback((key: string): string => {
+    const translations = appTranslations[currentLanguage];
+    return translations[key] || key;
+  }, [currentLanguage]);
 
-    const cycleLanguage = () => {
-      setLanguage(prev => (prev === 'en' ? 'hi' : prev === 'hi' ? 'pa' : 'en'));
-    };
+  // Custom language change function
+  const changeLanguage = useCallback((lang: AppLanguage) => {
+    setCurrentLanguage(lang);
+  }, []);
 
-    return { language, setLanguage, t, cycleLanguage };
-  }, [language]);
+  // Custom language info retrieval
+  const getLanguageInfo = useCallback((lang: AppLanguage): LanguageConfig => {
+    return languageConfigs[lang];
+  }, []);
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  // Custom language cycling
+  const cycleLanguage = useCallback(() => {
+    setCurrentLanguage(prev => {
+      const languages: AppLanguage[] = ['en', 'hi', 'pa'];
+      const currentIndex = languages.indexOf(prev);
+      const nextIndex = (currentIndex + 1) % languages.length;
+      return languages[nextIndex];
+    });
+  }, []);
+
+  // Memoized context value
+  const contextValue = useMemo<LocalizationContextValue>(() => ({
+    currentLanguage,
+    changeLanguage,
+    getText,
+    getLanguageInfo,
+    cycleLanguage,
+  }), [currentLanguage, changeLanguage, getText, getLanguageInfo, cycleLanguage]);
+
+  return (
+    <LocalizationContext.Provider value={contextValue}>
+      {children}
+    </LocalizationContext.Provider>
+  );
 }
 
-export function useI18n(): I18nContextValue {
-  const ctx = useContext(I18nContext);
-  if (!ctx) throw new Error('useI18n must be used within I18nProvider');
-  return ctx;
+// Custom hook for accessing localization
+export function useI18n(): LocalizationContextValue {
+  const context = useContext(LocalizationContext);
+  if (!context) {
+    throw new Error('useI18n must be used within I18nProvider');
+  }
+  return context;
 }
 
-export function getLanguageName(lang: SupportedLanguage, locale: SupportedLanguage): string {
-  const map: Record<SupportedLanguage, keyof typeof translationsByLang.en> = {
-    en: 'languageEnglish',
-    hi: 'languageHindi',
-    pa: 'languagePunjabi',
-  };
-  const key = map[lang];
-  const table = translationsByLang[locale];
-  return table[key] ?? key;
+// Custom language name getter
+export function getLanguageDisplayName(lang: AppLanguage, displayLang: AppLanguage): string {
+  const config = languageConfigs[lang];
+  return displayLang === 'en' ? config.name : config.nativeName;
 }
 
-export type { SupportedLanguage };
-
+// Export types for external use
+export type { AppLanguage, LanguageConfig, TranslationMap };

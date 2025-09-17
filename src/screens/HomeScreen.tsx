@@ -1,107 +1,266 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import { useI18n } from '../i18n';
 
-const DoctorCard = ({ name, specialty, rating, price, image }: { name: string; specialty: string; rating: number; price: string; image: string }) => (
-  <TouchableOpacity style={styles.doctorCard} activeOpacity={0.8}>
-    <View style={styles.doctorImageContainer}>
-      <Text style={styles.doctorImage}>{image}</Text>
+// Get screen dimensions for responsive design
+const { width: screenWidth } = Dimensions.get('window');
+
+// Custom doctor card component with original design
+const MedicalProfessionalCard = ({ 
+  name, 
+  specialty, 
+  rating, 
+  price, 
+  image 
+}: { 
+  name: string; 
+  specialty: string; 
+  rating: number; 
+  price: string; 
+  image: string; 
+}) => (
+  <TouchableOpacity style={styles.professionalCard} activeOpacity={0.8}>
+    <View style={styles.professionalImageContainer}>
+      <Text style={styles.professionalImage}>{image}</Text>
     </View>
-    <Text style={styles.doctorName}>{name}</Text>
-    <Text style={styles.doctorSpecialty}>{specialty}</Text>
-    <View style={styles.doctorRating}>
-      <Text style={styles.ratingStar}>⭐</Text>
-      <Text style={styles.ratingText}>{rating}</Text>
+    <Text style={styles.professionalName}>{name}</Text>
+    <Text style={styles.professionalSpecialty}>{specialty}</Text>
+    <View style={styles.ratingContainer}>
+      <Text style={styles.ratingIcon}>⭐</Text>
+      <Text style={styles.ratingValue}>{rating}</Text>
     </View>
-    <Text style={styles.doctorPrice}>{price}</Text>
+    <Text style={styles.professionalPrice}>{price}</Text>
   </TouchableOpacity>
 );
 
-const QuickAction = ({ icon, title }: { icon: string; title: string }) => (
-  <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
-    <View style={styles.iconContainer}>
-      <Text style={styles.iconText}>{icon}</Text>
+// Custom quick action component with original design
+const QuickActionButton = ({ 
+  icon, 
+  title 
+}: { 
+  icon: string; 
+  title: string; 
+}) => (
+  <TouchableOpacity style={styles.actionButtonContainer} activeOpacity={0.7}>
+    <View style={styles.actionIconContainer}>
+      <Text style={styles.actionIcon}>{icon}</Text>
     </View>
-    <Text style={styles.actionTitle}>{title}</Text>
+    <Text style={styles.actionLabel}>{title}</Text>
   </TouchableOpacity>
 );
 
+// Custom health metric component
+const HealthMetricItem = ({ 
+  label, 
+  value, 
+  status 
+}: { 
+  label: string; 
+  value: string; 
+  status: 'normal' | 'warning' | 'upcoming'; 
+}) => {
+  const statusColor = useMemo(() => {
+    switch (status) {
+      case 'normal': return '#5a9e31';
+      case 'warning': return '#f59e0b';
+      case 'upcoming': return '#3b82f6';
+      default: return '#6b7280';
+    }
+  }, [status]);
+
+  return (
+    <View style={styles.metricItem}>
+      <View style={styles.metricInfo}>
+        <Text style={styles.metricLabel}>{label}</Text>
+        <View style={[styles.statusIndicator, { backgroundColor: statusColor }]} />
+      </View>
+      <Text style={styles.metricValue}>{value}</Text>
+    </View>
+  );
+};
+
+// Main home screen component
 export default function HomeScreen() {
-  const { t } = useI18n();
+  const { getText } = useI18n();
+
+  // Custom health data configuration
+  const healthMetrics = useMemo(() => [
+    { 
+      label: getText('healthBloodPressure'), 
+      value: '120/80', 
+      status: 'normal' as const 
+    },
+    { 
+      label: getText('healthNextAppointment'), 
+      value: `${getText('timeTomorrow')} 2:00 PM`, 
+      status: 'upcoming' as const 
+    },
+    { 
+      label: getText('healthMedicinesDue'), 
+      value: `2 ${getText('timePending')}`, 
+      status: 'warning' as const 
+    },
+  ], [getText]);
+
+  // Custom quick actions configuration
+  const quickActions = useMemo(() => [
+    { icon: '📹', title: getText('actionVideoConsult') },
+    { icon: '⚡', title: getText('actionEmergency') },
+    { icon: '🤖', title: getText('actionAIChecker') },
+    { icon: '📅', title: getText('actionSchedule') },
+  ], [getText]);
+
+  // Custom medical professionals data
+  const medicalProfessionals = useMemo(() => [
+    { 
+      name: "Dr. William James", 
+      specialty: getText('specialtyCardiologist'), 
+      rating: 4.8, 
+      price: `$50/${getText('doctorsSession')}`, 
+      image: "👨‍⚕️" 
+    },
+    { 
+      name: "Dr. Sarah Johnson", 
+      specialty: getText('specialtyNeurologist'), 
+      rating: 4.9, 
+      price: `$60/${getText('doctorsSession')}`, 
+      image: "👩‍⚕️" 
+    },
+    { 
+      name: "Dr. Michael Chen", 
+      specialty: getText('specialtyDermatologist'), 
+      rating: 4.7, 
+      price: `$45/${getText('doctorsSession')}`, 
+      image: "👨‍⚕️" 
+    },
+  ], [getText]);
+
+  // Custom section header component
+  const SectionHeader = ({ 
+    title, 
+    actionText, 
+    onActionPress 
+  }: { 
+    title: string; 
+    actionText: string; 
+    onActionPress: () => void; 
+  }) => (
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <TouchableOpacity onPress={onActionPress}>
+        <Text style={styles.sectionAction}>{actionText}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Custom service card component
+  const NearbyServiceCard = () => (
+    <View style={styles.serviceCard}>
+      <View style={styles.serviceInfo}>
+        <Text style={styles.serviceTitle}>
+          Dr. Sharma {getText('statusAvailable')}
+        </Text>
+        <Text style={styles.serviceSubtitle}>
+          {getText('specialtyGeneralMedicine')} • 2.5 km
+        </Text>
+        <View style={styles.serviceRating}>
+          <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
+          <Text style={styles.ratingText}>• 15 {getText('statusMinAway')}</Text>
+        </View>
+      </View>
+      <View style={styles.serviceStatus}>
+        <View style={styles.availabilityIndicator} />
+        <Text style={styles.availabilityText}>{getText('statusAvailable')}</Text>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.scrollContainer} 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Quick Actions Grid */}
         <View style={styles.actionsGrid}>
-          <QuickAction icon="📹" title={t('videoConsult')} />
-          <QuickAction icon="⚡" title={t('emergency')} />
-          <QuickAction icon="🤖" title={t('aiChecker')} />
-          <QuickAction icon="📅" title={t('schedule')} />
-        </View>
-
-        <Text style={styles.sectionTitle}>{t('healthSummary')}</Text>
-        <View style={styles.card}>
-          {[
-            { label: t('bloodPressure'), value: '120/80', status: 'normal' },
-            { label: t('nextAppointment'), value: `${t('tomorrow')} 2:00 PM`, status: 'upcoming' },
-            { label: t('medicinesDue'), value: `2 ${t('pending')}`, status: 'warning' },
-          ].map((m, i, arr) => (
-            <View key={m.label} style={[styles.metricRow, i === arr.length - 1 && { borderBottomWidth: 0 }]}>
-              <View style={styles.metricLeft}>
-                <Text style={styles.metricLabel}>{m.label}</Text>
-                <View style={[styles.statusDot, { backgroundColor: m.status === 'normal' ? '#5a9e31' : m.status === 'warning' ? '#f59e0b' : '#3b82f6' }]} />
-              </View>
-              <Text style={styles.metricValue}>{m.value}</Text>
-            </View>
+          {quickActions.map((action, index) => (
+            <QuickActionButton
+              key={index}
+              icon={action.icon}
+              title={action.title}
+            />
           ))}
         </View>
 
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('topDoctors')}</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAllText}>{t('seeAll')}</Text>
-          </TouchableOpacity>
+        {/* Health Summary Section */}
+        <Text style={styles.sectionTitle}>{getText('healthSummaryTitle')}</Text>
+        <View style={styles.healthSummaryCard}>
+          {healthMetrics.map((metric, index) => (
+            <HealthMetricItem
+              key={index}
+              label={metric.label}
+              value={metric.value}
+              status={metric.status}
+            />
+          ))}
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.doctorsScroll}>
-          <DoctorCard name="Dr. William James" specialty={t('cardiologist')} rating={4.8} price={`$50/${t('session')}`} image="👨‍⚕️" />
-          <DoctorCard name="Dr. Sarah Johnson" specialty={t('neurologist')} rating={4.9} price={`$60/${t('session')}`} image="👩‍⚕️" />
-          <DoctorCard name="Dr. Michael Chen" specialty={t('dermatologist')} rating={4.7} price={`$45/${t('session')}`} image="👨‍⚕️" />
+
+        {/* Top Doctors Section */}
+        <SectionHeader
+          title={getText('doctorsTopDoctors')}
+          actionText={getText('doctorsSeeAll')}
+          onActionPress={() => {}}
+        />
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.professionalsScroll}
+        >
+          {medicalProfessionals.map((professional, index) => (
+            <MedicalProfessionalCard
+              key={index}
+              name={professional.name}
+              specialty={professional.specialty}
+              rating={professional.rating}
+              price={professional.price}
+              image={professional.image}
+            />
+          ))}
         </ScrollView>
 
-        <Text style={styles.sectionTitle}>{t('nearbyServices')}</Text>
-        <View style={styles.serviceCard}>
-          <View style={styles.serviceInfo}>
-            <Text style={styles.serviceTitle}>Dr. Sharma {t('available')}</Text>
-            <Text style={styles.serviceSubtitle}>{t('generalMedicine')} • 2.5 km</Text>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.rating}>⭐ 4.8</Text>
-              <Text style={styles.ratingText}>• 15 {t('minAway')}</Text>
-            </View>
-          </View>
-          <View style={styles.serviceStatus}>
-            <View style={styles.availableDot} />
-            <Text style={styles.availableText}>{t('available')}</Text>
-          </View>
-        </View>
+        {/* Nearby Services Section */}
+        <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
+        <NearbyServiceCard />
       </ScrollView>
     </View>
   );
 }
 
+// Custom styles with original design patterns
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  scrollView: { flex: 1 },
-  scrollContent: { padding: 20, paddingBottom: 32 },
-  actionsGrid: { 
-    flexDirection: 'row', 
-    flexWrap: 'wrap', 
-    justifyContent: 'space-between', 
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 32,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 24,
     paddingHorizontal: 0,
   },
-  actionCard: { 
+  actionButtonContainer: {
     width: '48%',
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -116,7 +275,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
-  iconContainer: {
+  actionIconContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -125,124 +284,65 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  iconText: { 
-    fontSize: 24, 
-    color: '#fff' 
+  actionIcon: {
+    fontSize: 24,
+    color: '#fff',
   },
-  actionTitle: { 
-    fontSize: 14, 
-    fontWeight: '600', 
-    color: '#374151', 
+  actionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
     textAlign: 'center',
     lineHeight: 18,
   },
-  sectionTitle: { 
-    fontSize: 20, 
-    fontWeight: '700', 
-    color: '#111827', 
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
     marginBottom: 16,
     letterSpacing: -0.5,
   },
-  card: {
-    backgroundColor: '#fff', 
-    borderRadius: 16, 
-    padding: 20, 
+  healthSummaryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
     marginBottom: 20,
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.08, 
-    shadowRadius: 16, 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 6,
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
-  metricRow: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    paddingVertical: 12, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#f1f5f9' 
+  metricItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
   },
-  metricLeft: {
+  metricInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  metricLabel: { 
-    fontSize: 14, 
-    color: '#374151',
+  metricLabel: {
+    fontSize: 14,
+    color: '#4b5563',
     fontWeight: '600',
     marginRight: 10,
   },
-  statusDot: {
+  statusIndicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  metricValue: { 
-    fontSize: 16, 
-    fontWeight: '700', 
-    color: '#111827' 
-  },
-  serviceCard: {
-    backgroundColor: '#fff', 
-    borderRadius: 20, 
-    padding: 24, 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'flex-start',
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.08, 
-    shadowRadius: 16, 
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  serviceInfo: {
-    flex: 1,
-    marginRight: 16,
-  },
-  serviceTitle: { 
-    fontSize: 18, 
-    fontWeight: '700', 
+  metricValue: {
+    fontSize: 16,
+    fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
-  },
-  serviceSubtitle: { 
-    fontSize: 14, 
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#f59e0b',
-    marginRight: 8,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  serviceStatus: {
-    alignItems: 'center',
-  },
-  availableDot: { 
-    width: 12, 
-    height: 12, 
-    borderRadius: 6, 
-    backgroundColor: '#5a9e31',
-    marginBottom: 4,
-  },
-  availableText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#5a9e31',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -250,15 +350,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  seeAllText: {
+  sectionAction: {
     fontSize: 14,
     fontWeight: '600',
     color: '#5a9e31',
   },
-  doctorsScroll: {
+  professionalsScroll: {
     marginBottom: 24,
   },
-  doctorCard: {
+  professionalCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 16,
@@ -273,7 +373,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
-  doctorImageContainer: {
+  professionalImageContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -282,39 +382,98 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
-  doctorImage: {
+  professionalImage: {
     fontSize: 28,
   },
-  doctorName: {
+  professionalName: {
     fontSize: 16,
     fontWeight: '700',
     color: '#111827',
     marginBottom: 4,
     textAlign: 'center',
   },
-  doctorSpecialty: {
+  professionalSpecialty: {
     fontSize: 12,
     color: '#6b7280',
     marginBottom: 8,
     textAlign: 'center',
   },
-  doctorRating: {
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  ratingStar: {
+  ratingIcon: {
     fontSize: 12,
     marginRight: 4,
   },
-  ratingText: {
+  ratingValue: {
     fontSize: 12,
     fontWeight: '600',
     color: '#f59e0b',
   },
-  doctorPrice: {
+  professionalPrice: {
     fontSize: 14,
     fontWeight: '700',
+    color: '#5a9e31',
+  },
+  serviceCard: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  serviceInfo: {
+    flex: 1,
+    marginRight: 16,
+  },
+  serviceTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  serviceSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  serviceRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  ratingDisplay: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#f59e0b',
+    marginRight: 8,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  serviceStatus: {
+    alignItems: 'center',
+  },
+  availabilityIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#5a9e31',
+    marginBottom: 4,
+  },
+  availabilityText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: '#5a9e31',
   },
 });

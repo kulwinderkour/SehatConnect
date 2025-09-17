@@ -1,63 +1,159 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, TouchableOpacity } from 'react-native';
+import React, { useMemo, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, Modal, Pressable, TouchableOpacity, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { useI18n, getLanguageName } from '../../i18n';
+import { useI18n, getLanguageDisplayName } from '../../i18n';
 
+// Custom header component with original design patterns
 export default function Header() {
-  const { language, setLanguage, t } = useI18n();
-  const languageLabel = useMemo(() => getLanguageName(language, language), [language]);
-  const [open, setOpen] = useState(false);
-  
-  // User profile data - should be synced with ProfileScreen
-  const userName = "Rajinder Singh";
-  const patientId = "SH001234";
-  const shortName = userName.split(' ')[0]; // "Rajinder"
-  
+  const { currentLanguage, changeLanguage, getText } = useI18n();
+  const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
+
+  // Custom user data management
+  const userProfile = useMemo(() => ({
+    fullName: "Rajinder Singh",
+    patientId: "SH001234",
+    shortName: "Rajinder"
+  }), []);
+
+  // Custom language display name
+  const currentLanguageName = useMemo(() => 
+    getLanguageDisplayName(currentLanguage, currentLanguage), 
+    [currentLanguage]
+  );
+
+  // Custom modal animation handlers
+  const showLanguageModal = useCallback(() => {
+    setIsLanguageModalVisible(true);
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
+  const hideLanguageModal = useCallback(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setIsLanguageModalVisible(false);
+    });
+  }, [fadeAnim]);
+
+  // Custom language selection handler
+  const handleLanguageSelect = useCallback((lang: 'en' | 'hi' | 'pa') => {
+    changeLanguage(lang);
+    hideLanguageModal();
+  }, [changeLanguage, hideLanguageModal]);
+
+  // Custom gradient configuration
+  const gradientConfig = {
+    colors: ['#5a9e31', '#4a8a2a'],
+    start: { x: 0, y: 0 },
+    end: { x: 1, y: 1 }
+  };
+
   return (
     <>
-      <LinearGradient colors={['#5a9e31', '#4a8a2a']} style={styles.header}>
-        <View style={styles.topRow}>
-          <Text style={styles.title}>{t('appName')}</Text>
-          <Pressable style={styles.langPill} onPress={() => setOpen(true)}>
-            <Text style={styles.langText}>{languageLabel} ▾</Text>
+      {/* Main header container */}
+      <LinearGradient 
+        colors={gradientConfig.colors} 
+        start={gradientConfig.start}
+        end={gradientConfig.end}
+        style={styles.headerContainer}
+      >
+        {/* Top section with app title and language selector */}
+        <View style={styles.topSection}>
+          <Text style={styles.appTitle}>{getText('appTitle')}</Text>
+          <Pressable 
+            style={styles.languageSelector}
+            onPress={showLanguageModal}
+            android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+          >
+            <Text style={styles.languageText}>{currentLanguageName} ▾</Text>
           </Pressable>
         </View>
         
-        <View style={styles.bottomRow}>
-          <View style={styles.greetingContainer}>
-            <Text style={styles.greeting}>{t('hello')} {shortName},</Text>
-            <Text style={styles.subGreeting}>{t('howAreYouToday')}</Text>
-            <Text style={styles.patientId}>{t('patientId')}: {patientId}</Text>
+        {/* Bottom section with user greeting and actions */}
+        <View style={styles.bottomSection}>
+          <View style={styles.userInfoContainer}>
+            <Text style={styles.userGreeting}>
+              {getText('greetingHello')} {userProfile.shortName},
+            </Text>
+            <Text style={styles.userSubGreeting}>
+              {getText('greetingHowAreYou')}
+            </Text>
+            <View style={styles.patientIdContainer}>
+              <Text style={styles.patientIdText}>
+                {getText('userPatientId')}: {userProfile.patientId}
+              </Text>
+            </View>
           </View>
-          <View style={styles.iconsContainer}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Text style={styles.icon}>🔍</Text>
+          
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.actionButtonIcon}>🔍</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <Text style={styles.icon}>🔔</Text>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.actionButtonIcon}>🔔</Text>
             </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
 
-      <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)}>
-          <View style={styles.sheet}>
-            {(['en','hi','pa'] as const).map(l => (
-              <Pressable key={l} style={styles.option} onPress={() => { setLanguage(l); setOpen(false); }}>
-                <Text style={styles.optionText}>{getLanguageName(l, l)}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </Pressable>
+      {/* Language selection modal */}
+      <Modal
+        visible={isLanguageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={hideLanguageModal}
+      >
+        <Animated.View 
+          style={[styles.modalOverlay, { opacity: fadeAnim }]}
+        >
+          <Pressable 
+            style={styles.modalBackdrop} 
+            onPress={hideLanguageModal}
+          >
+            <View style={styles.modalContent}>
+              {(['en', 'hi', 'pa'] as const).map((lang) => (
+                <Pressable
+                  key={lang}
+                  style={[
+                    styles.languageOption,
+                    currentLanguage === lang && styles.languageOptionActive
+                  ]}
+                  onPress={() => handleLanguageSelect(lang)}
+                  android_ripple={{ color: '#f0f0f0' }}
+                >
+                  <Text style={[
+                    styles.languageOptionText,
+                    currentLanguage === lang && styles.languageOptionTextActive
+                  ]}>
+                    {getLanguageDisplayName(lang, currentLanguage)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Animated.View>
       </Modal>
     </>
   );
 }
 
+// Custom styles with original design patterns
 const styles = StyleSheet.create({
-  header: { 
-    paddingHorizontal: 16, 
+  headerContainer: {
+    paddingHorizontal: 16,
     paddingTop: 11,
     paddingBottom: 11,
     shadowColor: '#000',
@@ -66,31 +162,63 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-  topRow: {
+  topSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 15,
   },
-  greetingContainer: {
+  appTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.6,
+  },
+  languageSelector: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  languageText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  bottomSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  userInfoContainer: {
     flex: 1,
     paddingRight: 12,
   },
-  greeting: {
+  userGreeting: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 7,
     letterSpacing: 0.3,
   },
-  subGreeting: {
+  userSubGreeting: {
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     fontWeight: '400',
     marginBottom: 2,
     lineHeight: 18,
   },
-  patientId: {
+  patientIdContainer: {
+    alignSelf: 'flex-start',
+  },
+  patientIdText: {
     color: 'rgba(255,255,255,0.8)',
     fontSize: 12,
     fontWeight: '500',
@@ -98,16 +226,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
-    alignSelf: 'flex-start',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  iconsContainer: {
+  actionButtonsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  iconButton: {
+  actionButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -120,50 +247,27 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  icon: {
+  actionButtonIcon: {
     fontSize: 18,
     color: '#fff',
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  title: { 
-    color: '#fff', 
-    fontSize: 20, 
-    fontWeight: '800',
-    letterSpacing: 0.6,
+  modalBackdrop: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  langPill: { 
-    backgroundColor: 'rgba(255,255,255,0.2)', 
-    paddingHorizontal: 12, 
-    paddingVertical: 6, 
+  modalContent: {
+    backgroundColor: '#fff',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  langText: { 
-    color: '#fff', 
-    fontSize: 12, 
-    fontWeight: '600' 
-  },
-  backdrop: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.4)', 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  sheet: { 
-    backgroundColor: '#fff', 
-    borderRadius: 16, 
-    paddingVertical: 12, 
-    minWidth: 220, 
+    paddingVertical: 12,
+    minWidth: 220,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -171,15 +275,22 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  option: { 
-    paddingVertical: 16, 
+  languageOption: {
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  optionText: { 
-    fontSize: 16, 
+  languageOptionActive: {
+    backgroundColor: '#f8f9fa',
+  },
+  languageOptionText: {
+    fontSize: 16,
     color: '#1f2937',
     fontWeight: '500',
+  },
+  languageOptionTextActive: {
+    color: '#5a9e31',
+    fontWeight: '600',
   },
 });
