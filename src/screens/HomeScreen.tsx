@@ -21,16 +21,9 @@ const DoctorCard = ({ name, specialty, rating, price, image }: { name: string; s
 
 const QuickAction = ({ icon, title }: { icon: string; title: string }) => (
   <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
-    <LinearGradient 
-      colors={['#5a9e31', '#E8F5E8']} 
-      style={styles.outerCircle}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <View style={styles.innerCircle}>
-        <Text style={styles.iconText}>{icon}</Text>
-      </View>
-    </LinearGradient>
+    <View style={styles.iconContainer}>
+      <Text style={styles.iconText}>{icon}</Text>
+    </View>
     <Text style={styles.actionTitle}>{title}</Text>
   </TouchableOpacity>
 );
@@ -41,7 +34,7 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Header />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.actionsRow}>
+        <View style={styles.actionsGrid}>
           <QuickAction icon="📹" title={t('videoConsult')} />
           <QuickAction icon="⚡" title={t('emergency')} />
           <QuickAction icon="🤖" title={t('aiChecker')} />
@@ -101,48 +94,47 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   scrollView: { flex: 1 },
   scrollContent: { padding: 20, paddingBottom: 32 },
-  actionsRow: { 
+  actionsGrid: { 
     flexDirection: 'row', 
+    flexWrap: 'wrap', 
     justifyContent: 'space-between', 
-    paddingVertical: 12, 
     marginBottom: 24,
-    paddingHorizontal: 4,
+    paddingHorizontal: 0,
   },
   actionCard: { 
-    width: 80, 
-    alignItems: 'center' 
-  },
-  outerCircle: {
-    width: 56, 
-    height: 56, 
-    borderRadius: 28, 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    marginBottom: 12,
-    shadowColor: '#5a9e31',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    width: '48%',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
-  innerCircle: {
-    width: 42, 
-    height: 42, 
-    borderRadius: 21, 
-    backgroundColor: '#FFFFFF', 
-    alignItems: 'center', 
+  iconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#5a9e31',
+    alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
   },
   iconText: { 
-    fontSize: 20, 
-    color: '#1f2937' 
+    fontSize: 24, 
+    color: '#fff' 
   },
   actionTitle: { 
-    fontSize: 11, 
+    fontSize: 14, 
     fontWeight: '600', 
     color: '#374151', 
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 18,
   },
   sectionTitle: { 
     fontSize: 20, 
