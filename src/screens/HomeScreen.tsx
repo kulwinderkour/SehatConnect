@@ -44,9 +44,9 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>{t('healthSummary')}</Text>
         <View style={styles.card}>
           {[
-            { label: 'Blood Pressure', value: '120/80', status: 'normal' },
-            { label: 'Next Appointment', value: 'Tomorrow 2:00 PM', status: 'upcoming' },
-            { label: 'Medicines Due', value: '2 pending', status: 'warning' },
+            { label: t('bloodPressure'), value: '120/80', status: 'normal' },
+            { label: t('nextAppointment'), value: `${t('tomorrow')} 2:00 PM`, status: 'upcoming' },
+            { label: t('medicinesDue'), value: `2 ${t('pending')}`, status: 'warning' },
           ].map((m, i, arr) => (
             <View key={m.label} style={[styles.metricRow, i === arr.length - 1 && { borderBottomWidth: 0 }]}>
               <View style={styles.metricLeft}>
@@ -59,30 +59,30 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Top Doctors</Text>
+          <Text style={styles.sectionTitle}>{t('topDoctors')}</Text>
           <TouchableOpacity>
-            <Text style={styles.seeAllText}>See All</Text>
+            <Text style={styles.seeAllText}>{t('seeAll')}</Text>
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.doctorsScroll}>
-          <DoctorCard name="Dr. William James" specialty="Cardiologist" rating={4.8} price="$50/session" image="👨‍⚕️" />
-          <DoctorCard name="Dr. Sarah Johnson" specialty="Neurologist" rating={4.9} price="$60/session" image="👩‍⚕️" />
-          <DoctorCard name="Dr. Michael Chen" specialty="Dermatologist" rating={4.7} price="$45/session" image="👨‍⚕️" />
+          <DoctorCard name="Dr. William James" specialty={t('cardiologist')} rating={4.8} price={`$50/${t('session')}`} image="👨‍⚕️" />
+          <DoctorCard name="Dr. Sarah Johnson" specialty={t('neurologist')} rating={4.9} price={`$60/${t('session')}`} image="👩‍⚕️" />
+          <DoctorCard name="Dr. Michael Chen" specialty={t('dermatologist')} rating={4.7} price={`$45/${t('session')}`} image="👨‍⚕️" />
         </ScrollView>
 
-        <Text style={styles.sectionTitle}>Nearby Services</Text>
+        <Text style={styles.sectionTitle}>{t('nearbyServices')}</Text>
         <View style={styles.serviceCard}>
           <View style={styles.serviceInfo}>
-            <Text style={styles.serviceTitle}>Dr. Sharma Available</Text>
-            <Text style={styles.serviceSubtitle}>General Medicine • 2.5 km</Text>
+            <Text style={styles.serviceTitle}>Dr. Sharma {t('available')}</Text>
+            <Text style={styles.serviceSubtitle}>{t('generalMedicine')} • 2.5 km</Text>
             <View style={styles.ratingContainer}>
               <Text style={styles.rating}>⭐ 4.8</Text>
-              <Text style={styles.ratingText}>• 15 min away</Text>
+              <Text style={styles.ratingText}>• 15 {t('minAway')}</Text>
             </View>
           </View>
           <View style={styles.serviceStatus}>
             <View style={styles.availableDot} />
-            <Text style={styles.availableText}>Available</Text>
+            <Text style={styles.availableText}>{t('available')}</Text>
           </View>
         </View>
       </ScrollView>

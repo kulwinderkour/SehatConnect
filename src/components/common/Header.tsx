@@ -4,7 +4,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useI18n, getLanguageName } from '../../i18n';
 
 export default function Header() {
-  const { language, setLanguage } = useI18n();
+  const { language, setLanguage, t } = useI18n();
   const languageLabel = useMemo(() => getLanguageName(language, language), [language]);
   const [open, setOpen] = useState(false);
   
@@ -17,7 +17,7 @@ export default function Header() {
     <>
       <LinearGradient colors={['#5a9e31', '#4a8a2a']} style={styles.header}>
         <View style={styles.topRow}>
-          <Text style={styles.title}>SehatConnect</Text>
+          <Text style={styles.title}>{t('appName')}</Text>
           <Pressable style={styles.langPill} onPress={() => setOpen(true)}>
             <Text style={styles.langText}>{languageLabel} ▾</Text>
           </Pressable>
@@ -25,9 +25,9 @@ export default function Header() {
         
         <View style={styles.bottomRow}>
           <View style={styles.greetingContainer}>
-            <Text style={styles.greeting}>Hello {shortName},</Text>
-            <Text style={styles.subGreeting}>How are you today?</Text>
-            <Text style={styles.patientId}>Patient ID: {patientId}</Text>
+            <Text style={styles.greeting}>{t('hello')} {shortName},</Text>
+            <Text style={styles.subGreeting}>{t('howAreYouToday')}</Text>
+            <Text style={styles.patientId}>{t('patientId')}: {patientId}</Text>
           </View>
           <View style={styles.iconsContainer}>
             <TouchableOpacity style={styles.iconButton}>

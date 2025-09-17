@@ -6,6 +6,7 @@ import ConsultationsScreen from '../screens/ConsultationsScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import PharmacyScreen from '../screens/PharmacyScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { useI18n } from '../i18n';
 
 const Tab = createBottomTabNavigator();
 
@@ -16,11 +17,14 @@ const Icon = ({ emoji, focused }: { emoji: string; focused: boolean }) => (
 );
 
 export default function TabNavigator() {
+  const { t } = useI18n();
+  
   const renderIcon = useCallback(
     (emoji: string) =>
       ({ focused }: { focused: boolean }) => <Icon emoji={emoji} focused={focused} />,
     []
   );
+  
   return (
     <Tab.Navigator
       screenOptions={{
@@ -31,11 +35,11 @@ export default function TabNavigator() {
         tabBarInactiveTintColor: '#666',
       }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: renderIcon('🏠') }} />
-      <Tab.Screen name="Consult" component={ConsultationsScreen} options={{ tabBarIcon: renderIcon('👨‍⚕️') }} />
-      <Tab.Screen name="Records" component={RecordsScreen} options={{ tabBarIcon: renderIcon('📋') }} />
-      <Tab.Screen name="Pharmacy" component={PharmacyScreen} options={{ tabBarIcon: renderIcon('💊') }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: renderIcon('👤') }} />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarIcon: renderIcon('🏠'), tabBarLabel: t('home') }} />
+      <Tab.Screen name="Consult" component={ConsultationsScreen} options={{ tabBarIcon: renderIcon('👨‍⚕️'), tabBarLabel: t('consult') }} />
+      <Tab.Screen name="Records" component={RecordsScreen} options={{ tabBarIcon: renderIcon('📋'), tabBarLabel: t('records') }} />
+      <Tab.Screen name="Pharmacy" component={PharmacyScreen} options={{ tabBarIcon: renderIcon('💊'), tabBarLabel: t('pharmacy') }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarIcon: renderIcon('👤'), tabBarLabel: t('profile') }} />
     </Tab.Navigator>
   );
 }

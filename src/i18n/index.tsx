@@ -16,6 +16,39 @@ const translationsByLang: Record<SupportedLanguage, Translations> = {
     schedule: 'Schedule',
     healthSummary: 'Health Summary',
     nearbyServices: 'Nearby Services',
+    // Navigation
+    home: 'Home',
+    consult: 'Consult',
+    records: 'Records',
+    pharmacy: 'Pharmacy',
+    profile: 'Profile',
+    // Greetings
+    hello: 'Hello',
+    howAreYouToday: 'How are you today?',
+    patientId: 'Patient ID',
+    // Health Summary
+    bloodPressure: 'Blood Pressure',
+    nextAppointment: 'Next Appointment',
+    medicinesDue: 'Medicines Due',
+    tomorrow: 'Tomorrow',
+    pending: 'pending',
+    // Doctors
+    topDoctors: 'Top Doctors',
+    seeAll: 'See All',
+    // Status
+    normal: 'Normal',
+    upcoming: 'Upcoming',
+    warning: 'Warning',
+    available: 'Available',
+    minAway: 'min away',
+    // Specialties
+    cardiologist: 'Cardiologist',
+    neurologist: 'Neurologist',
+    dermatologist: 'Dermatologist',
+    generalMedicine: 'General Medicine',
+    // Other
+    session: 'session',
+    rating: 'Rating',
   },
   hi: {
     appName: 'सेहत कनेक्ट',
@@ -28,6 +61,39 @@ const translationsByLang: Record<SupportedLanguage, Translations> = {
     schedule: 'समय-सारणी',
     healthSummary: 'स्वास्थ्य सारांश',
     nearbyServices: 'निकट सेवाएँ',
+    // Navigation
+    home: 'होम',
+    consult: 'परामर्श',
+    records: 'रिकॉर्ड',
+    pharmacy: 'फार्मेसी',
+    profile: 'प्रोफाइल',
+    // Greetings
+    hello: 'नमस्ते',
+    howAreYouToday: 'आज आप कैसे हैं?',
+    patientId: 'रोगी आईडी',
+    // Health Summary
+    bloodPressure: 'रक्तचाप',
+    nextAppointment: 'अगली अपॉइंटमेंट',
+    medicinesDue: 'दवाएं बकाया',
+    tomorrow: 'कल',
+    pending: 'लंबित',
+    // Doctors
+    topDoctors: 'शीर्ष डॉक्टर',
+    seeAll: 'सभी देखें',
+    // Status
+    normal: 'सामान्य',
+    upcoming: 'आगामी',
+    warning: 'चेतावनी',
+    available: 'उपलब्ध',
+    minAway: 'मिनट दूर',
+    // Specialties
+    cardiologist: 'हृदय रोग विशेषज्ञ',
+    neurologist: 'न्यूरोलॉजिस्ट',
+    dermatologist: 'त्वचा विशेषज्ञ',
+    generalMedicine: 'सामान्य चिकित्सा',
+    // Other
+    session: 'सत्र',
+    rating: 'रेटिंग',
   },
   pa: {
     appName: 'ਸਿਹਤ ਕਨੈਕਟ',
@@ -40,6 +106,39 @@ const translationsByLang: Record<SupportedLanguage, Translations> = {
     schedule: 'ਸ਼ਡਿਊਲ',
     healthSummary: 'ਸਿਹਤ ਸੰਖੇਪ',
     nearbyServices: 'ਨੇੜਲੇ ਸੇਵਾਵਾਂ',
+    // Navigation
+    home: 'ਹੋਮ',
+    consult: 'ਸਲਾਹ',
+    records: 'ਰਿਕਾਰਡ',
+    pharmacy: 'ਫਾਰਮੇਸੀ',
+    profile: 'ਪ੍ਰੋਫਾਈਲ',
+    // Greetings
+    hello: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ',
+    howAreYouToday: 'ਅੱਜ ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ?',
+    patientId: 'ਮਰੀਜ਼ ਆਈਡੀ',
+    // Health Summary
+    bloodPressure: 'ਬਲੱਡ ਪ੍ਰੈਸ਼ਰ',
+    nextAppointment: 'ਅਗਲੀ ਮੁਲਾਕਾਤ',
+    medicinesDue: 'ਦਵਾਈਆਂ ਬਾਕੀ',
+    tomorrow: 'ਕੱਲ',
+    pending: 'ਲੰਬਿਤ',
+    // Doctors
+    topDoctors: 'ਪ੍ਰਮੁੱਖ ਡਾਕਟਰ',
+    seeAll: 'ਸਾਰੇ ਦੇਖੋ',
+    // Status
+    normal: 'ਸਧਾਰਨ',
+    upcoming: 'ਆਉਣ ਵਾਲਾ',
+    warning: 'ਚੇਤਾਵਨੀ',
+    available: 'ਉਪਲਬਧ',
+    minAway: 'ਮਿੰਟ ਦੂਰ',
+    // Specialties
+    cardiologist: 'ਕਾਰਡੀਓਲੋਜਿਸਟ',
+    neurologist: 'ਨਿਊਰੋਲੋਜਿਸਟ',
+    dermatologist: 'ਡਰਮੇਟੋਲੋਜਿਸਟ',
+    generalMedicine: 'ਜਨਰਲ ਮੈਡੀਸਨ',
+    // Other
+    session: 'ਸੈਸ਼ਨ',
+    rating: 'ਰੇਟਿੰਗ',
   },
 };
 
