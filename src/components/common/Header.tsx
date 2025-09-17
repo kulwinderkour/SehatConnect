@@ -66,13 +66,21 @@ export default function Header() {
       >
         <View style={styles.topSection}>
           <Text style={styles.appTitle}>{getText('appTitle')}</Text>
-          <Pressable 
-            style={styles.languageSelector}
-            onPress={showLanguageModal}
-            android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
-          >
-            <Text style={styles.languageText}>{currentLanguageName} ▾</Text>
-          </Pressable>
+          <View style={styles.topRightContainer}>
+            <Pressable 
+              style={styles.languageSelector}
+              onPress={showLanguageModal}
+              android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+            >
+              <Text style={styles.languageText}>{currentLanguageName} ▾</Text>
+            </Pressable>
+            <TouchableOpacity 
+              style={styles.actionButton}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.actionButtonIcon}>🔔</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </LinearGradient>
 
@@ -93,15 +101,6 @@ export default function Header() {
                 {getText('userPatientId')}: {userProfile.patientId}
               </Text>
             </View>
-          </View>
-          
-          <View style={styles.actionButtonsContainer}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.actionButtonIcon}>🔔</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </LinearGradient>
@@ -174,6 +173,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  topRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   appTitle: {
     color: '#fff',
     fontSize: 20,
@@ -200,7 +204,7 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     alignItems: 'flex-start',
   },
   userInfoContainer: {
