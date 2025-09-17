@@ -4,6 +4,21 @@ import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import { useI18n } from '../i18n';
 
+const DoctorCard = ({ name, specialty, rating, price, image }: { name: string; specialty: string; rating: number; price: string; image: string }) => (
+  <TouchableOpacity style={styles.doctorCard} activeOpacity={0.8}>
+    <View style={styles.doctorImageContainer}>
+      <Text style={styles.doctorImage}>{image}</Text>
+    </View>
+    <Text style={styles.doctorName}>{name}</Text>
+    <Text style={styles.doctorSpecialty}>{specialty}</Text>
+    <View style={styles.doctorRating}>
+      <Text style={styles.ratingStar}>⭐</Text>
+      <Text style={styles.ratingText}>{rating}</Text>
+    </View>
+    <Text style={styles.doctorPrice}>{price}</Text>
+  </TouchableOpacity>
+);
+
 const QuickAction = ({ icon, title }: { icon: string; title: string }) => (
   <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
     <LinearGradient 
@@ -49,6 +64,18 @@ export default function HomeScreen() {
             </View>
           ))}
         </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Top Doctors</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAllText}>See All</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.doctorsScroll}>
+          <DoctorCard name="Dr. William James" specialty="Cardiologist" rating={4.8} price="$50/session" image="👨‍⚕️" />
+          <DoctorCard name="Dr. Sarah Johnson" specialty="Neurologist" rating={4.9} price="$60/session" image="👩‍⚕️" />
+          <DoctorCard name="Dr. Michael Chen" specialty="Dermatologist" rating={4.7} price="$45/session" image="👨‍⚕️" />
+        </ScrollView>
 
         <Text style={styles.sectionTitle}>Nearby Services</Text>
         <View style={styles.serviceCard}>
@@ -223,6 +250,79 @@ const styles = StyleSheet.create({
   availableText: {
     fontSize: 12,
     fontWeight: '600',
+    color: '#5a9e31',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  seeAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#5a9e31',
+  },
+  doctorsScroll: {
+    marginBottom: 24,
+  },
+  doctorCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    marginRight: 16,
+    width: 160,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  doctorImageContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#f8f9fa',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  doctorImage: {
+    fontSize: 28,
+  },
+  doctorName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  doctorSpecialty: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  doctorRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  ratingStar: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#f59e0b',
+  },
+  doctorPrice: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#5a9e31',
   },
 });
