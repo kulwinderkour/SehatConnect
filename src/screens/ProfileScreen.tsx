@@ -1,19 +1,52 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
+import { useUserProfile } from '../contexts/UserProfileContext';
+import { ProfilePhotoService, ProfilePhotoConfig } from '../services/ProfilePhotoService';
 
 export default function ProfileScreen() {
+  const { userProfile, updateProfileImage } = useUserProfile();
+  const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
+  const availablePhotos = ProfilePhotoService.getAvailablePhotos();
+
+  const handlePhotoSelect = (photo: ProfilePhotoConfig) => {
+    updateProfileImage(photo.uri);
+    setIsPhotoModalVisible(false);
+    Alert.alert('Success', 'Profile photo updated successfully!');
+  };
+
+  const handlePhotoPress = () => {
+    // Automatically select the uploaded photo
+    if (availablePhotos.length > 0) {
+      handlePhotoSelect(availablePhotos[0]);
+    } else {
+      Alert.alert(
+        'No Photos Available',
+        'Please add a photo to src/assets/images/profile-photos/rajinder_singh.jpg',
+        [{ text: 'OK', style: 'default' }]
+      );
+    }
+  };
+
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <Header />
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <View style={styles.profileHeader}>
-          <LinearGradient colors={['#4CAF50', '#2E7D32']} style={styles.avatar}>
-            <Text style={{ fontSize: 32, color: '#fff' }}>👤</Text>
-          </LinearGradient>
-          <Text style={styles.name}>Rajinder Singh</Text>
-          <Text style={styles.pid}>Patient ID: SH001234</Text>
+          <TouchableOpacity style={styles.avatarContainer} onPress={handlePhotoPress}>
+            <Image 
+              source={{ uri: userProfile.profileImage }}
+              style={styles.avatar}
+              resizeMode="cover"
+            />
+            <View style={styles.editIcon}>
+              <Text style={styles.editIconText}>📷</Text>
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.name}>{userProfile.fullName}</Text>
+          <Text style={styles.pid}>Patient ID: {userProfile.patientId}</Text>
+          <Text style={styles.editHint}>Tap photo to change</Text>
         </View>
 
         <View style={styles.menuSection}>
@@ -81,6 +114,45 @@ export default function ProfileScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Photo Selection Modal */}
+      <Modal
+        visible={isPhotoModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsPhotoModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Profile Photo</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
+              {availablePhotos.map((photo, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.photoOption}
+                  onPress={() => handlePhotoSelect(photo)}
+                >
+                  <Image 
+                    source={{ uri: photo.uri }} 
+                    style={styles.photoPreview} 
+                    resizeMode="cover" 
+                  />
+                  <Text style={styles.photoName}>{photo.name}</Text>
+                  <Text style={styles.photoDimensions}>
+                    {photo.dimensions.width}x{photo.dimensions.height}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setIsPhotoModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -90,12 +162,115 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff', borderRadius: 15, padding: 25, alignItems: 'center', marginBottom: 20,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
   },
-  avatar: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 15 },
+  avatarContainer: {
+    width: 80, 
+    height: 80, 
+    borderRadius: 40, 
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 3,
+    borderColor: '#5a9e31',
+    position: 'relative',
+  },
+  avatar: { 
+    width: 74, 
+    height: 74, 
+    borderRadius: 37,
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#5a9e31',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  editIconText: {
+    fontSize: 12,
+  },
   name: { fontSize: 20, fontWeight: '700', color: '#333', marginBottom: 5 },
   pid: { fontSize: 14, color: '#666' },
+  editHint: { fontSize: 12, color: '#999', marginTop: 5, fontStyle: 'italic' },
   menuSection: {
     backgroundColor: '#fff', borderRadius: 15, marginBottom: 15,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
   },
   menuItem: { paddingHorizontal: 20, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    margin: 20,
+    maxHeight: '80%',
+    minWidth: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  photoScroll: {
+    marginBottom: 20,
+  },
+  photoOption: {
+    alignItems: 'center',
+    marginRight: 15,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  photoPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+  },
+  photoName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  photoDimensions: {
+    fontSize: 10,
+    color: '#666',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#6c757d',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

@@ -1,20 +1,17 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Modal, Pressable, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, Modal, Pressable, TouchableOpacity, Animated, Image } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useI18n, getLanguageDisplayName } from '../../i18n';
+import { useNavigation } from '@react-navigation/native';
+import { useUserProfile } from '../../contexts/UserProfileContext';
 
 // Custom header component with original design patterns
 export default function Header() {
   const { currentLanguage, changeLanguage, getText } = useI18n();
+  const navigation = useNavigation();
+  const { userProfile } = useUserProfile();
   const [isLanguageModalVisible, setIsLanguageModalVisible] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
-
-  // Custom user data management
-  const userProfile = useMemo(() => ({
-    fullName: "Rajinder Singh",
-    patientId: "SH001234",
-    shortName: "Rajinder"
-  }), []);
 
   // Custom language display name
   const currentLanguageName = useMemo(() => 
@@ -47,6 +44,11 @@ export default function Header() {
     changeLanguage(lang);
     hideLanguageModal();
   }, [changeLanguage, hideLanguageModal]);
+
+  // Custom profile navigation handler
+  const handleProfilePress = useCallback(() => {
+    navigation.navigate('Profile' as never);
+  }, [navigation]);
 
   // Custom gradient configuration
   const gradientConfig = {
@@ -102,6 +104,18 @@ export default function Header() {
               </Text>
             </View>
           </View>
+          
+          <TouchableOpacity 
+            style={styles.profilePhotoContainer}
+            onPress={handleProfilePress}
+            activeOpacity={0.7}
+          >
+            <Image 
+              source={{ uri: userProfile.profileImage }}
+              style={styles.profilePhoto}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
         </View>
       </LinearGradient>
 
@@ -204,12 +218,32 @@ const styles = StyleSheet.create({
   },
   bottomSection: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
   userInfoContainer: {
     flex: 1,
     paddingRight: 12,
+  },
+  profilePhotoContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  profilePhoto: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   userGreeting: {
     color: '#fff',

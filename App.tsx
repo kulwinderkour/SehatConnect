@@ -4,17 +4,20 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { I18nProvider } from './src/i18n';
+import { UserProfileProvider } from './src/contexts/UserProfileContext';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <I18nProvider>
-        <NavigationContainer>
-          <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-            <AppNavigator />
-          </SafeAreaView>
-        </NavigationContainer>
+        <UserProfileProvider>
+          <NavigationContainer>
+            <SafeAreaView style={styles.container}>
+              <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+              <AppNavigator />
+            </SafeAreaView>
+          </NavigationContainer>
+        </UserProfileProvider>
       </I18nProvider>
     </SafeAreaProvider>
   );
