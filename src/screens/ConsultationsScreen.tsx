@@ -1,42 +1,177 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
-
-const DoctorCard = ({ emoji, name, specialty, rating }: any) => (
-  <View style={styles.docCard}>
-    <LinearGradient colors={['#4CAF50', '#2E7D32']} style={styles.docAvatar}>
-      <Text style={{ fontSize: 24, color: '#fff' }}>{emoji}</Text>
-    </LinearGradient>
-    <View style={{ flex: 1 }}>
-      <Text style={styles.docName}>{name}</Text>
-      <Text style={styles.docSpec}>{specialty}</Text>
-      <Text style={styles.docRate}>{rating}</Text>
-    </View>
-    <TouchableOpacity style={styles.consultBtn} activeOpacity={0.9}>
-      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Consult</Text>
-    </TouchableOpacity>
-  </View>
-);
+import DoctorList from '../components/consultations/DoctorList';
+import AppointmentCard from '../components/consultations/AppointmentCard';
+import { Doctor, Appointment, AppointmentStatus } from '../types/health';
+import { useI18n } from '../i18n';
+import { useAppointments } from '../contexts/AppointmentContext';
 
 export default function ConsultationsScreen() {
+  const { getText } = useI18n();
+  const { getAppointments } = useAppointments();
+
+  // Mock doctors data
+  const doctors: Doctor[] = useMemo(() => [
+    {
+      id: "1",
+      name: "Dr. Rajesh Sharma",
+      specialty: "General Medicine",
+      rating: 4.8,
+      reviewCount: 127,
+      experience: 12,
+      consultationFee: 0,
+      languages: ['English', 'Hindi'],
+      availability: {
+        isAvailable: true,
+        nextAvailableTime: '2:00 PM',
+        workingHours: { start: '09:00', end: '18:00' },
+        workingDays: [1, 2, 3, 4, 5, 6],
+        timeSlots: []
+      },
+      emoji: "👨‍⚕️",
+      isOnline: true,
+      nextAvailableSlot: "Today 2:00 PM",
+      hospital: "Apollo Hospital",
+      distance: 2.5,
+      qualifications: ['MBBS', 'MD General Medicine']
+    },
+    {
+      id: "2",
+      name: "Dr. Priya Kaur",
+      specialty: "Pediatrics",
+      rating: 4.9,
+      reviewCount: 89,
+      experience: 8,
+      consultationFee: 0,
+      languages: ['English', 'Hindi', 'Punjabi'],
+      availability: {
+        isAvailable: true,
+        nextAvailableTime: '3:30 PM',
+        workingHours: { start: '10:00', end: '19:00' },
+        workingDays: [1, 2, 3, 4, 5],
+        timeSlots: []
+      },
+      emoji: "👩‍⚕️",
+      isOnline: false,
+      nextAvailableSlot: "Tomorrow 10:00 AM",
+      hospital: "Fortis Hospital",
+      distance: 1.8,
+      qualifications: ['MBBS', 'MD Pediatrics']
+    },
+    {
+      id: "3",
+      name: "Dr. Amit Singh",
+      specialty: "Cardiology",
+      rating: 4.7,
+      reviewCount: 156,
+      experience: 15,
+      consultationFee: 0,
+      languages: ['English', 'Hindi'],
+      availability: {
+        isAvailable: true,
+        nextAvailableTime: '4:00 PM',
+        workingHours: { start: '09:00', end: '17:00' },
+        workingDays: [1, 2, 3, 4, 5, 6],
+        timeSlots: []
+      },
+      emoji: "👨‍⚕️",
+      isOnline: true,
+      nextAvailableSlot: "Today 4:00 PM",
+      hospital: "Max Hospital",
+      distance: 3.2,
+      qualifications: ['MBBS', 'MD Cardiology', 'DM Cardiology']
+    },
+  ], []);
+
+  // Get appointments from context
+  const appointments = useMemo(() => {
+    const contextAppointments = getAppointments();
+    // Add some mock appointments if none exist
+    if (contextAppointments.length === 0) {
+      return [
+        {
+          id: "mock-1",
+          doctorId: "1",
+          doctorName: "Dr. Rajesh Sharma",
+          doctorSpecialty: "General Medicine",
+          patientId: "patient1",
+          patientName: "Rajinder Singh",
+          date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
+          time: "14:00",
+          duration: 30,
+          status: "confirmed" as AppointmentStatus,
+          type: "video-consultation",
+          notes: "Follow up for blood pressure medication",
+          symptoms: ["High blood pressure", "Headache"],
+          followUpRequired: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ];
+    }
+    return contextAppointments;
+  }, [getAppointments]);
+
+  const handleDoctorPress = useCallback((doctor: Doctor) => {
+    Alert.alert('Doctor Details', `Viewing details for ${doctor.name}`);
+  }, []);
+
+  const handleConsultPress = useCallback((doctor: Doctor) => {
+    Alert.alert('Consultation', `Starting consultation with ${doctor.name}`);
+  }, []);
+
+  const handleAppointmentPress = useCallback((appointment: Appointment) => {
+    Alert.alert('Appointment Details', `Viewing appointment with ${appointment.doctorName}`);
+  }, []);
+
+  const handleAppointmentAction = useCallback((appointment: Appointment) => {
+    if (appointment.status === 'scheduled' || appointment.status === 'confirmed') {
+      Alert.alert('Join Appointment', `Joining appointment with ${appointment.doctorName}`);
+    } else {
+      Alert.alert('Appointment Details', `Viewing details for ${appointment.doctorName}`);
+    }
+  }, []);
+
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+    <View style={styles.container}>
       <Header />
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
-        <Text style={styles.sectionTitle}>Available Doctors</Text>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+      >
+        <View style={styles.doctorsSection}>
+          <DoctorList
+            doctors={doctors}
+            onDoctorPress={handleDoctorPress}
+            onConsultPress={handleConsultPress}
+            title="Available Doctors"
+            showFilters={true}
+            variant="vertical"
+          />
+        </View>
 
-        <DoctorCard emoji="👨‍⚕️" name="Dr. Rajesh Sharma" specialty="General Medicine" rating="⭐⭐⭐⭐⭐ 4.8 (127 reviews)" />
-        <DoctorCard emoji="👩‍⚕️" name="Dr. Priya Kaur" specialty="Pediatrics" rating="⭐⭐⭐⭐⭐ 4.9 (89 reviews)" />
-        <DoctorCard emoji="👨‍⚕️" name="Dr. Amit Singh" specialty="Cardiology" rating="⭐⭐⭐⭐⭐ 4.7 (156 reviews)" />
-
-        <Text style={[styles.sectionTitle, { marginTop: 25 }]}>My Appointments</Text>
-        <View style={styles.cardRow}>
-          <View>
-            <Text style={{ fontWeight: '600', color: '#333' }}>Dr. Sharma - Follow up</Text>
-            <Text style={{ fontSize: 12, color: '#666' }}>Tomorrow 2:00 PM</Text>
-          </View>
-          <View style={styles.badge}><Text style={styles.badgeText}>Confirmed</Text></View>
+        <Text style={styles.sectionTitle}>My Appointments</Text>
+        <View style={styles.appointmentsContainer}>
+          {appointments.length > 0 ? (
+            appointments.map((appointment) => (
+              <AppointmentCard
+                key={`appointment-${appointment.id}`}
+                appointment={appointment}
+                onPress={handleAppointmentPress}
+                onActionPress={handleAppointmentAction}
+                variant="upcoming"
+              />
+            ))
+          ) : (
+            <View style={styles.emptyAppointments}>
+              <Text style={styles.emptyAppointmentsText}>No appointments scheduled</Text>
+              <Text style={styles.emptyAppointmentsSubtext}>Book an appointment with a doctor to get started</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -44,20 +179,44 @@ export default function ConsultationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 15 },
-  docCard: {
-    backgroundColor: '#fff', borderRadius: 15, padding: 15, flexDirection: 'row', alignItems: 'center', marginBottom: 15,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
   },
-  docAvatar: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginRight: 15 },
-  docName: { fontSize: 16, fontWeight: '600', color: '#333' },
-  docSpec: { fontSize: 12, color: '#666', marginTop: 4 },
-  docRate: { fontSize: 12, color: '#ff9800', marginTop: 4 },
-  consultBtn: { backgroundColor: '#4CAF50', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
-  cardRow: {
-    backgroundColor: '#fff', borderRadius: 15, padding: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
+  scrollView: {
+    flex: 1,
   },
-  badge: { backgroundColor: '#e8f5e8', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 15 },
-  badgeText: { color: '#2e7d32', fontSize: 12, fontWeight: '700' },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 32,
+  },
+  doctorsSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
+    marginTop: 24,
+  },
+  appointmentsContainer: {
+    gap: 12,
+  },
+  emptyAppointments: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyAppointmentsText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  emptyAppointmentsSubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+    textAlign: 'center',
+  },
 });

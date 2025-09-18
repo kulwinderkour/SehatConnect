@@ -59,6 +59,7 @@ const appTranslations: Record<AppLanguage, TranslationMap> = {
     doctorsTopDoctors: 'Top Doctors',
     doctorsSeeAll: 'See All',
     doctorsSession: 'session',
+    doctorsFreeConsultation: 'Free Consultation',
     // Medical specialties
     specialtyCardiologist: 'Cardiologist',
     specialtyNeurologist: 'Neurologist',
@@ -107,6 +108,7 @@ const appTranslations: Record<AppLanguage, TranslationMap> = {
     doctorsTopDoctors: 'शीर्ष डॉक्टर',
     doctorsSeeAll: 'सभी देखें',
     doctorsSession: 'सत्र',
+    doctorsFreeConsultation: 'मुफ्त परामर्श',
     // Medical specialties
     specialtyCardiologist: 'हृदय रोग विशेषज्ञ',
     specialtyNeurologist: 'न्यूरोलॉजिस्ट',
@@ -155,6 +157,7 @@ const appTranslations: Record<AppLanguage, TranslationMap> = {
     doctorsTopDoctors: 'ਪ੍ਰਮੁੱਖ ਡਾਕਟਰ',
     doctorsSeeAll: 'ਸਾਰੇ ਦੇਖੋ',
     doctorsSession: 'ਸੈਸ਼ਨ',
+    doctorsFreeConsultation: 'ਮੁਫਤ ਸਲਾਹ',
     // Medical specialties
     specialtyCardiologist: 'ਕਾਰਡੀਓਲੋਜਿਸਟ',
     specialtyNeurologist: 'ਨਿਊਰੋਲੋਜਿਸਟ',

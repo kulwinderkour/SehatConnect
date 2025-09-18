@@ -5,18 +5,21 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { I18nProvider } from './src/i18n';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
+import { AppointmentProvider } from './src/contexts/AppointmentContext';
 
 export default function App() {
   return (
     <SafeAreaProvider>
       <I18nProvider>
         <UserProfileProvider>
-          <NavigationContainer>
-            <SafeAreaView style={styles.container}>
-              <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-              <AppNavigator />
-            </SafeAreaView>
-          </NavigationContainer>
+          <AppointmentProvider>
+            <NavigationContainer>
+              <SafeAreaView style={styles.container}>
+                <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+                <AppNavigator />
+              </SafeAreaView>
+            </NavigationContainer>
+          </AppointmentProvider>
         </UserProfileProvider>
       </I18nProvider>
     </SafeAreaProvider>

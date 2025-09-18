@@ -1,8 +1,12 @@
-import React, { useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useMemo, useCallback, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
+import DoctorList from '../components/consultations/DoctorList';
+import ScheduleModal from '../components/home/ScheduleModal';
 import { useI18n } from '../i18n';
+import { useAppointments } from '../contexts/AppointmentContext';
+import { Doctor, AppointmentBookingForm, HealthSummary } from '../types/health';
 
 // Get screen dimensions for responsive design
 const { width: screenWidth } = Dimensions.get('window');
@@ -38,12 +42,14 @@ const MedicalProfessionalCard = ({
 // Custom quick action component with original design
 const QuickActionButton = ({ 
   icon, 
-  title 
+  title,
+  onPress
 }: { 
   icon: string; 
-  title: string; 
+  title: string;
+  onPress: () => void;
 }) => (
-  <TouchableOpacity style={styles.actionButtonContainer} activeOpacity={0.7}>
+  <TouchableOpacity style={styles.actionButtonContainer} activeOpacity={0.7} onPress={onPress}>
     <View style={styles.actionIconContainer}>
       <Text style={styles.actionIcon}>{icon}</Text>
     </View>
@@ -84,6 +90,9 @@ const HealthMetricItem = ({
 // Main home screen component
 export default function HomeScreen() {
   const { getText } = useI18n();
+  const { addAppointment } = useAppointments();
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
 
   // Custom health data configuration
   const healthMetrics = useMemo(() => [
@@ -104,38 +113,146 @@ export default function HomeScreen() {
     },
   ], [getText]);
 
-  // Custom quick actions configuration
-  const quickActions = useMemo(() => [
-    { icon: '📹', title: getText('actionVideoConsult') },
-    { icon: '⚡', title: getText('actionEmergency') },
-    { icon: '🤖', title: getText('actionAIChecker') },
-    { icon: '📅', title: getText('actionSchedule') },
+  // Enhanced medical professionals data with proper types
+  const medicalProfessionals: Doctor[] = useMemo(() => [
+    { 
+      id: "1",
+      name: "Dr. Rajesh Sharma", 
+      specialty: getText('specialtyGeneralMedicine'), 
+      rating: 4.8,
+      reviewCount: 127,
+      experience: 12,
+      consultationFee: 0,
+      languages: ['English', 'Hindi'],
+      availability: {
+        isAvailable: true,
+        nextAvailableTime: '2:00 PM',
+        workingHours: { start: '09:00', end: '18:00' },
+        workingDays: [1, 2, 3, 4, 5, 6],
+        timeSlots: []
+      },
+      emoji: "👨‍⚕️",
+      isOnline: true,
+      nextAvailableSlot: "Today 2:00 PM",
+      hospital: "Apollo Hospital",
+      distance: 2.5,
+      qualifications: ['MBBS', 'MD General Medicine']
+    },
+    { 
+      id: "2",
+      name: "Dr. Priya Kaur", 
+      specialty: getText('specialtyPediatrics'), 
+      rating: 4.9,
+      reviewCount: 89,
+      experience: 8,
+      consultationFee: 0,
+      languages: ['English', 'Hindi', 'Punjabi'],
+      availability: {
+        isAvailable: true,
+        nextAvailableTime: '3:30 PM',
+        workingHours: { start: '10:00', end: '19:00' },
+        workingDays: [1, 2, 3, 4, 5, 6],
+        timeSlots: []
+      },
+      emoji: "👩‍⚕️",
+      isOnline: false,
+      nextAvailableSlot: "Tomorrow 10:00 AM",
+      hospital: "Fortis Hospital",
+      distance: 1.8,
+      qualifications: ['MBBS', 'MD Pediatrics']
+    },
+    { 
+      id: "3",
+      name: "Dr. Amit Singh", 
+      specialty: getText('specialtyCardiology'), 
+      rating: 4.7,
+      reviewCount: 156,
+      experience: 15,
+      consultationFee: 0,
+      languages: ['English', 'Hindi'],
+      availability: {
+        isAvailable: true,
+        nextAvailableTime: '4:00 PM',
+        workingHours: { start: '09:00', end: '17:00' },
+        workingDays: [1, 2, 3, 4, 5],
+        timeSlots: []
+      },
+      emoji: "👨‍⚕️",
+      isOnline: true,
+      nextAvailableSlot: "Today 4:00 PM",
+      hospital: "Max Hospital",
+      distance: 3.2,
+      qualifications: ['MBBS', 'MD Cardiology', 'DM Cardiology']
+    }
   ], [getText]);
 
-  // Custom medical professionals data
-  const medicalProfessionals = useMemo(() => [
+  // Handler functions
+  const handleSchedulePress = useCallback(() => {
+    setScheduleModalVisible(true);
+  }, []);
+
+  const handleDoctorPress = useCallback((doctor: Doctor) => {
+    setSelectedDoctor(doctor);
+    setScheduleModalVisible(true);
+  }, []);
+
+  const handleConsultPress = useCallback((doctor: Doctor) => {
+    // Navigate to consultation screen or start video call
+    Alert.alert('Consultation', `Starting consultation with ${doctor.name}`);
+  }, []);
+
+  const handleBookAppointment = useCallback(async (form: AppointmentBookingForm) => {
+    try {
+      const doctor = medicalProfessionals.find(doc => doc.id === form.doctorId);
+      if (!doctor) {
+        Alert.alert('Error', 'Doctor not found');
+        return;
+      }
+
+      await addAppointment(form, doctor);
+      
+      Alert.alert(
+        'Appointment Booked!', 
+        `Your appointment with ${doctor.name} has been scheduled for ${form.date} at ${form.time}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              setScheduleModalVisible(false);
+              setSelectedDoctor(undefined);
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to book appointment. Please try again.');
+    }
+  }, [addAppointment, medicalProfessionals]);
+
+  // Custom quick actions configuration
+  const quickActions = useMemo(() => [
     { 
-      name: "Dr. William James", 
-      specialty: getText('specialtyCardiologist'), 
-      rating: 4.8, 
-      price: `$50/${getText('doctorsSession')}`, 
-      image: "👨‍⚕️" 
+      icon: '📹', 
+      title: getText('actionVideoConsult'),
+      onPress: () => Alert.alert('Video Consult', 'Starting video consultation...')
     },
     { 
-      name: "Dr. Sarah Johnson", 
-      specialty: getText('specialtyNeurologist'), 
-      rating: 4.9, 
-      price: `$60/${getText('doctorsSession')}`, 
-      image: "👩‍⚕️" 
+      icon: '⚡', 
+      title: getText('actionEmergency'),
+      onPress: () => Alert.alert('Emergency', 'Calling emergency services...')
     },
     { 
-      name: "Dr. Michael Chen", 
-      specialty: getText('specialtyDermatologist'), 
-      rating: 4.7, 
-      price: `$45/${getText('doctorsSession')}`, 
-      image: "👨‍⚕️" 
+      icon: '🤖', 
+      title: getText('actionAIChecker'),
+      onPress: () => Alert.alert('AI Checker', 'Opening AI health checker...')
     },
-  ], [getText]);
+    { 
+      icon: '📅', 
+      title: getText('actionSchedule'),
+      onPress: handleSchedulePress
+    },
+  ], [getText, handleSchedulePress]);
+
 
   // Custom section header component
   const SectionHeader = ({ 
@@ -181,9 +298,10 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Header />
       <ScrollView 
-        style={styles.scrollContainer} 
-        contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
+        bounces={true}
       >
         {/* Quick Actions Grid */}
         <View style={styles.actionsGrid}>
@@ -192,6 +310,7 @@ export default function HomeScreen() {
               key={index}
               icon={action.icon}
               title={action.title}
+              onPress={action.onPress}
             />
           ))}
         </View>
@@ -210,32 +329,28 @@ export default function HomeScreen() {
         </View>
 
         {/* Top Doctors Section */}
-        <SectionHeader
-          title={getText('doctorsTopDoctors')}
-          actionText={getText('doctorsSeeAll')}
-          onActionPress={() => {}}
-        />
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.professionalsScroll}
-        >
-          {medicalProfessionals.map((professional, index) => (
-            <MedicalProfessionalCard
-              key={index}
-              name={professional.name}
-              specialty={professional.specialty}
-              rating={professional.rating}
-              price={professional.price}
-              image={professional.image}
-            />
-          ))}
-        </ScrollView>
+          <DoctorList
+            doctors={medicalProfessionals}
+            onDoctorPress={handleDoctorPress}
+            onConsultPress={handleConsultPress}
+            variant="default"
+            title={getText('doctorsTopDoctors')}
+            onSeeAllPress={() => {}}
+          />
 
         {/* Nearby Services Section */}
         <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
         <NearbyServiceCard />
       </ScrollView>
+
+      {/* Schedule Modal */}
+      <ScheduleModal
+        visible={scheduleModalVisible}
+        onClose={() => setScheduleModalVisible(false)}
+        doctors={medicalProfessionals}
+        onBookAppointment={handleBookAppointment}
+        selectedDoctor={selectedDoctor}
+      />
     </View>
   );
 }
@@ -246,10 +361,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f8fafc',
   },
-  scrollContainer: {
+  scrollView: {
     flex: 1,
   },
-  scrollContent: {
+  scrollContainer: {
     padding: 20,
     paddingBottom: 32,
   },
