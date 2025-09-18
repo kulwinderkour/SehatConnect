@@ -16,7 +16,7 @@ A comprehensive React Native healthcare application that provides telemedicine, 
 
 Before you begin, ensure you have the following installed on your system:
 
-### Required Software
+### Required Software (All Platforms)
 
 1. **Node.js** (v20 or higher)
    ```bash
@@ -35,8 +35,9 @@ Before you begin, ensure you have the following installed on your system:
    npm install -g @react-native-community/cli
    ```
 
-4. **Java Development Kit (JDK) 17**
-   - Download from [Oracle](https://www.oracle.com/java/technologies/downloads/) or use OpenJDK
+4. **Java Development Kit (JDK) 17)**
+   - **Windows**: Download from [Oracle](https://www.oracle.com/java/technologies/downloads/) or use [OpenJDK](https://adoptium.net/)
+   - **macOS**: Use Homebrew: `brew install openjdk@17`
    - Set `JAVA_HOME` environment variable
 
 5. **Android Studio** (for Android development)
@@ -44,7 +45,10 @@ Before you begin, ensure you have the following installed on your system:
    - Install Android SDK (API level 33 or higher)
    - Set up Android emulator or connect physical device
 
-6. **Xcode** (for iOS development - macOS only)
+### Platform-Specific Requirements
+
+#### For macOS Users:
+6. **Xcode** (for iOS development)
    - Download from Mac App Store
    - Install Xcode Command Line Tools: `xcode-select --install`
 
@@ -54,8 +58,23 @@ Before you begin, ensure you have the following installed on your system:
    ```
 
 8. **Ruby** (v2.6.10 or higher)
-   - macOS: Usually pre-installed
-   - Linux/Windows: Install from [Ruby website](https://www.ruby-lang.org/)
+   - Usually pre-installed on macOS
+   - If not: `brew install ruby`
+
+#### For Windows Users:
+6. **Ruby** (v2.6.10 or higher)
+   - Download from [RubyInstaller](https://rubyinstaller.org/)
+   - Choose Ruby+Devkit version
+   - Follow installation wizard
+
+7. **Git for Windows**
+   - Download from [Git for Windows](https://git-scm.com/download/win)
+   - Use Git Bash for terminal commands
+
+8. **Windows Build Tools**
+   ```bash
+   npm install -g windows-build-tools
+   ```
 
 ## 🚀 Quick Start
 
@@ -76,7 +95,45 @@ npm install
 cd ios && bundle install && bundle exec pod install && cd ..
 ```
 
-### 3. Environment Setup
+### 3. Platform-Specific Quick Start
+
+#### For Windows Users:
+```cmd
+# 1. Open Command Prompt or PowerShell as Administrator
+# 2. Navigate to project directory
+cd SehatConnet
+
+# 3. Install dependencies
+npm install
+
+# 4. Start Metro bundler
+npm start
+
+# 5. In a new terminal, run Android
+npm run android
+```
+
+#### For macOS Users:
+```bash
+# 1. Open Terminal
+# 2. Navigate to project directory
+cd SehatConnet
+
+# 3. Install dependencies
+npm install
+
+# 4. Install iOS dependencies (if developing for iOS)
+cd ios && bundle install && bundle exec pod install && cd ..
+
+# 5. Start Metro bundler
+npm start
+
+# 6. In a new terminal, run your preferred platform
+npm run android  # For Android
+npm run ios      # For iOS
+```
+
+### 4. Environment Setup
 
 #### For iOS (macOS only):
 Create a local environment file for Xcode:
@@ -85,8 +142,10 @@ Create a local environment file for Xcode:
 echo 'export NODE_BINARY=$(command -v node)' > ios/.xcode.env.local
 ```
 
-#### For Android:
+#### For Android (All Platforms):
 Ensure your Android SDK is properly configured and `ANDROID_HOME` is set:
+
+**On macOS/Linux:**
 ```bash
 # Add to your ~/.bashrc or ~/.zshrc
 export ANDROID_HOME=$HOME/Android/Sdk
@@ -96,40 +155,67 @@ export PATH=$PATH:$ANDROID_HOME/tools/bin
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 ```
 
-### 4. Start Metro Bundler
+**On Windows:**
+```cmd
+# Add to your system environment variables
+ANDROID_HOME=C:\Users\%USERNAME%\AppData\Local\Android\Sdk
+PATH=%PATH%;%ANDROID_HOME%\emulator
+PATH=%PATH%;%ANDROID_HOME%\tools
+PATH=%PATH%;%ANDROID_HOME%\tools\bin
+PATH=%PATH%;%ANDROID_HOME%\platform-tools
+```
+
+**Alternative for Windows (PowerShell):**
+```powershell
+# Add to your PowerShell profile
+$env:ANDROID_HOME = "C:\Users\$env:USERNAME\AppData\Local\Android\Sdk"
+$env:PATH += ";$env:ANDROID_HOME\emulator;$env:ANDROID_HOME\tools;$env:ANDROID_HOME\tools\bin;$env:ANDROID_HOME\platform-tools"
+```
+
+### 5. Start Metro Bundler
 
 ```bash
 npm start
 ```
 
-### 5. Run the Application
+### 6. Run the Application
 
 #### For Android:
 ```bash
 # In a new terminal window
 npm run android
+
+# OR use npx directly
+npx react-native run-android
 ```
 
 #### For iOS (macOS only):
 ```bash
 # In a new terminal window
 npm run ios
+
+# OR use npx directly
+npx react-native run-ios
 ```
 
 ## 📱 Platform-Specific Setup
 
-### Android Setup
+### Android Setup (All Platforms)
 
 1. **Install Android Studio**
+   - **Windows**: Download from [Android Studio](https://developer.android.com/studio)
+   - **macOS**: Download from [Android Studio](https://developer.android.com/studio) or use Homebrew: `brew install --cask android-studio`
+
 2. **Configure Android SDK**:
    - Open Android Studio
-   - Go to SDK Manager
+   - Go to SDK Manager (Tools > SDK Manager)
    - Install Android SDK Platform 33
    - Install Android SDK Build-Tools 33.0.0
    - Install Android SDK Platform-Tools
+   - Install Android SDK Command-line Tools
 
 3. **Set up Android Emulator**:
-   - Open AVD Manager in Android Studio
+   - Open AVD Manager in Android Studio (Tools > AVD Manager)
    - Create a new Virtual Device
    - Choose a device definition (e.g., Pixel 6)
    - Select a system image (API 33)
@@ -157,6 +243,21 @@ npm run ios
    cd ios && bundle exec pod install && cd ..
    ```
 
+### Windows-Specific Setup
+
+1. **Install Visual Studio Build Tools**:
+   - Download from [Visual Studio](https://visualstudio.microsoft.com/downloads/)
+   - Install "C++ build tools" workload
+   - Or install Visual Studio Community with C++ development tools
+
+2. **Configure Windows Defender**:
+   - Add your project folder to Windows Defender exclusions
+   - This prevents build performance issues
+
+3. **Use Git Bash or PowerShell**:
+   - Use Git Bash for Unix-like commands
+   - Or use PowerShell with proper PATH configuration
+
 ## 🛠️ Development
 
 ### Available Scripts
@@ -167,9 +268,13 @@ npm start
 
 # Run on Android
 npm run android
+# OR
+npx react-native run-android
 
-# Run on iOS
+# Run on iOS (macOS only)
 npm run ios
+# OR
+npx react-native run-ios
 
 # Run tests
 npm test
@@ -235,7 +340,7 @@ npx react-native start --reset-cache
 cd android && ./gradlew clean && cd ..
 ```
 
-#### iOS build issues:
+#### iOS build issues (macOS only):
 ```bash
 # Clean iOS build
 cd ios && xcodebuild clean && cd ..
@@ -250,11 +355,53 @@ nvm install 20
 nvm use 20
 ```
 
+#### Windows-specific issues:
+
+**PowerShell execution policy:**
+```powershell
+# Run as Administrator
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+**Long path issues on Windows:**
+```cmd
+# Enable long paths in Windows
+git config --global core.longpaths true
+```
+
+**Build tools not found:**
+```bash
+# Install Windows build tools
+npm install -g windows-build-tools
+# Or install Visual Studio Build Tools manually
+```
+
+**Android SDK not found:**
+```cmd
+# Check if ANDROID_HOME is set
+echo %ANDROID_HOME%
+# If not set, add to system environment variables
+```
+
 ### Environment Variables
 
+#### For iOS (macOS only):
 If you encounter issues with Node.js path on iOS:
 1. Create `ios/.xcode.env.local`
 2. Add: `export NODE_BINARY=$(command -v node)`
+
+#### For Windows:
+If you encounter PATH issues:
+1. Add Node.js to system PATH: `C:\Program Files\nodejs\`
+2. Add Android SDK to system PATH
+3. Restart your terminal/IDE after changing environment variables
+
+#### For macOS:
+If you encounter permission issues:
+```bash
+# Fix npm permissions
+sudo chown -R $(whoami) ~/.npm
+```
 
 ## 📦 Dependencies
 
