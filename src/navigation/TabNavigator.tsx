@@ -1,15 +1,45 @@
 import React, { useCallback, useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import ConsultationsScreen from '../screens/ConsultationsScreen';
+import VideoConsultScreen from '../screens/VideoConsultScreen';
+import VideoCallScreen from '../screens/VideoCallScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import PharmacyScreen from '../screens/PharmacyScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import { useI18n } from '../i18n';
 
-// Create tab navigator instance
+// Create navigator instances
 const Tab = createBottomTabNavigator();
+const ConsultStack = createStackNavigator();
+
+// Consult stack navigator for video consultation flow
+function ConsultStackNavigator() {
+  return (
+    <ConsultStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: true,
+        cardStyle: { backgroundColor: '#ffffff' },
+      }}
+    >
+      <ConsultStack.Screen 
+        name="ConsultationsMain" 
+        component={ConsultationsScreen}
+      />
+      <ConsultStack.Screen 
+        name="VideoConsult" 
+        component={VideoConsultScreen}
+      />
+      <ConsultStack.Screen 
+        name="VideoCall" 
+        component={VideoCallScreen}
+      />
+    </ConsultStack.Navigator>
+  );
+}
 
 // Custom tab icon component with original design
 const CustomTabIcon = ({ 
@@ -50,7 +80,7 @@ export default function TabNavigator() {
     },
     {
       name: 'Consult',
-      component: ConsultationsScreen,
+      component: ConsultStackNavigator,
       icon: '👨‍⚕️',
       label: getText('navConsult'),
     },

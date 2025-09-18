@@ -1,5 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import DoctorList from '../components/consultations/DoctorList';
@@ -89,6 +90,7 @@ const HealthMetricItem = ({
 
 // Main home screen component
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const { getText } = useI18n();
   const { addAppointment } = useAppointments();
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
@@ -229,12 +231,17 @@ export default function HomeScreen() {
     }
   }, [addAppointment, medicalProfessionals]);
 
+  // Handle video consult press
+  const handleVideoConsultPress = useCallback(() => {
+    navigation.navigate('Consult', { screen: 'VideoConsult' });
+  }, [navigation]);
+
   // Custom quick actions configuration
   const quickActions = useMemo(() => [
     { 
       icon: '📹', 
       title: getText('actionVideoConsult'),
-      onPress: () => Alert.alert('Video Consult', 'Starting video consultation...')
+      onPress: handleVideoConsultPress
     },
     { 
       icon: '⚡', 
@@ -251,7 +258,7 @@ export default function HomeScreen() {
       title: getText('actionSchedule'),
       onPress: handleSchedulePress
     },
-  ], [getText, handleSchedulePress]);
+  ], [getText, handleSchedulePress, handleVideoConsultPress]);
 
 
   // Custom section header component
