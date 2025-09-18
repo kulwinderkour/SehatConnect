@@ -168,6 +168,24 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const renderStepIndicator = () => (
     <View style={styles.stepIndicator}>
       {[1, 2, 3, 4].map(step => (
@@ -181,7 +199,6 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
       ))}
     </View>
   );
-
 
   const renderAppointmentDetails = () => (
     <ScrollView style={styles.stepContent}>
@@ -241,6 +258,107 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           numberOfLines={4}
           placeholderTextColor="#9ca3af"
         />
+      </View>
+    </ScrollView>
+  );
+
+  const renderBookingSummary = () => (
+    <ScrollView style={styles.stepContent}>
+      <Text style={styles.stepTitle}>Booking Summary</Text>
+      
+      {/* Doctor Information */}
+      <View style={styles.summaryCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardIcon}>👩‍⚕️</Text>
+          <Text style={styles.cardTitle}>Doctor</Text>
+        </View>
+        <View style={styles.doctorSummary}>
+          <Text style={styles.doctorEmojiLarge}>{selectedDoctorData?.emoji || '👩‍⚕️'}</Text>
+          <View style={styles.doctorSummaryInfo}>
+            <Text style={styles.doctorSummaryName}>{selectedDoctorData?.name || 'No doctor selected'}</Text>
+            <Text style={styles.doctorSummarySpecialty}>{selectedDoctorData?.specialty || 'No specialty'}</Text>
+            <Text style={styles.doctorSummaryRating}>⭐ {selectedDoctorData?.rating || '0'} ({selectedDoctorData?.reviewCount || '0'} reviews)</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Appointment Date & Time */}
+      <View style={styles.summaryCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardIcon}>📅</Text>
+          <Text style={styles.cardTitle}>Date & Time</Text>
+        </View>
+        <View style={styles.dateTimeContainer}>
+          <View style={styles.dateTimeItem}>
+            <Text style={styles.dateTimeLabel}>Date</Text>
+            <Text style={styles.dateTimeValue}>{selectedDate ? formatDate(selectedDate) : 'No date selected'}</Text>
+          </View>
+          <View style={styles.dateTimeItem}>
+            <Text style={styles.dateTimeLabel}>Time</Text>
+            <Text style={styles.dateTimeValue}>{selectedTime ? formatTime(selectedTime) : 'No time selected'}</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Appointment Type */}
+      <View style={styles.summaryCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardIcon}>📱</Text>
+          <Text style={styles.cardTitle}>Consultation Type</Text>
+        </View>
+        <View style={styles.consultationSummary}>
+          <Text style={styles.consultationIcon}>
+            {appointmentTypes.find(type => type.id === selectedType)?.icon}
+          </Text>
+          <View style={styles.consultationSummaryInfo}>
+            <Text style={styles.consultationSummaryLabel}>
+              {appointmentTypes.find(type => type.id === selectedType)?.label}
+            </Text>
+            <Text style={styles.consultationSummaryPrice}>
+              {appointmentTypes.find(type => type.id === selectedType)?.price}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Symptoms */}
+      {symptoms.length > 0 && (
+        <View style={styles.summaryCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardIcon}>🩺</Text>
+            <Text style={styles.cardTitle}>Symptoms</Text>
+          </View>
+          <View style={styles.summarySymptoms}>
+            {symptoms.map(symptom => (
+              <View key={symptom} style={styles.summarySymptomTag}>
+                <Text style={styles.summarySymptomText}>{symptom}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Notes */}
+      {notes && (
+        <View style={styles.summaryCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardIcon}>📝</Text>
+            <Text style={styles.cardTitle}>Additional Notes</Text>
+          </View>
+          <Text style={styles.summaryNotesText}>{notes}</Text>
+        </View>
+      )}
+
+      {/* Important Information */}
+      <View style={styles.infoCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardIcon}>ℹ️</Text>
+          <Text style={[styles.cardTitle, { color: '#0369a1' }]}>Important Information</Text>
+        </View>
+        <Text style={styles.infoText}>• Please join the consultation 5 minutes before the scheduled time</Text>
+        <Text style={styles.infoText}>• You will receive a confirmation email with meeting details</Text>
+        <Text style={styles.infoText}>• Cancellation is free up to 2 hours before the appointment</Text>
+        <Text style={styles.infoText}>• Have your medical history and current medications ready</Text>
       </View>
     </ScrollView>
   );
@@ -343,11 +461,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
           </View>
         );
       case 4: 
-        return (
-          <View key="step-4-appointment-details">
-            {renderAppointmentDetails()}
-          </View>
-        );
+        return renderBookingSummary();
       default: return null;
     }
   };
@@ -371,9 +485,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
         {renderStepIndicator()}
 
         <View style={styles.content}>
-          <View style={styles.stepContent}>
-            {renderCurrentStep()}
-          </View>
+          {renderCurrentStep()}
         </View>
 
         <View style={styles.footer}>
@@ -395,7 +507,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({
               styles.nextButtonText,
               !canProceed() && styles.nextButtonTextDisabled
             ]}>
-              {currentStep === 4 ? 'Book Appointment' : 'Next'}
+              {currentStep === 4 ? 'Confirm Booking' : 'Next'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -701,6 +813,133 @@ const styles = StyleSheet.create({
   },
   nextButtonTextDisabled: {
     color: '#9ca3af',
+  },
+  // New styles for booking summary
+  summaryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  cardIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  cardTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  doctorSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  doctorEmojiLarge: {
+    fontSize: 32,
+    marginRight: 12,
+  },
+  doctorSummaryInfo: {
+    flex: 1,
+  },
+  doctorSummaryName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  doctorSummarySpecialty: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  doctorSummaryRating: {
+    fontSize: 12,
+    color: '#f59e0b',
+  },
+  dateTimeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  dateTimeItem: {
+    flex: 1,
+  },
+  dateTimeLabel: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dateTimeValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  consultationSummary: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  consultationIcon: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  consultationSummaryInfo: {
+    flex: 1,
+  },
+  consultationSummaryLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  consultationSummaryPrice: {
+    fontSize: 14,
+    color: '#4CAF50',
+    fontWeight: '600',
+  },
+  summarySymptoms: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  summarySymptomTag: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#4CAF50',
+  },
+  summarySymptomText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  summaryNotesText: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+  },
+  infoCard: {
+    backgroundColor: '#f0f9ff',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+    marginTop: 8,
+  },
+  infoText: {
+    fontSize: 13,
+    color: '#0c4a6e',
+    lineHeight: 18,
+    marginBottom: 4,
   },
 });
 
