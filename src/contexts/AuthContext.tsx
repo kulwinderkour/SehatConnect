@@ -1,11 +1,17 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
+export type UserRole = 'patient' | 'doctor' | 'admin';
+
 interface User {
   fullName: string;
   patientId: string;
   shortName: string;
   profileImage: string;
   email: string;
+  role: UserRole;
+  specialty?: string; // For doctors
+  hospital?: string; // For doctors
+  experience?: number; // For doctors
 }
 
 interface AuthContextType {

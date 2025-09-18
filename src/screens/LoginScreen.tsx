@@ -33,7 +33,8 @@ export default function LoginScreen() {
       fullName: 'Rajinder Singh',
       patientId: 'SH001234',
       shortName: 'Rajinder',
-      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=R'
+      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=R',
+      role: 'patient' as const
     },
     {
       email: 'doctor@example.com',
@@ -41,7 +42,11 @@ export default function LoginScreen() {
       fullName: 'Dr. Rajesh Sharma',
       patientId: 'DOC001',
       shortName: 'Dr. Sharma',
-      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=DS'
+      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=DS',
+      role: 'doctor' as const,
+      specialty: 'General Medicine',
+      hospital: 'Apollo Hospital',
+      experience: 12
     },
     {
       email: 'admin@example.com',
@@ -49,7 +54,8 @@ export default function LoginScreen() {
       fullName: 'Admin User',
       patientId: 'ADM001',
       shortName: 'Admin',
-      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=A'
+      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=A',
+      role: 'admin' as const
     }
   ];
 
@@ -83,7 +89,11 @@ export default function LoginScreen() {
           patientId: user.patientId,
           shortName: user.shortName,
           profileImage: user.profileImage,
-          email: user.email
+          email: user.email,
+          role: user.role,
+          specialty: user.specialty,
+          hospital: user.hospital,
+          experience: user.experience
         });
 
         setLoading(false);
@@ -93,7 +103,7 @@ export default function LoginScreen() {
           [
             {
               text: 'OK',
-              onPress: () => (navigation as any).replace('MainTabs')
+              onPress: () => (navigation as any).replace('MainApp')
             }
           ]
         );

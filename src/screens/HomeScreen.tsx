@@ -39,50 +39,60 @@ const MedicalProfessionalCard = ({
   </TouchableOpacity>
 );
 
-// Custom quick action component with original design
+// Modern quick action component (like doctor dashboard)
 const QuickActionButton = ({ 
   icon, 
   title,
+  subtitle,
+  color,
   onPress
 }: { 
   icon: string; 
   title: string;
+  subtitle: string;
+  color: string;
   onPress: () => void;
 }) => (
-  <TouchableOpacity style={styles.actionButtonContainer} activeOpacity={0.7} onPress={onPress}>
-    <View style={styles.actionIconContainer}>
+  <TouchableOpacity 
+    style={[styles.actionButton, { borderLeftColor: color }]} 
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    <View style={styles.actionContent}>
       <Text style={styles.actionIcon}>{icon}</Text>
+      <View style={styles.actionTextContainer}>
+        <Text style={styles.actionTitle}>{title}</Text>
+        <Text style={styles.actionSubtitle}>{subtitle}</Text>
+      </View>
+      <Text style={styles.actionArrow}>›</Text>
     </View>
-    <Text style={styles.actionLabel}>{title}</Text>
   </TouchableOpacity>
 );
 
-// Custom health metric component
-const HealthMetricItem = ({ 
+// Modern health metric card component (like doctor dashboard)
+const HealthMetricCard = ({ 
   label, 
   value, 
-  status 
+  status,
+  icon,
+  color
 }: { 
   label: string; 
   value: string; 
   status: 'normal' | 'warning' | 'upcoming'; 
+  icon: string;
+  color: string;
 }) => {
-  const statusColor = useMemo(() => {
-    switch (status) {
-      case 'normal': return '#5a9e31';
-      case 'warning': return '#f59e0b';
-      case 'upcoming': return '#3b82f6';
-      default: return '#6b7280';
-    }
-  }, [status]);
-
   return (
-    <View style={styles.metricItem}>
-      <View style={styles.metricInfo}>
-        <Text style={styles.metricLabel}>{label}</Text>
-        <View style={[styles.statusIndicator, { backgroundColor: statusColor }]} />
+    <View style={[styles.metricCard, { borderLeftColor: color }]}>
+      <View style={styles.metricHeader}>
+        <Text style={styles.metricIcon}>{icon}</Text>
+        <Text style={styles.metricValue}>{value}</Text>
       </View>
-      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricSubtitle}>
+        {status === 'normal' ? 'Normal' : status === 'warning' ? 'Needs attention' : 'Upcoming'}
+      </Text>
     </View>
   );
 };
@@ -94,22 +104,35 @@ export default function HomeScreen() {
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
 
-  // Custom health data configuration
+  // Modern health metrics with grid layout
   const healthMetrics = useMemo(() => [
     { 
       label: getText('healthBloodPressure'), 
       value: '120/80', 
-      status: 'normal' as const 
+      status: 'normal' as const,
+      icon: '🩸',
+      color: '#10b981'
     },
     { 
       label: getText('healthNextAppointment'), 
-      value: `${getText('timeTomorrow')} 2:00 PM`, 
-      status: 'upcoming' as const 
+      value: 'Tomorrow 2:00 PM', 
+      status: 'upcoming' as const,
+      icon: '📅',
+      color: '#3b82f6'
     },
     { 
       label: getText('healthMedicinesDue'), 
-      value: `2 ${getText('timePending')}`, 
-      status: 'warning' as const 
+      value: '2 Pending', 
+      status: 'warning' as const,
+      icon: '💊',
+      color: '#f59e0b'
+    },
+    { 
+      label: 'Last Checkup', 
+      value: '2 weeks ago', 
+      status: 'normal' as const,
+      icon: '🏥',
+      color: '#8b5cf6'
     },
   ], [getText]);
 
@@ -229,26 +252,34 @@ export default function HomeScreen() {
     }
   }, [addAppointment, medicalProfessionals]);
 
-  // Custom quick actions configuration
+  // Modern quick actions configuration (like doctor dashboard)
   const quickActions = useMemo(() => [
     { 
       icon: '📹', 
       title: getText('actionVideoConsult'),
+      subtitle: 'Start video call',
+      color: '#10b981',
       onPress: () => Alert.alert('Video Consult', 'Starting video consultation...')
     },
     { 
       icon: '⚡', 
       title: getText('actionEmergency'),
+      subtitle: 'Emergency services',
+      color: '#ef4444',
       onPress: () => Alert.alert('Emergency', 'Calling emergency services...')
     },
     { 
       icon: '🤖', 
       title: getText('actionAIChecker'),
+      subtitle: 'AI health check',
+      color: '#8b5cf6',
       onPress: () => Alert.alert('AI Checker', 'Opening AI health checker...')
     },
     { 
       icon: '📅', 
       title: getText('actionSchedule'),
+      subtitle: 'Book appointment',
+      color: '#3b82f6',
       onPress: handleSchedulePress
     },
   ], [getText, handleSchedulePress]);
@@ -272,24 +303,26 @@ export default function HomeScreen() {
     </View>
   );
 
-  // Custom service card component
+  // Modern service card component (like doctor dashboard)
   const NearbyServiceCard = () => (
     <View style={styles.serviceCard}>
-      <View style={styles.serviceInfo}>
-        <Text style={styles.serviceTitle}>
-          Dr. Sharma {getText('statusAvailable')}
-        </Text>
-        <Text style={styles.serviceSubtitle}>
-          {getText('specialtyGeneralMedicine')} • 2.5 km
-        </Text>
-        <View style={styles.serviceRating}>
-          <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
-          <Text style={styles.ratingText}>• 15 {getText('statusMinAway')}</Text>
+      <View style={styles.serviceHeader}>
+        <View style={styles.serviceInfo}>
+          <Text style={styles.serviceTitle}>
+            Dr. Sharma {getText('statusAvailable')}
+          </Text>
+          <Text style={styles.serviceSubtitle}>
+            {getText('specialtyGeneralMedicine')} • 2.5 km
+          </Text>
+        </View>
+        <View style={styles.serviceStatus}>
+          <View style={styles.availabilityIndicator} />
+          <Text style={styles.availabilityText}>{getText('statusAvailable')}</Text>
         </View>
       </View>
-      <View style={styles.serviceStatus}>
-        <View style={styles.availabilityIndicator} />
-        <Text style={styles.availabilityText}>{getText('statusAvailable')}</Text>
+      <View style={styles.serviceRating}>
+        <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
+        <Text style={styles.ratingText}>• 15 {getText('statusMinAway')}</Text>
       </View>
     </View>
   );
@@ -303,27 +336,32 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        {/* Quick Actions Grid */}
-        <View style={styles.actionsGrid}>
+        {/* Quick Actions - Modern Style */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickActions}>
           {quickActions.map((action, index) => (
             <QuickActionButton
               key={index}
               icon={action.icon}
               title={action.title}
+              subtitle={action.subtitle}
+              color={action.color}
               onPress={action.onPress}
             />
           ))}
         </View>
 
-        {/* Health Summary Section */}
+        {/* Health Summary Section - Modern Grid */}
         <Text style={styles.sectionTitle}>{getText('healthSummaryTitle')}</Text>
-        <View style={styles.healthSummaryCard}>
+        <View style={styles.healthMetricsGrid}>
           {healthMetrics.map((metric, index) => (
-            <HealthMetricItem
+            <HealthMetricCard
               key={index}
               label={metric.label}
               value={metric.value}
               status={metric.status}
+              icon={metric.icon}
+              color={metric.color}
             />
           ))}
         </View>
@@ -368,47 +406,46 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
   },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+  // Modern quick actions (like doctor dashboard)
+  quickActions: {
+    gap: 12,
     marginBottom: 24,
-    paddingHorizontal: 0,
   },
-  actionButtonContainer: {
-    width: '48%',
+  actionButton: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
   },
-  actionIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#5a9e31',
+  actionContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
   },
   actionIcon: {
     fontSize: 24,
-    color: '#fff',
+    marginRight: 16,
   },
-  actionLabel: {
-    fontSize: 14,
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    lineHeight: 18,
+    color: '#111827',
+    marginBottom: 2,
+  },
+  actionSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  actionArrow: {
+    fontSize: 20,
+    color: '#9ca3af',
   },
   sectionTitle: {
     fontSize: 20,
@@ -417,47 +454,49 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     letterSpacing: -0.5,
   },
-  healthSummaryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
-  },
-  metricItem: {
+  // Modern health metrics grid (like doctor dashboard)
+  healthMetricsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    marginBottom: 24,
   },
-  metricInfo: {
+  metricCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    width: '48%',
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  metricHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  metricIcon: {
+    fontSize: 20,
+  },
+  metricValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
   },
   metricLabel: {
     fontSize: 14,
-    color: '#4b5563',
     fontWeight: '600',
-    marginRight: 10,
+    color: '#374151',
+    marginBottom: 2,
   },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  metricValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
+  metricSubtitle: {
+    fontSize: 12,
+    color: '#6b7280',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -532,20 +571,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#5a9e31',
   },
+  // Modern service card (like doctor dashboard)
   serviceCard: {
     backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
+  },
+  serviceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#f1f5f9',
+    marginBottom: 12,
   },
   serviceInfo: {
     flex: 1,
@@ -560,7 +603,21 @@ const styles = StyleSheet.create({
   serviceSubtitle: {
     fontSize: 14,
     color: '#6b7280',
-    marginBottom: 8,
+  },
+  serviceStatus: {
+    alignItems: 'center',
+  },
+  availabilityIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10b981',
+    marginBottom: 4,
+  },
+  availabilityText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#10b981',
   },
   serviceRating: {
     flexDirection: 'row',
@@ -575,20 +632,5 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 14,
     color: '#6b7280',
-  },
-  serviceStatus: {
-    alignItems: 'center',
-  },
-  availabilityIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#5a9e31',
-    marginBottom: 4,
-  },
-  availabilityText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#5a9e31',
   },
 });
