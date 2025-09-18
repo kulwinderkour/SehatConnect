@@ -2,10 +2,13 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import TabNavigator from './TabNavigator';
 import SplashScreen from '../screens/SplashScreen';
+import LoginScreen from '../screens/LoginScreen';
+import { useAuth } from '../contexts/AuthContext';
 
 // Custom navigation parameter types
 export type RootStackParamList = {
   Splash: undefined;
+  Login: undefined;
   MainTabs: undefined;
 };
 
@@ -21,6 +24,8 @@ const screenOptions = {
 
 // Main app navigator component
 export default function AppNavigator() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <Stack.Navigator
       initialRouteName="Splash"
@@ -29,6 +34,13 @@ export default function AppNavigator() {
       <Stack.Screen 
         name="Splash" 
         component={SplashScreen}
+        options={{
+          gestureEnabled: false,
+        }}
+      />
+      <Stack.Screen 
+        name="Login" 
+        component={LoginScreen}
         options={{
           gestureEnabled: false,
         }}
