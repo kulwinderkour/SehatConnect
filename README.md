@@ -1,97 +1,307 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# SehatConnect - Healthcare Mobile App
 
-# Getting Started
+A comprehensive React Native healthcare application that provides telemedicine, pharmacy services, health records management, and emergency features.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## 🏥 Features
 
-## Step 1: Start Metro
+- **Telemedicine**: Video consultations with healthcare providers
+- **Pharmacy Services**: Medicine ordering and delivery
+- **Health Records**: Digital health record management
+- **Emergency Services**: Quick access to emergency contacts
+- **Multi-language Support**: English, Hindi, and Punjabi
+- **Offline Support**: Works without internet connection
+- **Profile Management**: User profile and photo management
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 📋 Prerequisites
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+Before you begin, ensure you have the following installed on your system:
 
-```sh
-# Using npm
+### Required Software
+
+1. **Node.js** (v20 or higher)
+   ```bash
+   # Check your Node.js version
+   node --version
+   ```
+
+2. **npm** (comes with Node.js)
+   ```bash
+   # Check your npm version
+   npm --version
+   ```
+
+3. **React Native CLI**
+   ```bash
+   npm install -g @react-native-community/cli
+   ```
+
+4. **Java Development Kit (JDK) 17**
+   - Download from [Oracle](https://www.oracle.com/java/technologies/downloads/) or use OpenJDK
+   - Set `JAVA_HOME` environment variable
+
+5. **Android Studio** (for Android development)
+   - Download from [Android Studio](https://developer.android.com/studio)
+   - Install Android SDK (API level 33 or higher)
+   - Set up Android emulator or connect physical device
+
+6. **Xcode** (for iOS development - macOS only)
+   - Download from Mac App Store
+   - Install Xcode Command Line Tools: `xcode-select --install`
+
+7. **CocoaPods** (for iOS dependencies)
+   ```bash
+   sudo gem install cocoapods
+   ```
+
+8. **Ruby** (v2.6.10 or higher)
+   - macOS: Usually pre-installed
+   - Linux/Windows: Install from [Ruby website](https://www.ruby-lang.org/)
+
+## 🚀 Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone <your-repository-url>
+cd SehatConnet
+```
+
+### 2. Install Dependencies
+
+```bash
+# Install Node.js dependencies
+npm install
+
+# Install iOS dependencies (macOS only)
+cd ios && bundle install && bundle exec pod install && cd ..
+```
+
+### 3. Environment Setup
+
+#### For iOS (macOS only):
+Create a local environment file for Xcode:
+```bash
+# Create .xcode.env.local file
+echo 'export NODE_BINARY=$(command -v node)' > ios/.xcode.env.local
+```
+
+#### For Android:
+Ensure your Android SDK is properly configured and `ANDROID_HOME` is set:
+```bash
+# Add to your ~/.bashrc or ~/.zshrc
+export ANDROID_HOME=$HOME/Android/Sdk
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+```
+
+### 4. Start Metro Bundler
+
+```bash
+npm start
+```
+
+### 5. Run the Application
+
+#### For Android:
+```bash
+# In a new terminal window
+npm run android
+```
+
+#### For iOS (macOS only):
+```bash
+# In a new terminal window
+npm run ios
+```
+
+## 📱 Platform-Specific Setup
+
+### Android Setup
+
+1. **Install Android Studio**
+2. **Configure Android SDK**:
+   - Open Android Studio
+   - Go to SDK Manager
+   - Install Android SDK Platform 33
+   - Install Android SDK Build-Tools 33.0.0
+   - Install Android SDK Platform-Tools
+
+3. **Set up Android Emulator**:
+   - Open AVD Manager in Android Studio
+   - Create a new Virtual Device
+   - Choose a device definition (e.g., Pixel 6)
+   - Select a system image (API 33)
+   - Finish setup
+
+4. **Enable Developer Options** (for physical device):
+   - Go to Settings > About Phone
+   - Tap "Build Number" 7 times
+   - Go back to Settings > Developer Options
+   - Enable "USB Debugging"
+
+### iOS Setup (macOS only)
+
+1. **Install Xcode** from Mac App Store
+2. **Install Xcode Command Line Tools**:
+   ```bash
+   xcode-select --install
+   ```
+3. **Install CocoaPods**:
+   ```bash
+   sudo gem install cocoapods
+   ```
+4. **Install iOS dependencies**:
+   ```bash
+   cd ios && bundle exec pod install && cd ..
+   ```
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+# Start Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+# Run on Android
 npm run android
 
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+# Run on iOS
 npm run ios
 
-# OR using Yarn
-yarn ios
+# Run tests
+npm test
+
+# Run linter
+npm run lint
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+### Project Structure
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```
+src/
+├── components/          # Reusable UI components
+│   ├── common/         # Common components (Button, Input, etc.)
+│   ├── consultations/  # Consultation-related components
+│   ├── home/          # Home screen components
+│   ├── pharmacy/      # Pharmacy components
+│   └── profile/       # Profile components
+├── contexts/          # React contexts for state management
+├── hooks/             # Custom React hooks
+├── i18n/              # Internationalization files
+├── navigation/        # Navigation configuration
+├── screens/           # Screen components
+├── services/          # API and service layer
+├── store/             # Redux store and slices
+├── types/             # TypeScript type definitions
+└── utils/             # Utility functions
+```
 
-## Step 3: Modify your app
+## 🌐 Internationalization
 
-Now that you have successfully run the app, let's make changes!
+The app supports multiple languages:
+- English (en)
+- Hindi (hi)
+- Punjabi (pa)
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+Language files are located in `src/i18n/` directory.
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## 📸 Profile Photos
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+To add profile photos:
 
-## Congratulations! :tada:
+1. Place your photo in `src/assets/images/profile-photos/`
+2. Follow the naming convention: `username.jpg`
+3. Recommended size: 400x400 pixels
+4. Supported formats: JPG, PNG, WebP
 
-You've successfully run and modified your React Native App. :partying_face:
+See `PROFILE_PHOTO_GUIDE.md` for detailed instructions.
 
-### Now what?
+## 🔧 Troubleshooting
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+### Common Issues
 
-# Troubleshooting
+#### Metro bundler issues:
+```bash
+# Clear Metro cache
+npx react-native start --reset-cache
+```
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+#### Android build issues:
+```bash
+# Clean Android build
+cd android && ./gradlew clean && cd ..
+```
 
-# Learn More
+#### iOS build issues:
+```bash
+# Clean iOS build
+cd ios && xcodebuild clean && cd ..
+# Reinstall pods
+cd ios && rm -rf Pods && bundle exec pod install && cd ..
+```
 
-To learn more about React Native, take a look at the following resources:
+#### Node version issues:
+```bash
+# Use Node Version Manager (nvm)
+nvm install 20
+nvm use 20
+```
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### Environment Variables
+
+If you encounter issues with Node.js path on iOS:
+1. Create `ios/.xcode.env.local`
+2. Add: `export NODE_BINARY=$(command -v node)`
+
+## 📦 Dependencies
+
+### Main Dependencies
+- React Native 0.81.4
+- React Navigation 7.x
+- React Native Bootsplash
+- React Native Linear Gradient
+- React Native Gesture Handler
+- React Native Safe Area Context
+- React Native Screens
+
+### Development Dependencies
+- TypeScript 5.8.3
+- ESLint
+- Prettier
+- Jest
+- Babel
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make your changes
+4. Run tests: `npm test`
+5. Run linter: `npm run lint`
+6. Commit your changes: `git commit -m 'Add feature'`
+7. Push to the branch: `git push origin feature-name`
+8. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+If you encounter any issues:
+
+1. Check the troubleshooting section above
+2. Search existing issues in the repository
+3. Create a new issue with detailed information about your problem
+4. Include your system information (OS, Node.js version, etc.)
+
+## 📞 Contact
+
+For questions or support, please contact the development team.
+
+---
+
+**Happy Coding! 🚀**
