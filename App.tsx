@@ -7,6 +7,7 @@ import { I18nProvider } from './src/i18n';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { UserProfileProvider } from './src/contexts/UserProfileContext';
 import { AppointmentProvider } from './src/contexts/AppointmentContext';
+import { navigationRef } from './src/services/NavigationService';
 
 export default function App() {
   return (
@@ -15,7 +16,7 @@ export default function App() {
         <AuthProvider>
           <UserProfileProvider>
             <AppointmentProvider>
-              <NavigationContainer>
+              <NavigationContainer ref={navigationRef}>
                 <SafeAreaView style={styles.container}>
                   <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
                   <AppNavigator />

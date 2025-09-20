@@ -5,15 +5,20 @@ import DoctorTabNavigator from './DoctorTabNavigator';
 
 // Role-based navigator that shows different interfaces based on user role
 export default function RoleBasedNavigator() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+
+  // If not authenticated, don't render anything (AppNavigator will handle this)
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   // Show doctor interface for doctors
-  if (user?.role === 'doctor') {
+  if (user.role === 'doctor') {
     return <DoctorTabNavigator />;
   }
 
   // Show admin interface for admins (you can create AdminTabNavigator later)
-  if (user?.role === 'admin') {
+  if (user.role === 'admin') {
     return <TabNavigator />; // For now, show patient interface
   }
 

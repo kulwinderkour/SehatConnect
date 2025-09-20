@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
+import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { ProfilePhotoService, ProfilePhotoConfig } from '../services/ProfilePhotoService';
+import { reset } from '../services/NavigationService';
 
 export default function ProfileScreen() {
+  const { user, logout } = useAuth();
   const { userProfile, updateProfileImage } = useUserProfile();
+  const navigation = useNavigation();
   const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
   const availablePhotos = ProfilePhotoService.getAvailablePhotos();
 
@@ -27,6 +32,28 @@ export default function ProfileScreen() {
         [{ text: 'OK', style: 'default' }]
       );
     }
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            logout();
+            // Navigate to Login screen using navigation service
+            reset('Login');
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -112,6 +139,13 @@ export default function ProfileScreen() {
             </View>
             <Text>›</Text>
           </View>
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ marginRight: 15, fontSize: 18 }}>🚪</Text>
+              <Text style={styles.logoutText}>Logout</Text>
+            </View>
+            <Text>›</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -280,5 +314,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  logoutText: {
+    color: '#ef4444',
   },
 });
