@@ -55,10 +55,10 @@ export default function SplashScreen({ navigation }: any) {
       }, 400);
 
 
-      // Navigate to main app after total duration
+      // Navigate to login screen after total duration
       setTimeout(() => {
-        navigation.replace('MainTabs');
-      }, 2500);
+        (navigation as any).replace('Login');
+      }, 1400);
     };
 
     startAnimations();
