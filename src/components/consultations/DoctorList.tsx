@@ -12,6 +12,7 @@ interface DoctorListProps {
   variant?: 'default' | 'horizontal' | 'grid';
   title?: string;
   onSeeAllPress?: () => void;
+  showInternalMoreButton?: boolean;
 }
 
 const DoctorList: React.FC<DoctorListProps> = ({
@@ -22,7 +23,8 @@ const DoctorList: React.FC<DoctorListProps> = ({
   showFilters = false,
   variant = 'default',
   title,
-  onSeeAllPress
+  onSeeAllPress,
+  showInternalMoreButton = true
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
@@ -187,7 +189,9 @@ const DoctorList: React.FC<DoctorListProps> = ({
   }
 
   // Default vertical list - show limited doctors initially
-  const doctorsToShow = showAllDoctors ? filteredDoctors : filteredDoctors.slice(0, 2);
+  const doctorsToShow = showInternalMoreButton 
+    ? (showAllDoctors ? filteredDoctors : filteredDoctors.slice(0, 2))
+    : filteredDoctors;
   
   return (
     <View style={styles.container}>
@@ -199,7 +203,7 @@ const DoctorList: React.FC<DoctorListProps> = ({
               {renderDoctor({ item: doctor })}
             </View>
           ))}
-          {!showAllDoctors && filteredDoctors.length > 2 && (
+          {showInternalMoreButton && !showAllDoctors && filteredDoctors.length > 2 && (
             <TouchableOpacity 
               style={styles.showMoreButton}
               onPress={() => setShowAllDoctors(true)}
