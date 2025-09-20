@@ -1,43 +1,17 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+// import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import DoctorList from '../components/consultations/DoctorList';
 import ScheduleModal from '../components/home/ScheduleModal';
 import { useI18n } from '../i18n';
 import { useAppointments } from '../contexts/AppointmentContext';
-import { Doctor, AppointmentBookingForm, HealthSummary } from '../types/health';
+import { Doctor, AppointmentBookingForm } from '../types/health';
 
 // Get screen dimensions for responsive design
-const { width: screenWidth } = Dimensions.get('window');
+// (screenWidth removed as unused)
 
-// Custom doctor card component with original design
-const MedicalProfessionalCard = ({ 
-  name, 
-  specialty, 
-  rating, 
-  price, 
-  image 
-}: { 
-  name: string; 
-  specialty: string; 
-  rating: number; 
-  price: string; 
-  image: string; 
-}) => (
-  <TouchableOpacity style={styles.professionalCard} activeOpacity={0.8}>
-    <View style={styles.professionalImageContainer}>
-      <Text style={styles.professionalImage}>{image}</Text>
-    </View>
-    <Text style={styles.professionalName}>{name}</Text>
-    <Text style={styles.professionalSpecialty}>{specialty}</Text>
-    <View style={styles.ratingContainer}>
-      <Text style={styles.ratingIcon}>⭐</Text>
-      <Text style={styles.ratingValue}>{rating}</Text>
-    </View>
-    <Text style={styles.professionalPrice}>{price}</Text>
-  </TouchableOpacity>
-);
+// Custom doctor card component with original design (not used)
 
 // Custom quick action component with original design
 const QuickActionButton = ({ 
@@ -254,45 +228,9 @@ export default function HomeScreen() {
   ], [getText, handleSchedulePress]);
 
 
-  // Custom section header component
-  const SectionHeader = ({ 
-    title, 
-    actionText, 
-    onActionPress 
-  }: { 
-    title: string; 
-    actionText: string; 
-    onActionPress: () => void; 
-  }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity onPress={onActionPress}>
-        <Text style={styles.sectionAction}>{actionText}</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
-  // Custom service card component
-  const NearbyServiceCard = () => (
-    <View style={styles.serviceCard}>
-      <View style={styles.serviceInfo}>
-        <Text style={styles.serviceTitle}>
-          Dr. Sharma {getText('statusAvailable')}
-        </Text>
-        <Text style={styles.serviceSubtitle}>
-          {getText('specialtyGeneralMedicine')} • 2.5 km
-        </Text>
-        <View style={styles.serviceRating}>
-          <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
-          <Text style={styles.ratingText}>• 15 {getText('statusMinAway')}</Text>
-        </View>
-      </View>
-      <View style={styles.serviceStatus}>
-        <View style={styles.availabilityIndicator} />
-        <Text style={styles.availabilityText}>{getText('statusAvailable')}</Text>
-      </View>
-    </View>
-  );
+
+
 
   return (
     <View style={styles.container}>
@@ -339,8 +277,8 @@ export default function HomeScreen() {
           />
 
         {/* Nearby Services Section */}
-        <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
-        <NearbyServiceCard />
+  <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
+  <NearbyServiceCard getText={getText} />
       </ScrollView>
 
       {/* Schedule Modal */}
@@ -355,8 +293,26 @@ export default function HomeScreen() {
   );
 }
 
+// NearbyServiceCard component definition
+const NearbyServiceCard = ({ getText }: { getText: (key: string) => string }) => (
+  <View style={styles.serviceCard}>
+    <View style={styles.serviceInfo}>
+      <Text style={styles.serviceTitle}>{getText('servicePharmacy')}</Text>
+      <Text style={styles.serviceSubtitle}>{getText('servicePharmacySubtitle')}</Text>
+      <View style={styles.serviceRating}>
+        <Text style={styles.ratingDisplay}>4.7</Text>
+  <Text style={styles.ratingText}>({getText('serviceReviews')})</Text>
+      </View>
+    </View>
+    <View style={styles.serviceStatus}>
+      <View style={styles.availabilityIndicator} />
+      <Text style={styles.availabilityText}>{getText('serviceOpenNow')}</Text>
+    </View>
+  </View>
+);
+
 // Custom styles with original design patterns
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
