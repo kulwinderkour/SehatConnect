@@ -1,46 +1,16 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import Header from '../components/common/Header';
 import DoctorList from '../components/consultations/DoctorList';
 import ScheduleModal from '../components/home/ScheduleModal';
 import { useI18n } from '../i18n';
 import { useAppointments } from '../contexts/AppointmentContext';
-import { Doctor, AppointmentBookingForm, HealthSummary } from '../types/health';
+import { Doctor, AppointmentBookingForm } from '../types/health';
 
-// Get screen dimensions for responsive design
-const { width: screenWidth } = Dimensions.get('window');
 
-// Custom doctor card component with original design
-const MedicalProfessionalCard = ({ 
-  name, 
-  specialty, 
-  rating, 
-  price, 
-  image 
-}: { 
-  name: string; 
-  specialty: string; 
-  rating: number; 
-  price: string; 
-  image: string; 
-}) => (
-  <TouchableOpacity style={styles.professionalCard} activeOpacity={0.8}>
-    <View style={styles.professionalImageContainer}>
-      <Text style={styles.professionalImage}>{image}</Text>
-    </View>
-    <Text style={styles.professionalName}>{name}</Text>
-    <Text style={styles.professionalSpecialty}>{specialty}</Text>
-    <View style={styles.ratingContainer}>
-      <Text style={styles.ratingIcon}>⭐</Text>
-      <Text style={styles.ratingValue}>{rating}</Text>
-    </View>
-    <Text style={styles.professionalPrice}>{price}</Text>
-  </TouchableOpacity>
-);
 
-// Modern quick action component (like doctor dashboard)
-const QuickActionButton = ({ 
+// Grid-based quick action component (like doctor dashboard)
+const QuickActionGridCard = ({ 
   icon, 
   title,
   subtitle,
@@ -54,18 +24,16 @@ const QuickActionButton = ({
   onPress: () => void;
 }) => (
   <TouchableOpacity 
-    style={[styles.actionButton, { borderLeftColor: color }]} 
+    style={[styles.actionGridCard, { borderLeftColor: color }]} 
     onPress={onPress}
     activeOpacity={0.7}
   >
-    <View style={styles.actionContent}>
-      <Text style={styles.actionIcon}>{icon}</Text>
-      <View style={styles.actionTextContainer}>
-        <Text style={styles.actionTitle}>{title}</Text>
-        <Text style={styles.actionSubtitle}>{subtitle}</Text>
-      </View>
-      <Text style={styles.actionArrow}>›</Text>
+    <View style={styles.actionGridHeader}>
+      <Text style={styles.actionGridIcon}>{icon}</Text>
+      <Text style={styles.actionGridValue}>{title.split(' ')[0]}</Text>
     </View>
+    <Text style={styles.actionGridLabel}>{title}</Text>
+    <Text style={styles.actionGridSubtitle}>{subtitle}</Text>
   </TouchableOpacity>
 );
 
@@ -285,47 +253,6 @@ export default function HomeScreen() {
   ], [getText, handleSchedulePress]);
 
 
-  // Custom section header component
-  const SectionHeader = ({ 
-    title, 
-    actionText, 
-    onActionPress 
-  }: { 
-    title: string; 
-    actionText: string; 
-    onActionPress: () => void; 
-  }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity onPress={onActionPress}>
-        <Text style={styles.sectionAction}>{actionText}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  // Modern service card component (like doctor dashboard)
-  const NearbyServiceCard = () => (
-    <View style={styles.serviceCard}>
-      <View style={styles.serviceHeader}>
-        <View style={styles.serviceInfo}>
-          <Text style={styles.serviceTitle}>
-            Dr. Sharma {getText('statusAvailable')}
-          </Text>
-          <Text style={styles.serviceSubtitle}>
-            {getText('specialtyGeneralMedicine')} • 2.5 km
-          </Text>
-        </View>
-        <View style={styles.serviceStatus}>
-          <View style={styles.availabilityIndicator} />
-          <Text style={styles.availabilityText}>{getText('statusAvailable')}</Text>
-        </View>
-      </View>
-      <View style={styles.serviceRating}>
-        <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
-        <Text style={styles.ratingText}>• 15 {getText('statusMinAway')}</Text>
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -336,11 +263,11 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         bounces={true}
       >
-        {/* Quick Actions - Modern Style */}
+        {/* Quick Actions - Grid Layout */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.quickActions}>
+        <View style={styles.quickActionsGrid}>
           {quickActions.map((action, index) => (
-            <QuickActionButton
+            <QuickActionGridCard
               key={index}
               icon={action.icon}
               title={action.title}
@@ -376,9 +303,12 @@ export default function HomeScreen() {
             onSeeAllPress={() => {}}
           />
 
-        {/* Nearby Services Section */}
+        {/* Nearby Services Section - Grid Layout */}
         <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
-        <NearbyServiceCard />
+        <View style={styles.servicesGrid}>
+          <NearbyServiceCard />
+          <NearbyServiceCard />
+        </View>
       </ScrollView>
 
       {/* Schedule Modal */}
@@ -393,6 +323,27 @@ export default function HomeScreen() {
   );
 }
 
+
+// Modern service card component (grid-friendly)
+const NearbyServiceCard = () => (
+  <View style={styles.serviceCard}>
+    <View style={styles.serviceHeader}>
+      <Text style={styles.serviceIcon}>🏥</Text>
+      <View style={styles.serviceStatus}>
+        <View style={styles.availabilityIndicator} />
+      </View>
+    </View>
+    <Text style={styles.serviceTitle}>Dr. Sharma</Text>
+    <Text style={styles.serviceSubtitle}>
+      General Medicine
+    </Text>
+    <View style={styles.serviceRating}>
+      <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
+      <Text style={styles.ratingText}>2.5 km</Text>
+    </View>
+  </View>
+);
+
 // Custom styles with original design patterns
 const styles = StyleSheet.create({
   container: {
@@ -406,15 +357,19 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
   },
-  // Modern quick actions (like doctor dashboard)
-  quickActions: {
-    gap: 12,
+  // Grid-based quick actions (like doctor dashboard)
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 24,
   },
-  actionButton: {
+  actionGridCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
+    width: '48%',
+    marginBottom: 12,
     borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -422,30 +377,29 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  actionContent: {
+  actionGridHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  actionIcon: {
-    fontSize: 24,
-    marginRight: 16,
+  actionGridIcon: {
+    fontSize: 20,
   },
-  actionTextContainer: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  actionGridValue: {
+    fontSize: 18,
+    fontWeight: '700',
     color: '#111827',
+  },
+  actionGridLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
     marginBottom: 2,
   },
-  actionSubtitle: {
-    fontSize: 14,
+  actionGridSubtitle: {
+    fontSize: 12,
     color: '#6b7280',
-  },
-  actionArrow: {
-    fontSize: 20,
-    color: '#9ca3af',
   },
   sectionTitle: {
     fontSize: 20,
@@ -571,66 +525,69 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#5a9e31',
   },
+  // Services grid layout
+  servicesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
   // Modern service card (like doctor dashboard)
   serviceCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
+    width: '48%',
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 8,
+    elevation: 3,
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
   serviceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  serviceInfo: {
-    flex: 1,
-    marginRight: 16,
+  serviceIcon: {
+    fontSize: 20,
   },
   serviceTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#111827',
     marginBottom: 4,
   },
   serviceSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
+    marginBottom: 8,
   },
   serviceStatus: {
     alignItems: 'center',
   },
   availabilityIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#10b981',
-    marginBottom: 4,
-  },
-  availabilityText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#10b981',
   },
   serviceRating: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   ratingDisplay: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#f59e0b',
-    marginRight: 8,
   },
   ratingText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
   },
 });
