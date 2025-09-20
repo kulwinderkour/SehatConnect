@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+// import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
 import Header from '../components/common/Header';
 import DoctorList from '../components/consultations/DoctorList';
 import ScheduleModal from '../components/home/ScheduleModal';
@@ -304,7 +304,7 @@ export default function HomeScreen() {
   // Custom service card component
   const NearbyServiceCard = () => (
     <View style={styles.serviceCard}>
-      <View style={styles.serviceInfo}>
+      <View style={styles.serviceHeader}>
         <Text style={styles.serviceTitle}>
           Dr. Sharma {getText('statusAvailable')}
         </Text>
@@ -336,7 +336,7 @@ export default function HomeScreen() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActionsGrid}>
           {quickActions.map((action, index) => (
-            <QuickActionGridCard
+            <QuickActionButton
               key={index}
               icon={action.icon}
               title={action.title}
@@ -634,5 +634,11 @@ export const styles = StyleSheet.create({
   ratingText: {
     fontSize: 12,
     color: '#6b7280',
+  },
+  availabilityText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#10b981',
+    marginTop: 4,
   },
 });
