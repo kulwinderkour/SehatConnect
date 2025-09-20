@@ -111,9 +111,9 @@ export default function Header() {
             activeOpacity={0.7}
           >
             <Image 
-              source={{ uri: userProfile.profileImage }}
+              source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.profilePhoto}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </TouchableOpacity>
         </View>
@@ -226,24 +226,24 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   profilePhotoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#5a9e31',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  profilePhoto: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  profilePhoto: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
   },
   userGreeting: {
     color: '#fff',

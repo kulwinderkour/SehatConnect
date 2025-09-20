@@ -5,14 +5,14 @@ interface UserProfile {
   fullName: string;
   patientId: string;
   shortName: string;
-  profileImage: string;
+  profileImage: any; // Can be string (for remote) or number (for local require())
   email?: string;
   phone?: string;
 }
 
 interface UserProfileContextType {
   userProfile: UserProfile;
-  updateProfileImage: (imageUri: string) => void;
+  updateProfileImage: (imageUri: any) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
 }
 
@@ -30,12 +30,12 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
     fullName: "Rajinder Singh",
     patientId: "SH001234",
     shortName: "Rajinder",
-    profileImage: defaultPhoto?.uri || "https://via.placeholder.com/100x100/5a9e31/ffffff?text=R",
+    profileImage: defaultPhoto?.uri || require('../assets/images/profile-photos/rajinder_singh.jpg'),
     email: "rajinder.singh@example.com",
     phone: "+91 98765 43210"
   });
 
-  const updateProfileImage = (imageUri: string) => {
+  const updateProfileImage = (imageUri: any) => {
     setUserProfile(prev => ({
       ...prev,
       profileImage: imageUri

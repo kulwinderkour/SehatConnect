@@ -36,9 +36,9 @@ export default function ProfileScreen() {
         <View style={styles.profileHeader}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handlePhotoPress}>
             <Image 
-              source={{ uri: userProfile.profileImage }}
+              source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.avatar}
-              resizeMode="cover"
+              resizeMode="contain"
             />
             <View style={styles.editIcon}>
               <Text style={styles.editIconText}>📷</Text>
@@ -133,9 +133,9 @@ export default function ProfileScreen() {
                   onPress={() => handlePhotoSelect(photo)}
                 >
                   <Image 
-                    source={{ uri: photo.uri }} 
+                    source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
                     style={styles.photoPreview} 
-                    resizeMode="cover" 
+                    resizeMode="contain" 
                   />
                   <Text style={styles.photoName}>{photo.name}</Text>
                   <Text style={styles.photoDimensions}>
@@ -163,36 +163,44 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
   },
   avatarContainer: {
-    width: 80, 
-    height: 80, 
-    borderRadius: 40, 
+    width: 90, 
+    height: 90, 
+    borderRadius: 45, 
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-    borderWidth: 3,
+    shadowColor: '#5a9e31',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 4,
     borderColor: '#5a9e31',
     position: 'relative',
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatar: { 
-    width: 74, 
-    height: 74, 
-    borderRadius: 37,
+    width: 82, 
+    height: 82, 
+    borderRadius: 41,
   },
   editIcon: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    bottom: -3,
+    right: -3,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#5a9e31',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   editIconText: {
     fontSize: 12,
