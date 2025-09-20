@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
-// import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
+import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { ProfilePhotoService, ProfilePhotoConfig } from '../services/ProfilePhotoService';
