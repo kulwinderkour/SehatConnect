@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, memo, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
 import DoctorCard from './DoctorCard';
 import { Doctor } from '../../types/health';
+import { optimizedFlatListProps, getOptimizedBatchSize, getOptimizedWindowSize } from '../../utils/performanceUtils';
 
 interface DoctorListProps {
   doctors: Doctor[];
@@ -15,7 +16,7 @@ interface DoctorListProps {
   showInternalMoreButton?: boolean;
 }
 
-const DoctorList: React.FC<DoctorListProps> = ({
+const DoctorList: React.FC<DoctorListProps> = memo(({
   doctors,
   onDoctorPress,
   onConsultPress,
@@ -58,25 +59,25 @@ const DoctorList: React.FC<DoctorListProps> = ({
     return filtered;
   }, [doctors, searchQuery, selectedSpecialty]);
 
-  const renderDoctor = ({ item }: { item: Doctor }) => (
+  const renderDoctor = useCallback(({ item }: { item: Doctor }) => (
     <DoctorCard
       doctor={item}
       onPress={onDoctorPress}
       onConsultPress={onConsultPress}
       variant={variant === 'grid' ? 'compact' : 'default'}
     />
-  );
+  ), [onDoctorPress, onConsultPress, variant]);
 
-  const renderHorizontalDoctor = ({ item }: { item: Doctor }) => (
+  const renderHorizontalDoctor = useCallback(({ item }: { item: Doctor }) => (
     <DoctorCard
       doctor={item}
       onPress={onDoctorPress}
       onConsultPress={onConsultPress}
       variant="compact"
     />
-  );
+  ), [onDoctorPress, onConsultPress]);
 
-  const renderHeader = () => (
+  const renderHeader = useCallback(() => (
     <View style={styles.header}>
       {title && (
         <View style={styles.titleContainer}>
@@ -138,9 +139,9 @@ const DoctorList: React.FC<DoctorListProps> = ({
         </View>
       )}
     </View>
-  );
+  ), [title, onSeeAllPress, showFilters, searchQuery, selectedSpecialty, specialties]);
 
-  const renderEmptyState = () => (
+  const renderEmptyState = useCallback(() => (
     <View style={styles.emptyState}>
       <Text style={styles.emptyStateTitle}>No doctors found</Text>
       <Text style={styles.emptyStateSubtitle}>
@@ -150,7 +151,7 @@ const DoctorList: React.FC<DoctorListProps> = ({
         }
       </Text>
     </View>
-  );
+  ), [searchQuery, selectedSpecialty]);
 
   if (variant === 'horizontal') {
     return (
@@ -165,6 +166,15 @@ const DoctorList: React.FC<DoctorListProps> = ({
           contentContainerStyle={styles.horizontalList}
           ListEmptyComponent={renderEmptyState}
           key="horizontal-flatlist"
+          {...optimizedFlatListProps}
+          maxToRenderPerBatch={getOptimizedBatchSize()}
+          windowSize={getOptimizedWindowSize()}
+          initialNumToRender={3}
+          getItemLayout={(data, index) => ({
+            length: 160,
+            offset: 160 * index,
+            index,
+          })}
         />
       </View>
     );
@@ -183,6 +193,10 @@ const DoctorList: React.FC<DoctorListProps> = ({
           contentContainerStyle={styles.gridList}
           ListEmptyComponent={renderEmptyState}
           key="grid-flatlist"
+          {...optimizedFlatListProps}
+          maxToRenderPerBatch={getOptimizedBatchSize()}
+          windowSize={getOptimizedWindowSize()}
+          initialNumToRender={4}
         />
       </View>
     );
@@ -219,7 +233,9 @@ const DoctorList: React.FC<DoctorListProps> = ({
       )}
     </View>
   );
-};
+});
+
+DoctorList.displayName = 'DoctorList';
 
 const styles = StyleSheet.create({
   container: {

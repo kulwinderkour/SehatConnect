@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, memo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -8,6 +8,7 @@ import ScheduleModal from '../components/home/ScheduleModal';
 import { useI18n } from '../i18n';
 import { useAppointments } from '../contexts/AppointmentContext';
 import { Doctor, AppointmentBookingForm } from '../types/health';
+import { optimizedScrollViewProps } from '../utils/performanceUtils';
 
 // Get screen dimensions for responsive design
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
@@ -17,8 +18,8 @@ const isSmallScreen = screenWidth < 375;
 const isMediumScreen = screenWidth >= 375 && screenWidth < 414;
 const isLargeScreen = screenWidth >= 414;
 
-// Custom doctor card component with original design
-const MedicalProfessionalCard = ({ 
+// Custom doctor card component with original design - memoized for performance
+const MedicalProfessionalCard = memo(({ 
   name, 
   specialty, 
   rating, 
@@ -43,10 +44,10 @@ const MedicalProfessionalCard = ({
     </View>
     <Text style={styles.professionalPrice}>{price}</Text>
   </TouchableOpacity>
-);
+));
 
-// Custom quick action component with improved alignment
-const QuickActionButton = ({ 
+// Custom quick action component with improved alignment - memoized for performance
+const QuickActionButton = memo(({ 
   icon, 
   title,
   subtitle,
@@ -72,10 +73,10 @@ const QuickActionButton = ({
       <Text style={styles.actionGridSubtitle} numberOfLines={2}>{subtitle}</Text>
     </View>
   </TouchableOpacity>
-);
+));
 
-// Simple health summary list component
-const HealthSummaryCard = ({ 
+// Simple health summary list component - memoized for performance
+const HealthSummaryCard = memo(({ 
   metrics
 }: { 
   metrics: Array<{
@@ -93,10 +94,10 @@ const HealthSummaryCard = ({
       ))}
     </View>
   );
-};
+});
 
-// Main home screen component
-export default function HomeScreen() {
+// Main home screen component - memoized for performance
+const HomeScreen = memo(() => {
   const navigation = useNavigation();
   const { getText } = useI18n();
   const { addAppointment } = useAppointments();
@@ -340,8 +341,7 @@ export default function HomeScreen() {
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
+        {...optimizedScrollViewProps}
       >
         {/* Quick Actions - Grid Layout */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -400,7 +400,9 @@ export default function HomeScreen() {
       />
     </View>
   );
-}
+});
+
+export default HomeScreen;
 
 // Custom styles with original design patterns
 export const styles = StyleSheet.create({

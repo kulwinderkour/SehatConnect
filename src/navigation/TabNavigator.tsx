@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, memo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
@@ -41,8 +41,8 @@ function ConsultStackNavigator() {
   );
 }
 
-// Custom tab icon component with original design
-const CustomTabIcon = ({ 
+// Custom tab icon component with original design - memoized for performance
+const CustomTabIcon = memo(({ 
   emoji, 
   isActive 
 }: { 
@@ -62,15 +62,15 @@ const CustomTabIcon = ({
       </Text>
     </View>
   </View>
-);
+));
 
 // Custom tab bar configuration will be defined after styles
 
-// Main tab navigator component
-export default function TabNavigator() {
+// Main tab navigator component - memoized for performance
+const TabNavigator = memo(() => {
   const { getText } = useI18n();
 
-  // Custom tab configuration with original structure
+  // Custom tab configuration with original structure - memoized
   const tabScreens = useMemo(() => [
     {
       name: 'Home',
@@ -104,7 +104,7 @@ export default function TabNavigator() {
     },
   ], [getText]);
 
-  // Custom icon renderer with original implementation
+  // Custom icon renderer with original implementation - memoized
   const createIconRenderer = useCallback((icon: string) => {
     return ({ focused }: { focused: boolean }) => (
       <CustomTabIcon
@@ -123,6 +123,10 @@ export default function TabNavigator() {
         tabBarActiveTintColor: '#5a9e31',
         tabBarInactiveTintColor: '#6b7280',
         tabBarShowLabel: true,
+        lazy: true, // Enable lazy loading for better performance
+        unmountOnBlur: false, // Keep screens mounted for smoother transitions
+        animationEnabled: true, // Enable smooth animations
+        tabBarHideOnKeyboard: true, // Hide tab bar when keyboard is open
       }}
     >
       {tabScreens.map((screen) => (
@@ -138,7 +142,9 @@ export default function TabNavigator() {
       ))}
     </Tab.Navigator>
   );
-}
+});
+
+export default TabNavigator;
 
 // Custom styles with original design patterns
 const styles = StyleSheet.create({

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import Header from '../../components/common/Header';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUserProfile } from '../../contexts/UserProfileContext';
 import { ProfilePhotoService, ProfilePhotoConfig } from '../../services/ProfilePhotoService';
-import { reset } from '../../services/NavigationService';
+import { safeAlert } from '../../utils/safeAlert';
 
 export default function DoctorProfileScreen() {
   const { user, logout } = useAuth();
@@ -17,7 +17,7 @@ export default function DoctorProfileScreen() {
   const handlePhotoSelect = (photo: ProfilePhotoConfig) => {
     updateProfileImage(photo.uri);
     setIsPhotoModalVisible(false);
-    Alert.alert('Success', 'Profile photo updated successfully!');
+    safeAlert('Success', 'Profile photo updated successfully!');
   };
 
   const handlePhotoPress = () => {
@@ -25,7 +25,7 @@ export default function DoctorProfileScreen() {
     if (availablePhotos.length > 0) {
       handlePhotoSelect(availablePhotos[0]);
     } else {
-      Alert.alert(
+      safeAlert(
         'No Photos Available',
         'Please add a photo to src/assets/images/profile-photos/',
         [{ text: 'OK', style: 'default' }]
@@ -37,12 +37,12 @@ export default function DoctorProfileScreen() {
     if (menuItem === 'Logout') {
       handleLogout();
     } else {
-      Alert.alert(menuItem, 'This feature will be available soon!');
+      safeAlert(menuItem, 'This feature will be available soon!');
     }
   };
 
   const handleLogout = () => {
-    Alert.alert(
+    safeAlert(
       'Logout',
       'Are you sure you want to logout?',
       [
@@ -54,9 +54,10 @@ export default function DoctorProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
+            console.log('Doctor logging out...');
             logout();
-            // Navigate to Login screen using navigation service
-            reset('Login');
+            // The AppNavigator will automatically show Login screen when isAuthenticated becomes false
+            console.log('Doctor logout complete, AppNavigator will handle navigation');
           },
         },
       ]

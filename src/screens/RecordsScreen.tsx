@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 
-const Category = ({ title, icon, children }: any) => (
+const Category = memo(({ title, icon, children }: any) => (
   <View style={styles.category}>
     <LinearGradient colors={['#4CAF50', '#2E7D32']} style={styles.catHeader}>
       <Text style={styles.catTitle}>{title}</Text>
@@ -13,20 +13,27 @@ const Category = ({ title, icon, children }: any) => (
       {children}
     </View>
   </View>
-);
+));
 
-const Row = ({ left, right }: { left: React.ReactNode; right: React.ReactNode }) => (
+const Row = memo(({ left, right }: { left: React.ReactNode; right: React.ReactNode }) => (
   <View style={styles.row}>
     <Text style={styles.rowLeft}>{left}</Text>
     <Text style={styles.rowRight}>{right}</Text>
   </View>
-);
+));
 
-export default function RecordsScreen() {
+const RecordsScreen = memo(() => {
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <Header />
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView 
+        contentContainerStyle={{ padding: 20 }}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        removeClippedSubviews={true}
+        keyboardShouldPersistTaps="handled"
+      >
         <Category title="Medical History" icon="📋">
           <Row left="Hypertension" right="Ongoing" />
           <Row left="Diabetes Type 2" right="Controlled" />
@@ -61,7 +68,9 @@ export default function RecordsScreen() {
       </ScrollView>
     </View>
   );
-}
+});
+
+export default RecordsScreen;
 
 const styles = StyleSheet.create({
   category: {

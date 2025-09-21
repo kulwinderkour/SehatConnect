@@ -1,41 +1,42 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import React, { useState, memo, useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal } from 'react-native';
 import { useNavigation, CommonActions } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { ProfilePhotoService, ProfilePhotoConfig } from '../services/ProfilePhotoService';
-import { reset } from '../services/NavigationService';
+import { safeAlert } from '../utils/safeAlert';
 
-export default function ProfileScreen() {
+const ProfileScreen = memo(() => {
   const { user, logout } = useAuth();
   const { userProfile, updateProfileImage } = useUserProfile();
   const navigation = useNavigation();
   const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
-  const availablePhotos = ProfilePhotoService.getAvailablePhotos();
+  
+  const availablePhotos = useMemo(() => ProfilePhotoService.getAvailablePhotos(), []);
 
-  const handlePhotoSelect = (photo: ProfilePhotoConfig) => {
+  const handlePhotoSelect = useCallback((photo: ProfilePhotoConfig) => {
     updateProfileImage(photo.uri);
     setIsPhotoModalVisible(false);
-    Alert.alert('Success', 'Profile photo updated successfully!');
-  };
+    safeAlert('Success', 'Profile photo updated successfully!');
+  }, [updateProfileImage]);
 
-  const handlePhotoPress = () => {
+  const handlePhotoPress = useCallback(() => {
     // Automatically select the uploaded photo
     if (availablePhotos.length > 0) {
       handlePhotoSelect(availablePhotos[0]);
     } else {
-      Alert.alert(
+      safeAlert(
         'No Photos Available',
         'Please add a photo to src/assets/images/profile-photos/rajinder_singh.jpg',
         [{ text: 'OK', style: 'default' }]
       );
     }
-  };
+  }, [availablePhotos, handlePhotoSelect]);
 
-  const handleLogout = () => {
-    Alert.alert(
+  const handleLogout = useCallback(() => {
+    safeAlert(
       'Logout',
       'Are you sure you want to logout?',
       [
@@ -47,25 +48,38 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
+            console.log('Logging out...');
             logout();
-            // Navigate to Login screen using navigation service
-            reset('Login');
+            console.log('Logout complete, AppNavigator will handle navigation');
+            // Force a small delay to ensure state updates are processed
+            setTimeout(() => {
+              console.log('Logout state should be updated by now');
+            }, 100);
           },
         },
       ]
     );
-  };
+  }, [logout]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <Header />
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView 
+        contentContainerStyle={{ padding: 20 }}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        removeClippedSubviews={true}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.profileHeader}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handlePhotoPress}>
             <Image 
               source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.avatar}
               resizeMode="contain"
+              fadeDuration={200}
+              loadingIndicatorSource={require('../assets/images/profile-photos/rajinder_singh.jpg')}
             />
             <View style={styles.editIcon}>
               <Text style={styles.editIconText}>📷</Text>
@@ -169,7 +183,9 @@ export default function ProfileScreen() {
                   <Image 
                     source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
                     style={styles.photoPreview} 
-                    resizeMode="contain" 
+                    resizeMode="contain"
+                    fadeDuration={200}
+                    loadingIndicatorSource={require('../assets/images/profile-photos/rajinder_singh.jpg')}
                   />
                   <Text style={styles.photoName}>{photo.name}</Text>
                   <Text style={styles.photoDimensions}>
@@ -189,7 +205,9 @@ export default function ProfileScreen() {
       </Modal>
     </View>
   );
-}
+});
+
+export default ProfileScreen;
 
 const styles = StyleSheet.create({
   profileHeader: {

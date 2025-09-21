@@ -55,14 +55,12 @@ export default function SplashScreen({ navigation }: any) {
       }, 400);
 
 
-      // Navigate to login screen after total duration
-      setTimeout(() => {
-        (navigation as any).replace('Login');
-      }, 1400);
+      // Navigation is now handled by AppNavigator
+      // No need to navigate from here
     };
 
     startAnimations();
-  }, [navigation, logoOpacity, logoScale, brandOpacity, brandTranslateY]);
+  }, [logoOpacity, logoScale, brandOpacity, brandTranslateY]);
 
   return (
     <View style={styles.container}>

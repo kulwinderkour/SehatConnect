@@ -6,8 +6,7 @@ import {
   ScrollView, 
   TouchableOpacity, 
   TextInput,
-  Alert,
-  Dimensions 
+  Dimensions
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -16,6 +15,7 @@ import DoctorCard from '../components/consultations/DoctorCard';
 import { Doctor } from '../types/health';
 import { ConsultStackParamList } from '../types/navigation';
 import { useI18n } from '../i18n';
+import { safeAlert } from '../utils/safeAlert';
 
 // Get screen dimensions for responsive design
 const { width: screenWidth } = Dimensions.get('window');
@@ -177,7 +177,7 @@ export default function VideoConsultScreen() {
   // Handle doctor selection for video consultation
   const handleDoctorSelect = useCallback((doctor: Doctor) => {
     if (!doctor.availability.isAvailable) {
-      Alert.alert(
+      safeAlert(
         'Doctor Not Available',
         `${doctor.name} is not available right now. Next available slot: ${doctor.nextAvailableSlot}`,
         [{ text: 'OK' }]
@@ -191,7 +191,7 @@ export default function VideoConsultScreen() {
 
   // Handle doctor press for more details
   const handleDoctorPress = useCallback((doctor: Doctor) => {
-    Alert.alert(
+    safeAlert(
       'Doctor Details',
       `${doctor.name}\n${doctor.specialty}\n${doctor.hospital}\nRating: ${doctor.rating} ⭐\nExperience: ${doctor.experience} years\nConsultation Fee: ₹${doctor.consultationFee}`,
       [

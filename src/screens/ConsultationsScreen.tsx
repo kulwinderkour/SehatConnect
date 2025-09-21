@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useMemo, useCallback, memo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 // import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
 import Header from '../components/common/Header';
 import DoctorList from '../components/consultations/DoctorList';
@@ -7,8 +7,10 @@ import AppointmentCard from '../components/consultations/AppointmentCard';
 import { Doctor, Appointment, AppointmentStatus } from '../types/health';
 import { useI18n } from '../i18n';
 import { useAppointments } from '../contexts/AppointmentContext';
+import { optimizedScrollViewProps } from '../utils/performanceUtils';
+import { safeAlert } from '../utils/safeAlert';
 
-export default function ConsultationsScreen() {
+const ConsultationsScreen = memo(() => {
   const { getText } = useI18n();
   const { getAppointments } = useAppointments();
 
@@ -115,22 +117,22 @@ export default function ConsultationsScreen() {
   }, [getAppointments]);
 
   const handleDoctorPress = useCallback((doctor: Doctor) => {
-    Alert.alert('Doctor Details', `Viewing details for ${doctor.name}`);
+    safeAlert('Doctor Details', `Viewing details for ${doctor.name}`);
   }, []);
 
   const handleConsultPress = useCallback((doctor: Doctor) => {
-    Alert.alert('Consultation', `Starting consultation with ${doctor.name}`);
+    safeAlert('Consultation', `Starting consultation with ${doctor.name}`);
   }, []);
 
   const handleAppointmentPress = useCallback((appointment: Appointment) => {
-    Alert.alert('Appointment Details', `Viewing appointment with ${appointment.doctorName}`);
+    safeAlert('Appointment Details', `Viewing appointment with ${appointment.doctorName}`);
   }, []);
 
   const handleAppointmentAction = useCallback((appointment: Appointment) => {
     if (appointment.status === 'scheduled' || appointment.status === 'confirmed') {
-      Alert.alert('Join Appointment', `Joining appointment with ${appointment.doctorName}`);
+      safeAlert('Join Appointment', `Joining appointment with ${appointment.doctorName}`);
     } else {
-      Alert.alert('Appointment Details', `Viewing details for ${appointment.doctorName}`);
+      safeAlert('Appointment Details', `Viewing details for ${appointment.doctorName}`);
     }
   }, []);
 
@@ -140,8 +142,7 @@ export default function ConsultationsScreen() {
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
+        {...optimizedScrollViewProps}
       >
         <View style={styles.doctorsSection}>
           <DoctorList
@@ -176,7 +177,9 @@ export default function ConsultationsScreen() {
       </ScrollView>
     </View>
   );
-}
+});
+
+export default ConsultationsScreen;
 
 const styles = StyleSheet.create({
   container: {
