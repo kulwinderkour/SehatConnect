@@ -105,7 +105,7 @@ const HomeScreen = memo(() => {
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
   const [showAllDoctors, setShowAllDoctors] = useState(false);
 
-  // Simple health summary data
+  // Simple health summary data₹
   const healthSummaryData = useMemo(() => [
     { 
       label: 'Blood Pressure', 
