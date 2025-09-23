@@ -33,7 +33,7 @@ export default function LoginScreen() {
       fullName: 'Rajinder Singh',
       patientId: 'SH001234',
       shortName: 'Rajinder',
-      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=R',
+      profileImage: './assets/images/profile-photos/rajinder_singh.jpg',
       role: 'patient' as const
     },
     {

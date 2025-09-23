@@ -25,7 +25,7 @@ export default function SplashScreen({ navigation }: any) {
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 800,
+          duration: 1000,
           useNativeDriver: true,
           easing: Easing.out(Easing.quad),
         }),
@@ -115,8 +115,8 @@ export default function SplashScreen({ navigation }: any) {
           { opacity: footerOpacity }
         ]}
       >
-        <Text style={styles.footerText}>from</Text>
-        <Text style={styles.footerBrand}>SehatConnect</Text>
+        {/* <Text style={styles.footerText}>from</Text>
+        <Text style={styles.footerBrand}>SehatConnect</Text> */}
       </Animated.View>
     </View>
   );

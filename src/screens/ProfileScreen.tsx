@@ -38,7 +38,7 @@ export default function ProfileScreen() {
             <Image 
               source={{ uri: userProfile.profileImage }}
               style={styles.avatar}
-              resizeMode="cover"
+              resizeMode="contain"
             />
             <View style={styles.editIcon}>
               <Text style={styles.editIconText}>📷</Text>
@@ -135,7 +135,7 @@ export default function ProfileScreen() {
                   <Image 
                     source={{ uri: photo.uri }} 
                     style={styles.photoPreview} 
-                    resizeMode="cover" 
+                    resizeMode="contain" 
                   />
                   <Text style={styles.photoName}>{photo.name}</Text>
                   <Text style={styles.photoDimensions}>
@@ -163,31 +163,34 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
   },
   avatarContainer: {
-    width: 80, 
-    height: 80, 
-    borderRadius: 40, 
+    width: 100, 
+    height: 100, 
+    borderRadius: 50, 
     marginBottom: 15,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+    position: 'relative',
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 3,
     borderColor: '#5a9e31',
-    position: 'relative',
   },
   avatar: { 
-    width: 74, 
-    height: 74, 
-    borderRadius: 37,
+    width: 94, 
+    height: 94, 
+    borderRadius: 47,
   },
   editIcon: {
     position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    bottom: 5,
+    right: 5,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#5a9e31',
     alignItems: 'center',
     justifyContent: 'center',
@@ -195,7 +198,7 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   editIconText: {
-    fontSize: 12,
+    fontSize: 14,
   },
   name: { fontSize: 20, fontWeight: '700', color: '#333', marginBottom: 5 },
   pid: { fontSize: 14, color: '#666' },

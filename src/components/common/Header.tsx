@@ -47,7 +47,11 @@ export default function Header() {
 
   // Custom profile navigation handler
   const handleProfilePress = useCallback(() => {
-    navigation.navigate('Profile' as never);
+    try {
+      navigation.navigate('Profile' as never);
+    } catch (error) {
+      console.warn('Navigation to Profile failed:', error);
+    }
   }, [navigation]);
 
   // Custom gradient configuration
@@ -108,7 +112,7 @@ export default function Header() {
           <TouchableOpacity 
             style={styles.profilePhotoContainer}
             onPress={handleProfilePress}
-            activeOpacity={0.7}
+            activeOpacity={0.6}
           >
             <Image 
               source={{ uri: userProfile.profileImage }}
@@ -226,24 +230,29 @@ const styles = StyleSheet.create({
     paddingRight: 12,
   },
   profilePhotoContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   profilePhoto: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: 'rgba(255,255,255,0.4)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   userGreeting: {
     color: '#fff',
