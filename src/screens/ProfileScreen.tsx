@@ -78,8 +78,6 @@ const ProfileScreen = memo(() => {
               source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.avatar}
               resizeMode="contain"
-              fadeDuration={200}
-              loadingIndicatorSource={require('../assets/images/profile-photos/rajinder_singh.jpg')}
             />
             <View style={styles.editIcon}>
               <Text style={styles.editIconText}>📷</Text>
@@ -184,8 +182,6 @@ const ProfileScreen = memo(() => {
                     source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
                     style={styles.photoPreview} 
                     resizeMode="contain"
-                    fadeDuration={200}
-                    loadingIndicatorSource={require('../assets/images/profile-photos/rajinder_singh.jpg')}
                   />
                   <Text style={styles.photoName}>{photo.name}</Text>
                   <Text style={styles.photoDimensions}>
@@ -215,9 +211,9 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
   },
   avatarContainer: {
-    width: 90, 
-    height: 90, 
-    borderRadius: 45, 
+    width: 100, 
+    height: 100, 
+    borderRadius: 50, 
     marginBottom: 15,
     shadowColor: '#5a9e31',
     shadowOffset: { width: 0, height: 4 },
@@ -228,18 +224,18 @@ const styles = StyleSheet.create({
     borderColor: '#5a9e31',
     position: 'relative',
     backgroundColor: '#f8f9fa',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   avatar: { 
-    width: 82, 
-    height: 82, 
-    borderRadius: 41,
+    width: 92, 
+    height: 92, 
+    borderRadius: 46,
   },
   editIcon: {
     position: 'absolute',
-    bottom: -3,
-    right: -3,
+    bottom: 5,
+    right: 5,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -255,7 +251,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   editIconText: {
-    fontSize: 12,
+    fontSize: 14,
   },
   name: { fontSize: 20, fontWeight: '700', color: '#333', marginBottom: 5 },
   pid: { fontSize: 14, color: '#666' },

@@ -1,72 +1,53 @@
-import React, { useMemo, useCallback, useState, memo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Alert } from 'react-native';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Dimensions,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
 import Header from '../components/common/Header';
 import DoctorList from '../components/consultations/DoctorList';
 import ScheduleModal from '../components/home/ScheduleModal';
+import SmartSOSWizard from '../components/common/SmartSOSWizard';
 import { useI18n } from '../i18n';
 import { useAppointments } from '../contexts/AppointmentContext';
 import { Doctor, AppointmentBookingForm } from '../types/health';
-import { optimizedScrollViewProps } from '../utils/performanceUtils';
+import { EmergencyLocation } from '../types/emergency';
+import { Video, AlertCircle, Calendar, Users, Heart, CalendarDays, Pill, Hospital } from 'lucide-react-native';
+import { emergencyLocationService } from '../services/EmergencyService';
+import { emergencyAudioService } from '../services/AudioService';
 
 // Get screen dimensions for responsive design
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 // Responsive breakpoints
 const isSmallScreen = screenWidth < 375;
-const isMediumScreen = screenWidth >= 375 && screenWidth < 414;
-const isLargeScreen = screenWidth >= 414;
 
-// Custom doctor card component with original design - memoized for performance
-const MedicalProfessionalCard = memo(({ 
-  name, 
-  specialty, 
-  rating, 
-  price, 
-  image 
-}: { 
-  name: string; 
-  specialty: string; 
-  rating: number; 
-  price: string; 
-  image: string; 
-}) => (
-  <TouchableOpacity style={styles.professionalCard} activeOpacity={0.8}>
-    <View style={styles.professionalImageContainer}>
-      <Text style={styles.professionalImage}>{image}</Text>
-    </View>
-    <Text style={styles.professionalName}>{name}</Text>
-    <Text style={styles.professionalSpecialty}>{specialty}</Text>
-    <View style={styles.ratingContainer}>
-      <Text style={styles.ratingIcon}>⭐</Text>
-      <Text style={styles.ratingValue}>{rating}</Text>
-    </View>
-    <Text style={styles.professionalPrice}>{price}</Text>
-  </TouchableOpacity>
-));
-
-// Custom quick action component with improved alignment - memoized for performance
-const QuickActionButton = memo(({ 
-  icon, 
+// Custom quick action component with original design
+const QuickActionButton = ({
+  icon,
   title,
   subtitle,
   color,
-  onPress
-}: { 
-  icon: string; 
+  onPress,
+}: {
+  icon: React.ReactNode; // ✅ allow JSX components
   title: string;
   subtitle: string;
   color: string;
   onPress: () => void;
 }) => (
-  <TouchableOpacity 
-    style={[styles.actionGridCard, { borderLeftColor: color }]} 
+  <TouchableOpacity
+    style={[styles.actionGridCard, { borderLeftColor: color }]}
     onPress={onPress}
     activeOpacity={0.7}
   >
     <View style={styles.actionGridHeader}>
-      <Text style={styles.actionGridIcon}>{icon}</Text>
+      <View style={styles.actionGridIcon}>{icon}</View>
     </View>
     <View style={styles.actionGridContent}>
       <Text style={styles.actionGridLabel} numberOfLines={2}>{title}</Text>
@@ -75,124 +56,174 @@ const QuickActionButton = memo(({
   </TouchableOpacity>
 ));
 
-// Simple health summary list component - memoized for performance
-const HealthSummaryCard = memo(({ 
-  metrics
-}: { 
-  metrics: Array<{
-    label: string;
-    value: string;
-  }>;
+// Modern health metric card component (like doctor dashboard)
+const HealthMetricCard = ({
+  label,
+  value,
+  status,
+  icon,
+  color,
+}: {
+  label: string;
+  value: string;
+  status: 'normal' | 'warning' | 'upcoming';
+  icon: React.ReactNode;
+  color: string;
 }) => {
   return (
-    <View style={styles.healthSummaryCard}>
-      {metrics.map((metric, index) => (
-        <View key={index} style={styles.healthSummaryRow}>
-          <Text style={styles.healthSummaryLabel}>{metric.label}</Text>
-          <Text style={styles.healthSummaryValue}>{metric.value}</Text>
-        </View>
-      ))}
+    <View style={[styles.metricCard, { borderLeftColor: color }]}>
+      <View style={styles.metricHeader}>
+        <View style={styles.metricIcon}>{icon}</View>
+      </View>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+      <Text style={styles.metricSubtitle}>
+        {status === 'normal'
+          ? 'Normal'
+          : status === 'warning'
+          ? 'Needs attention'
+          : 'Upcoming'}
+      </Text>
     </View>
   );
-});
+};
 
-// Main home screen component - memoized for performance
-const HomeScreen = memo(() => {
+// Main home screen component
+export default function HomeScreen() {
   const navigation = useNavigation();
   const { getText } = useI18n();
   const { addAppointment } = useAppointments();
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
-  const [showAllDoctors, setShowAllDoctors] = useState(false);
+  const [emergencyWizardVisible, setEmergencyWizardVisible] = useState(false);
+  const [userLocation, setUserLocation] = useState<EmergencyLocation | null>(null);
 
-  // Simple health summary data
-  const healthSummaryData = useMemo(() => [
-    { 
-      label: 'Blood Pressure', 
-      value: '120/80'
-    },
-    { 
-      label: 'Next Appointment', 
-      value: 'Tomorrow 2:00 PM'
-    },
-    { 
-      label: 'Medicines Due', 
-      value: '2 pending'
-    },
-  ], []);
+  // Modern health metrics with grid layout
+  const healthMetrics = useMemo(
+    () => [
+      {
+        label: getText('healthBloodPressure'),
+        value: '120/80',
+        status: 'normal' as const,
+        icon: <Heart size={20} color="#10b981" />,
+        color: '#10b981',
+      },
+      {
+        label: getText('healthNextAppointment'),
+        value: 'Tomorrow 2:00 PM',
+        status: 'upcoming' as const,
+        icon: <CalendarDays size={20} color="#3b82f6" />,
+        color: '#3b82f6',
+      },
+      {
+        label: getText('healthMedicinesDue'),
+        value: '2 Pending',
+        status: 'warning' as const,
+        icon: <Pill size={20} color="#f59e0b" />,
+        color: '#f59e0b',
+      },
+      {
+        label: 'Last Checkup',
+        value: '2 weeks ago',
+        status: 'normal' as const,
+        icon: <Hospital size={20} color="#8b5cf6" />,
+        color: '#8b5cf6',
+      },
+    ],
+    [getText],
+  );
 
   // Enhanced medical professionals data with proper types
-  const medicalProfessionals: Doctor[] = useMemo(() => [
-    { 
-      id: "1",
-      name: "Dr. Rajesh Sharma", 
-      specialty: getText('specialtyGeneralMedicine'), 
-      rating: 4.8,
-      reviewCount: 127,
-      experience: 12,
-      consultationFee: 0,
-      languages: ['English', 'Hindi'],
-      availability: {
-        isAvailable: true,
-        nextAvailableTime: '2:00 PM',
-        workingHours: { start: '09:00', end: '18:00' },
-        workingDays: [1, 2, 3, 4, 5, 6],
-        timeSlots: []
+  const medicalProfessionals: Doctor[] = useMemo(
+    () => [
+      {
+        id: '1',
+        name: 'Dr. Rajesh Sharma',
+        specialty: getText('specialtyGeneralMedicine'),
+        rating: 4.8,
+        reviewCount: 127,
+        experience: 12,
+        consultationFee: 0,
+        languages: ['English', 'Hindi'],
+        availability: {
+          isAvailable: true,
+          nextAvailableTime: '2:00 PM',
+          workingHours: { start: '09:00', end: '18:00' },
+          workingDays: [1, 2, 3, 4, 5, 6],
+          timeSlots: [],
+        },
+        emoji: '👨‍⚕️',
+        isOnline: true,
+        nextAvailableSlot: 'Today 2:00 PM',
+        hospital: 'Apollo Hospital',
+        distance: 2.5,
+        qualifications: ['MBBS', 'MD General Medicine'],
       },
-      emoji: "👨‍⚕️",
-      isOnline: true,
-      nextAvailableSlot: "Today 2:00 PM",
-      hospital: "Apollo Hospital",
-      distance: 2.5,
-      qualifications: ['MBBS', 'MD General Medicine']
-    },
-    { 
-      id: "2",
-      name: "Dr. Priya Kaur", 
-      specialty: getText('specialtyPediatrics'), 
-      rating: 4.9,
-      reviewCount: 89,
-      experience: 8,
-      consultationFee: 0,
-      languages: ['English', 'Hindi', 'Punjabi'],
-      availability: {
-        isAvailable: true,
-        nextAvailableTime: '3:30 PM',
-        workingHours: { start: '10:00', end: '19:00' },
-        workingDays: [1, 2, 3, 4, 5, 6],
-        timeSlots: []
+      {
+        id: '2',
+        name: 'Dr. Priya Kaur',
+        specialty: getText('specialtyPediatrics'),
+        rating: 4.9,
+        reviewCount: 89,
+        experience: 8,
+        consultationFee: 0,
+        languages: ['English', 'Hindi', 'Punjabi'],
+        availability: {
+          isAvailable: true,
+          nextAvailableTime: '3:30 PM',
+          workingHours: { start: '10:00', end: '19:00' },
+          workingDays: [1, 2, 3, 4, 5, 6],
+          timeSlots: [],
+        },
+        emoji: '👩‍⚕️',
+        isOnline: false,
+        nextAvailableSlot: 'Tomorrow 10:00 AM',
+        hospital: 'Fortis Hospital',
+        distance: 1.8,
+        qualifications: ['MBBS', 'MD Pediatrics'],
       },
-      emoji: "👩‍⚕️",
-      isOnline: false,
-      nextAvailableSlot: "Tomorrow 10:00 AM",
-      hospital: "Fortis Hospital",
-      distance: 1.8,
-      qualifications: ['MBBS', 'MD Pediatrics']
-    },
-    { 
-      id: "3",
-      name: "Dr. Amit Singh", 
-      specialty: getText('specialtyCardiology'), 
-      rating: 4.7,
-      reviewCount: 156,
-      experience: 15,
-      consultationFee: 0,
-      languages: ['English', 'Hindi'],
-      availability: {
-        isAvailable: true,
-        nextAvailableTime: '4:00 PM',
-        workingHours: { start: '09:00', end: '17:00' },
-        workingDays: [1, 2, 3, 4, 5],
-        timeSlots: []
+      {
+        id: '3',
+        name: 'Dr. Amit Singh',
+        specialty: getText('specialtyCardiology'),
+        rating: 4.7,
+        reviewCount: 156,
+        experience: 15,
+        consultationFee: 0,
+        languages: ['English', 'Hindi'],
+        availability: {
+          isAvailable: true,
+          nextAvailableTime: '4:00 PM',
+          workingHours: { start: '09:00', end: '17:00' },
+          workingDays: [1, 2, 3, 4, 5],
+          timeSlots: [],
+        },
+        emoji: '👨‍⚕️',
+        isOnline: true,
+        nextAvailableSlot: 'Today 4:00 PM',
+        hospital: 'Max Hospital',
+        distance: 3.2,
+        qualifications: ['MBBS', 'MD Cardiology', 'DM Cardiology'],
       },
-      emoji: "👨‍⚕️",
-      isOnline: true,
-      nextAvailableSlot: "Today 4:00 PM",
-      hospital: "Max Hospital",
-      distance: 3.2,
-      qualifications: ['MBBS', 'MD Cardiology', 'DM Cardiology']
-    }
-  ], [getText]);
+    ],
+    [getText],
+  );
+
+  // Emergency service initialization
+  useEffect(() => {
+    const initializeEmergencyServices = async () => {
+      try {
+        await emergencyAudioService.initialize();
+        
+        // Don't request location permission on home screen load
+        // Location will be requested only when emergency features are used
+      } catch (error) {
+        console.error('Failed to initialize emergency services:', error);
+      }
+    };
+
+    initializeEmergencyServices();
+  }, []);
 
   // Filter doctors based on showAllDoctors state
   const displayedDoctors = useMemo(() => {
@@ -229,119 +260,143 @@ const HomeScreen = memo(() => {
     Alert.alert('Consultation', `Starting consultation with ${doctor.name}`);
   }, []);
 
-  const handleBookAppointment = useCallback(async (form: AppointmentBookingForm) => {
+  const handleEmergencyPress = useCallback(async () => {
     try {
-      const doctor = medicalProfessionals.find(doc => doc.id === form.doctorId);
-      if (!doctor) {
-        Alert.alert('Error', 'Doctor not found');
-        return;
-      }
-
-      await addAppointment(form, doctor);
+      // Initialize emergency services if not already done
+      await emergencyAudioService.initialize();
       
-      Alert.alert(
-        'Appointment Booked!', 
-        `Your appointment with ${doctor.name} has been scheduled for ${form.date} at ${form.time}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              setScheduleModalVisible(false);
-              setSelectedDoctor(undefined);
-            }
+      // Open the Smart SOS Wizard first
+      setEmergencyWizardVisible(true);
+      
+      // Request location permission and get current location for emergency
+      // This will happen in background while wizard is open
+      setTimeout(async () => {
+        try {
+          const hasPermission = await emergencyLocationService.requestLocationPermission();
+          if (hasPermission) {
+            const location = await emergencyLocationService.getCurrentLocation();
+            setUserLocation(location);
           }
+          
+          // Play emergency alert after location is handled
+          await emergencyAudioService.playEmergencyAlert('General Emergency', 'en');
+        } catch (locationError) {
+          console.error('Location permission error:', locationError);
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error('Emergency initialization error:', error);
+      Alert.alert(
+        'Emergency Service',
+        'Unable to initialize emergency services. Would you like to call emergency services directly?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Call 108', onPress: () => Alert.alert('Calling', 'Would open dialer with 108') }
         ]
       );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to book appointment. Please try again.');
     }
-  }, [addAppointment, medicalProfessionals]);
-
-  // Handle video consult press
-  const handleVideoConsultPress = useCallback(() => {
-    navigation.navigate('Consult', { screen: 'VideoConsult' });
-  }, [navigation]);
-
-  // Modern quick actions configuration (like doctor dashboard)
-  const quickActions = useMemo(() => [
-    { 
-      icon: '📹', 
-      title: getText('actionVideoConsult'),
-      subtitle: 'Start video call',
-      color: '#10b981',
-      onPress: handleVideoConsultPress
-    },
-    { 
-      icon: '⚡', 
-      title: getText('actionEmergency'),
-      subtitle: 'Emergency services',
-      color: '#ef4444',
-      onPress: () => Alert.alert('Emergency', 'Calling emergency services...')
-    },
-    { 
-      icon: '🤖', 
-      title: getText('actionAIChecker'),
-      subtitle: 'AI health check',
-      color: '#8b5cf6',
-      onPress: () => Alert.alert('AI Checker', 'Opening AI health checker...')
-    },
-    { 
-      icon: '📅', 
-      title: getText('actionSchedule'),
-      subtitle: 'Book appointment',
-      color: '#3b82f6',
-      onPress: handleSchedulePress
-    },
-  ], [getText, handleSchedulePress, handleVideoConsultPress]);
+  }, []);
 
 
-  // Custom section header component
-  const SectionHeader = ({ 
-    title, 
-    actionText, 
-    onActionPress 
-  }: { 
-    title: string; 
-    actionText: string; 
-    onActionPress: () => void; 
-  }) => (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <TouchableOpacity onPress={onActionPress}>
-        <Text style={styles.sectionAction}>{actionText}</Text>
-      </TouchableOpacity>
-    </View>
+
+  const handlePlayAudio = useCallback(async (audioKey: string) => {
+    try {
+      // Map audio keys to actual instructions
+      const audioMap: { [key: string]: string } = {
+        'road_accident_step_1': 'Ensure scene safety - check for ongoing danger',
+        'chest_pain_step_1': 'Call emergency services immediately',
+        'snake_bite_step_1': 'Keep the person calm and still',
+        // Add more mappings as needed
+      };
+
+      const instruction = audioMap[audioKey] || 'Follow the instruction shown on screen';
+      await emergencyAudioService.playFirstAidInstruction(instruction, 'en');
+    } catch (error) {
+      console.error('Audio playback error:', error);
+    }
+  }, []);
+
+  const handleBookAppointment = useCallback(
+    async (form: AppointmentBookingForm) => {
+      try {
+        const doctor = medicalProfessionals.find(
+          doc => doc.id === form.doctorId,
+        );
+        if (!doctor) {
+          Alert.alert('Error', 'Doctor not found');
+          return;
+        }
+
+        await addAppointment(form, doctor);
+
+        Alert.alert(
+          'Appointment Booked!',
+          `Your appointment with ${doctor.name} has been scheduled for ${form.date} at ${form.time}`,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setScheduleModalVisible(false);
+                setSelectedDoctor(undefined);
+              },
+            },
+          ],
+        );
+      } catch (error) {
+        Alert.alert('Error', 'Failed to book appointment. Please try again.');
+      }
+    },
+    [addAppointment, medicalProfessionals],
   );
 
-  // Custom service card component
-  const NearbyServiceCard = () => (
-    <View style={styles.serviceCard}>
-      <View style={styles.serviceInfo}>
-        <Text style={styles.serviceTitle}>
-          Dr. Sharma
-        </Text>
-        <Text style={styles.serviceSubtitle}>
-          {getText('specialtyGeneralMedicine')} • 2.5 km
-        </Text>
-        <View style={styles.serviceRating}>
-          <Text style={styles.ratingDisplay}>⭐ 4.8</Text>
-          <Text style={styles.ratingText}>• 15 {getText('statusMinAway')}</Text>
-        </View>
-      </View>
-      <View style={styles.serviceStatus}>
-        <View style={styles.availabilityIndicator} />
-        <Text style={styles.availabilityText}>{getText('statusAvailable')}</Text>
-      </View>
-    </View>
+  // Modern quick actions configuration (like doctor dashboard)
+  const quickActions = useMemo(
+    () => [
+      {
+        icon: <Video size={24} color="#10b981" />,
+        title: getText('actionVideoConsult'),
+        subtitle: 'Start video call',
+        color: '#10b981',
+        onPress: () => navigation.navigate('Consult' as never),
+      },
+
+      {
+        icon: <AlertCircle size={24} color="#ef4444" />,
+        title: getText('actionEmergency'),
+        subtitle: 'Smart SOS Workflow',
+        color: '#ef4444',
+        onPress: handleEmergencyPress,
+      },
+      {
+        icon: <Users size={24} color="#8b5cf6" />,
+        title: 'Government Schemes',
+        subtitle: 'Public health programs',
+        color: '#8b5cf6',
+        onPress: () => navigation.navigate('GovernmentSchemes' as never),
+      },
+      {
+        icon: <Calendar size={24} color="#3b82f6" />,
+        title: getText('actionSchedule'),
+        subtitle: 'Book appointment',
+        color: '#3b82f6',
+        onPress: handleSchedulePress,
+      },
+    ],
+    [getText, handleSchedulePress, navigation, handleEmergencyPress],
   );
 
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
-        {...optimizedScrollViewProps}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        removeClippedSubviews={true}
+        keyboardShouldPersistTaps="handled"
       >
         {/* Quick Actions - Grid Layout */}
         <Text style={styles.sectionTitle}>Quick Actions</Text>
@@ -360,34 +415,46 @@ const HomeScreen = memo(() => {
 
         {/* Health Summary Section - Simple List */}
         <Text style={styles.sectionTitle}>Health Summary</Text>
-        <HealthSummaryCard metrics={healthSummaryData} />
+        <View style={styles.healthMetricsGrid}>
+          {healthMetrics.map((metric, index) => (
+            <HealthMetricCard
+              key={index}
+              label={metric.label}
+              value={metric.value}
+              status={metric.status}
+              icon={metric.icon}
+              color={metric.color}
+            />
+          ))}
+        </View>
 
         {/* Top Doctors Section */}
-          <DoctorList
-            doctors={displayedDoctors}
-            onDoctorPress={handleDoctorPress}
-            onConsultPress={handleConsultPress}
-            variant="default"
-            title={getText('doctorsTopDoctors')}
-            onSeeAllPress={() => {}}
-            showInternalMoreButton={false}
-          />
+        <DoctorList
+          doctors={medicalProfessionals}
+          onDoctorPress={handleDoctorPress}
+          onConsultPress={handleConsultPress}
+          variant="default"
+          title={getText('doctorsTopDoctors')}
+          onSeeAllPress={() => {}}
+        />
 
-        {/* Show More/Less Doctors Button */}
-        {medicalProfessionals.length > 2 && (
-          <TouchableOpacity style={styles.showMoreButton} onPress={toggleShowAllDoctors}>
-            <Text style={styles.showMoreButtonText}>
-              {showAllDoctors 
-                ? 'Show Less Doctors' 
-                : `Show More Doctors (${medicalProfessionals.length - 2} more)`
-              }
-            </Text>
-          </TouchableOpacity>
-        )}
 
         {/* Nearby Services Section */}
         <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
-        <NearbyServiceCard />
+        <View style={styles.serviceCard}>
+          <Text style={styles.serviceTitle}>
+            Dr. Sharma {getText('statusAvailable')}
+          </Text>
+          <Text style={styles.serviceSubtitle}>
+            {getText('specialtyGeneralMedicine')} • 2.5 km
+          </Text>
+          <View style={styles.serviceStatus}>
+            <View style={styles.availabilityIndicator} />
+            <Text style={styles.availabilityText}>
+              {getText('statusAvailable')}
+            </Text>
+          </View>
+        </View>
       </ScrollView>
 
       {/* Schedule Modal */}
@@ -397,6 +464,14 @@ const HomeScreen = memo(() => {
         doctors={medicalProfessionals}
         onBookAppointment={handleBookAppointment}
         selectedDoctor={selectedDoctor}
+      />
+
+      {/* Smart SOS Emergency Wizard */}
+      <SmartSOSWizard
+        visible={emergencyWizardVisible}
+        onClose={() => setEmergencyWizardVisible(false)}
+        userLocation={userLocation || undefined}
+        onPlayAudio={handlePlayAudio}
       />
     </View>
   );
@@ -440,16 +515,11 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   actionGridHeader: {
-    alignItems: 'flex-start',
     marginBottom: 12,
   },
   actionGridIcon: {
-    fontSize: isSmallScreen ? 20 : 24,
+    alignItems: 'flex-start',
     marginBottom: 4,
-  },
-  actionGridContent: {
-    flex: 1,
-    justifyContent: 'flex-end',
   },
   actionGridLabel: {
     fontSize: isSmallScreen ? 14 : 15,
@@ -470,35 +540,50 @@ export const styles = StyleSheet.create({
     marginBottom: 16,
     letterSpacing: -0.5,
   },
-  // Simple health summary card
-  healthSummaryCard: {
+  // Health metrics grid
+  healthMetricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    gap: 12,
+  },
+  metricCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
+    padding: 16,
+    width: '48%',
+    marginBottom: 12,
+    borderLeftWidth: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  healthSummaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+  metricHeader: {
+    marginBottom: 12,
   },
-  healthSummaryLabel: {
-    fontSize: 16,
+  metricIcon: {
+    alignItems: 'flex-start',
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: '400',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#374151',
+    marginBottom: 2,
+  },
+  metricSubtitle: {
+    fontSize: 12,
     color: '#6b7280',
     fontWeight: '500',
-  },
-  healthSummaryValue: {
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '700',
   },
   sectionHeader: {
     flexDirection: 'row',

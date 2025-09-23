@@ -24,7 +24,7 @@ export default function SplashScreen({ navigation }: any) {
       Animated.parallel([
         Animated.timing(logoOpacity, {
           toValue: 1,
-          duration: 800,
+          duration: 1000,
           useNativeDriver: true,
           easing: Easing.out(Easing.quad),
         }),
@@ -95,7 +95,6 @@ export default function SplashScreen({ navigation }: any) {
       >
         <Text style={styles.brandText}>SehatConnect</Text>
       </Animated.View>
-
     </View>
   );
 }
