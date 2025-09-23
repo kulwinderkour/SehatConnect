@@ -56,7 +56,7 @@ export default function Header() {
 
   // Custom gradient configuration
   const gradientConfig = {
-    colors: ['#5a9e31', '#4a8a2a'],
+    colors: ['#059669', '#047857'],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 }
   };
