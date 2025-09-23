@@ -54,7 +54,7 @@ const QuickActionButton = ({
       <Text style={styles.actionGridSubtitle} numberOfLines={2}>{subtitle}</Text>
     </View>
   </TouchableOpacity>
-));
+);
 
 // Modern health metric card component (like doctor dashboard)
 const HealthMetricCard = ({
@@ -225,25 +225,6 @@ export default function HomeScreen() {
     initializeEmergencyServices();
   }, []);
 
-  // Filter doctors based on showAllDoctors state
-  const displayedDoctors = useMemo(() => {
-    const result = showAllDoctors ? medicalProfessionals : medicalProfessionals.slice(0, 2);
-    console.log('displayedDoctors updated:', {
-      showAllDoctors,
-      totalDoctors: medicalProfessionals.length,
-      displayedCount: result.length
-    });
-    return result;
-  }, [medicalProfessionals, showAllDoctors]);
-
-  // Toggle show all doctors
-  const toggleShowAllDoctors = useCallback(() => {
-    console.log('Toggle button pressed, current state:', showAllDoctors);
-    setShowAllDoctors(prev => {
-      console.log('Setting showAllDoctors to:', !prev);
-      return !prev;
-    });
-  }, [showAllDoctors]);
 
   // Handler functions
   const handleSchedulePress = useCallback(() => {
@@ -475,9 +456,7 @@ export default function HomeScreen() {
       />
     </View>
   );
-});
-
-export default HomeScreen;
+}
 
 // Custom styles with original design patterns
 export const styles = StyleSheet.create({
@@ -520,6 +499,10 @@ export const styles = StyleSheet.create({
   actionGridIcon: {
     alignItems: 'flex-start',
     marginBottom: 4,
+  },
+  actionGridContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   actionGridLabel: {
     fontSize: isSmallScreen ? 14 : 15,
