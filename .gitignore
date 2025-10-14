@@ -77,3 +77,4 @@ yarn-error.log
 ios/SehatConnect.xcodeproj/project.pbxproj
 ios/SehatConnect/Info.plist
 ios/SehatConnect/PrivacyInfo.xcprivacy
+ios/Podfile.lock
