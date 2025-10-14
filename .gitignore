@@ -73,3 +73,8 @@ yarn-error.log
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+# iOS project files not to track
+ios/SehatConnect.xcodeproj/project.pbxproj
+ios/SehatConnect/Info.plist
+ios/SehatConnect/PrivacyInfo.xcprivacy
+ios/Podfile.lock

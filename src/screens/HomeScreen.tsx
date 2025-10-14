@@ -98,40 +98,21 @@ export default function HomeScreen() {
   const [emergencyWizardVisible, setEmergencyWizardVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<EmergencyLocation | null>(null);
 
-  // Modern health metrics with grid layout
-  const healthMetrics = useMemo(
-    () => [
-      {
-        label: getText('healthBloodPressure'),
-        value: '120/80',
-        status: 'normal' as const,
-        icon: <Heart size={20} color="#10b981" />,
-        color: '#10b981',
-      },
-      {
-        label: getText('healthNextAppointment'),
-        value: 'Tomorrow 2:00 PM',
-        status: 'upcoming' as const,
-        icon: <CalendarDays size={20} color="#3b82f6" />,
-        color: '#3b82f6',
-      },
-      {
-        label: getText('healthMedicinesDue'),
-        value: '2 Pending',
-        status: 'warning' as const,
-        icon: <Pill size={20} color="#f59e0b" />,
-        color: '#f59e0b',
-      },
-      {
-        label: 'Last Checkup',
-        value: '2 weeks ago',
-        status: 'normal' as const,
-        icon: <Hospital size={20} color="#8b5cf6" />,
-        color: '#8b5cf6',
-      },
-    ],
-    [getText],
-  );
+  // Simple health summary data
+  const healthSummaryData = useMemo(() => [
+    { 
+      label: 'Blood Pressure', 
+      value: '120/80'
+    },
+    { 
+      label: 'Next Appointment', 
+      value: 'Tomorrow 2:00 PM'
+    },
+    { 
+      label: 'Medicines Due', 
+      value: '2 pending'
+    },
+  ], []);
 
   // Enhanced medical professionals data with proper types
   const medicalProfessionals: Doctor[] = useMemo(
