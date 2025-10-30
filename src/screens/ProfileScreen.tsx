@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 // import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
 import Header from '../components/common/Header';
 import { useUserProfile } from '../contexts/UserProfileContext';
@@ -9,6 +10,10 @@ export default function ProfileScreen() {
   const { userProfile, updateProfileImage } = useUserProfile();
   const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
   const availablePhotos = ProfilePhotoService.getAvailablePhotos();
+  // navigation is a stack navigator inside the Profile tab; typing here is kept permissive to allow
+  // navigation to stack screens added in ProfileStackNavigator (PersonalInfo, Language, etc.).
+  // Narrow typing can be added if a shared ParamList is declared.
+  const navigation = useNavigation<any>();
 
   const handlePhotoSelect = (photo: ProfilePhotoConfig) => {
     updateProfileImage(photo.uri);
@@ -50,51 +55,51 @@ export default function ProfileScreen() {
         </View>
 
         <View style={styles.menuSection}>
-          <View style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('PersonalInfo') }>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ marginRight: 15, fontSize: 18 }}>👤</Text>
               <Text>Personal Information</Text>
             </View>
             <Text>›</Text>
-          </View>
-          <View style={styles.menuItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('FamilyMembers') }>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ marginRight: 15, fontSize: 18 }}>👨‍👩‍👧‍👦</Text>
               <Text>Family Members</Text>
             </View>
             <Text>›</Text>
-          </View>
-          <View style={styles.menuItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('InsuranceInfo') }>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ marginRight: 15, fontSize: 18 }}>🏥</Text>
               <Text>Insurance Info</Text>
             </View>
             <Text>›</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.menuSection}>
-          <View style={styles.menuItem}>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AppSettings')}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ marginRight: 15, fontSize: 18 }}>⚙️</Text>
               <Text>App Settings</Text>
             </View>
             <Text>›</Text>
-          </View>
-          <View style={styles.menuItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Language')}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ marginRight: 15, fontSize: 18 }}>🌐</Text>
               <Text>Language: English</Text>
             </View>
             <Text>›</Text>
-          </View>
-          <View style={styles.menuItem}>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('PrivacySecurity')}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ marginRight: 15, fontSize: 18 }}>🔒</Text>
               <Text>Privacy & Security</Text>
             </View>
             <Text>›</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.menuSection}>
