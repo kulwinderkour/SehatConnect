@@ -98,19 +98,28 @@ export default function HomeScreen() {
   const [emergencyWizardVisible, setEmergencyWizardVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<EmergencyLocation | null>(null);
 
-  // Simple health summary data
-  const healthSummaryData = useMemo(() => [
+  // Health metrics data for cards
+  const healthMetrics = useMemo(() => [
     { 
       label: 'Blood Pressure', 
-      value: '120/80'
+      value: '120/80',
+      status: 'normal' as const,
+      icon: <Heart size={24} color="#ef4444" />,
+      color: '#ef4444'
     },
     { 
       label: 'Next Appointment', 
-      value: 'Tomorrow 2:00 PM'
+      value: 'Tomorrow 2:00 PM',
+      status: 'upcoming' as const,
+      icon: <CalendarDays size={24} color="#3b82f6" />,
+      color: '#3b82f6'
     },
     { 
       label: 'Medicines Due', 
-      value: '2 pending'
+      value: '2 pending',
+      status: 'warning' as const,
+      icon: <Pill size={24} color="#f59e0b" />,
+      color: '#f59e0b'
     },
   ], []);
 
