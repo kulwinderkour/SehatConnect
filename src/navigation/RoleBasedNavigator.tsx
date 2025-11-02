@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import TabNavigator from './TabNavigator';
 import DoctorTabNavigator from './DoctorTabNavigator';
 import GovernmentSchemesScreen from '../screens/GovernmentSchemesScreen';
+import VideoCallScreen from '../screens/VideoCallScreen';
+import VideoConsultScreen from '../screens/VideoConsultScreen';
 import { RootStackParamList } from '../types/navigation.d';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -12,21 +14,61 @@ const Stack = createStackNavigator<RootStackParamList>();
 export default function RoleBasedNavigator() {
   const { user, isAuthenticated } = useAuth();
 
+  console.log('RoleBasedNavigator render - isAuthenticated:', isAuthenticated, 'user:', user?.fullName, 'role:', user?.role);
+
   // If not authenticated, don't render anything (AppNavigator will handle this)
   if (!isAuthenticated || !user) {
+    console.log('RoleBasedNavigator: Not authenticated, returning null');
     return null;
   }
 
   // Show doctor interface for doctors
   if (user?.role === 'doctor') {
+    console.log('RoleBasedNavigator: Rendering DoctorTabNavigator');
     return <DoctorTabNavigator />;
   }
 
-  // Show admin interface for admins (you can create AdminTabNavigator later)
-  if (user?.role === 'admin') {
-    return <TabNavigator />; // For now, show patient interface
-  }
-
-  // Default to patient interface
-  return <TabNavigator />;
+  // Show patient/admin interface with stack navigator for modal screens
+  console.log('RoleBasedNavigator: Rendering Patient/Admin Stack Navigator');
+  return (
+    <Stack.Navigator 
+      initialRouteName="MainTabs"
+      screenOptions={{ 
+        headerShown: false,
+        cardStyle: { backgroundColor: '#fff' }
+      }}
+    >
+      <Stack.Screen 
+        name="MainTabs" 
+        component={TabNavigator}
+        options={{
+          animationEnabled: true,
+        }}
+      />
+      <Stack.Screen 
+        name="GovernmentSchemes" 
+        component={GovernmentSchemesScreen}
+        options={{
+          animationEnabled: true,
+          presentation: 'card',
+        }}
+      />
+      <Stack.Screen 
+        name="VideoCall" 
+        component={VideoCallScreen}
+        options={{
+          animationEnabled: true,
+          presentation: 'fullScreenModal',
+        }}
+      />
+      <Stack.Screen 
+        name="VideoConsult" 
+        component={VideoConsultScreen}
+        options={{
+          animationEnabled: true,
+          presentation: 'card',
+        }}
+      />
+    </Stack.Navigator>
+  );
 }

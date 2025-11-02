@@ -12,6 +12,8 @@ export type RootTabParamList = {
 export type RootStackParamList = {
   MainTabs: undefined;
   GovernmentSchemes: undefined;
+  VideoCall: undefined;
+  VideoConsult: undefined;
 };
 
 export type TabScreenProps<T extends keyof RootTabParamList> =

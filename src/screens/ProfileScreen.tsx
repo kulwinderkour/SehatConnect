@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 // import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
@@ -11,7 +11,6 @@ import { safeAlert } from '../utils/safeAlert';
 const ProfileScreen = memo(() => {
   const { user, logout } = useAuth();
   const { userProfile, updateProfileImage } = useUserProfile();
-  const navigation = useNavigation();
   const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
   const availablePhotos = ProfilePhotoService.getAvailablePhotos();
   // navigation is a stack navigator inside the Profile tab; typing here is kept permissive to allow

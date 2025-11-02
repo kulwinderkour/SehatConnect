@@ -3,8 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import ConsultationsScreen from '../screens/ConsultationsScreen';
-import VideoConsultScreen from '../screens/VideoConsultScreen';
-import VideoCallScreen from '../screens/VideoCallScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import PharmacyScreen from '../screens/PharmacyScreen';
 import ProfileStackNavigator from './ProfileStackNavigator';
@@ -12,7 +10,6 @@ import { useI18n } from '../i18n';
 
 // Create navigator instances
 const Tab = createBottomTabNavigator();
-const ConsultStack = createStackNavigator();
 
 // Custom tab icon component with original design
 const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }) => (
@@ -21,30 +18,42 @@ const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }
       <Text style={[styles.iconEmoji, isActive && styles.iconEmojiActive]}>{emoji}</Text>
     </View>
   </View>
-));
+);
 
 // Main tab navigator component
 export default function TabNavigator() {
+  console.log('TabNavigator: Rendering');
+  
   const { getText } = useI18n();
 
+  console.log('TabNavigator: i18n loaded, getText available');
+
   const tabScreens = useMemo(
-    () => [
-      { name: 'Home', component: HomeScreen, icon: '🏠', label: getText('navHome') },
-      { name: 'Consult', component: ConsultationsScreen, icon: '👨‍⚕️', label: getText('navConsult') },
-      { name: 'Records', component: RecordsScreen, icon: '📋', label: getText('navRecords') },
-      { name: 'Pharmacy', component: PharmacyScreen, icon: '💊', label: getText('navPharmacy') },
-      { name: 'Profile', component: ProfileStackNavigator, icon: '👤', label: getText('navProfile') },
-    ],
+    () => {
+      console.log('TabNavigator: Creating tab screens array');
+      return [
+        { name: 'Home', component: HomeScreen, icon: '🏠', label: getText('navHome') },
+        { name: 'Consult', component: ConsultationsScreen, icon: '👨‍⚕️', label: getText('navConsult') },
+        { name: 'Records', component: RecordsScreen, icon: '📋', label: getText('navRecords') },
+        { name: 'Pharmacy', component: PharmacyScreen, icon: '💊', label: getText('navPharmacy') },
+        { name: 'Profile', component: ProfileStackNavigator, icon: '👤', label: getText('navProfile') },
+      ];
+    },
     [getText]
   );
+
+  console.log('TabNavigator: Tab screens created, count:', tabScreens.length);
 
   const createIconRenderer = useCallback(
     (icon: string) => ({ focused }: { focused: boolean }) => <CustomTabIcon emoji={icon} isActive={focused} />,
     []
   );
 
+  console.log('TabNavigator: Returning Tab.Navigator');
+
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         tabBarStyle: styles.tabBar,
@@ -53,8 +62,6 @@ export default function TabNavigator() {
         tabBarInactiveTintColor: '#6b7280',
         tabBarShowLabel: true,
         lazy: true, // Enable lazy loading for better performance
-        unmountOnBlur: false, // Keep screens mounted for smoother transitions
-        animationEnabled: true, // Enable smooth animations
         tabBarHideOnKeyboard: true, // Hide tab bar when keyboard is open
       }}
     >
@@ -63,9 +70,7 @@ export default function TabNavigator() {
       ))}
     </Tab.Navigator>
   );
-});
-
-export default TabNavigator;
+}
 
 const styles = StyleSheet.create({
   tabBar: {
