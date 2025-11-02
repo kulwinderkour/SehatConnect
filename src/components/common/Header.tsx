@@ -63,6 +63,15 @@ export default function Header() {
 
   return (
     <>
+      {/* Back button when nested and can go back */}
+      {navigation.canGoBack() && (
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={{ position: 'absolute', left: 8, top: 12, zIndex: 30, padding: 8 }}
+        >
+          <Text style={{ color: '#fff', fontSize: 18 }}></Text>
+        </TouchableOpacity>
+      )}
       {/* First header section - App title */}
       <LinearGradient 
         colors={gradientConfig.colors} 
