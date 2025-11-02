@@ -12,7 +12,6 @@ import { useI18n } from '../i18n';
 
 // Create navigator instances
 const Tab = createBottomTabNavigator();
-const ConsultStack = createStackNavigator();
 
 // Custom tab icon component with original design
 const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }) => (
@@ -21,7 +20,7 @@ const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }
       <Text style={[styles.iconEmoji, isActive && styles.iconEmojiActive]}>{emoji}</Text>
     </View>
   </View>
-));
+);
 
 // Main tab navigator component
 export default function TabNavigator() {
@@ -63,9 +62,7 @@ export default function TabNavigator() {
       ))}
     </Tab.Navigator>
   );
-});
-
-export default TabNavigator;
+}
 
 const styles = StyleSheet.create({
   tabBar: {

@@ -22,11 +22,15 @@ export default function RoleBasedNavigator() {
     return <DoctorTabNavigator />;
   }
 
-  // Show admin interface for admins (you can create AdminTabNavigator later)
-  if (user?.role === 'admin') {
-    return <TabNavigator />; // For now, show patient interface
-  }
-
-  // Default to patient interface
-  return <TabNavigator />;
+  // For patients and admins, wrap TabNavigator in a Stack to allow navigation to screens
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="MainTabs" component={TabNavigator} />
+      <Stack.Screen name="GovernmentSchemes" component={GovernmentSchemesScreen} />
+    </Stack.Navigator>
+  );
 }

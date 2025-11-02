@@ -54,6 +54,17 @@ export default function Header() {
     }
   }, [navigation]);
 
+  // Custom back button handler with safety check
+  const handleBackPress = useCallback(() => {
+    try {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.warn('Navigation goBack failed:', error);
+    }
+  }, [navigation]);
+
   // Custom gradient configuration
   const gradientConfig = {
     colors: ['#059669', '#047857'],
@@ -64,9 +75,9 @@ export default function Header() {
   return (
     <>
       {/* Back button when nested and can go back */}
-      {navigation.canGoBack() && (
+      {navigation.canGoBack && navigation.canGoBack() && (
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
           style={{ position: 'absolute', left: 8, top: 12, zIndex: 30, padding: 8 }}
         >
           <Text style={{ color: '#fff', fontSize: 18 }}></Text>

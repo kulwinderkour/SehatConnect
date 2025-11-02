@@ -209,6 +209,17 @@ export default function GovernmentSchemesScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
+  // Handle back navigation safely
+  const handleBackPress = () => {
+    try {
+      if (navigation.canGoBack && navigation.canGoBack()) {
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.warn('Navigation goBack failed:', error);
+    }
+  };
+
   // Filter schemes based on search and category
   const filteredSchemes = governmentSchemes.filter(scheme => {
     const matchesSearch = scheme.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -226,7 +237,7 @@ export default function GovernmentSchemesScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={handleBackPress}
         >
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
