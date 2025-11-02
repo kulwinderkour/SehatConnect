@@ -16,7 +16,6 @@ export default function SplashScreen({ navigation }: any) {
   const logoScale = useRef(new Animated.Value(0.5)).current;
   const brandOpacity = useRef(new Animated.Value(0)).current;
   const brandTranslateY = useRef(new Animated.Value(20)).current;
-  const footerOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Start animations immediately
@@ -55,24 +54,13 @@ export default function SplashScreen({ navigation }: any) {
         ]).start();
       }, 400);
 
-      // Footer animation (delayed further)
-      setTimeout(() => {
-        Animated.timing(footerOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.quad),
-        }).start();
-      }, 800);
 
-      // Navigate to login screen after total duration
-      setTimeout(() => {
-        (navigation as any).replace('Login');
-      }, 1400);
+      // Navigation is now handled by AppNavigator
+      // No need to navigate from here
     };
 
     startAnimations();
-  }, [navigation, logoOpacity, logoScale, brandOpacity, brandTranslateY, footerOpacity]);
+  }, [logoOpacity, logoScale, brandOpacity, brandTranslateY]);
 
   return (
     <View style={styles.container}>
@@ -107,17 +95,6 @@ export default function SplashScreen({ navigation }: any) {
       >
         <Text style={styles.brandText}>SehatConnect</Text>
       </Animated.View>
-
-      {/* Footer with animation */}
-      <Animated.View 
-        style={[
-          styles.footerContainer,
-          { opacity: footerOpacity }
-        ]}
-      >
-        {/* <Text style={styles.footerText}>from</Text>
-        <Text style={styles.footerBrand}>SehatConnect</Text> */}
-      </Animated.View>
     </View>
   );
 }
@@ -149,22 +126,5 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     color: '#0F172A',
     textAlign: 'center',
-  },
-  footerContainer: {
-    position: 'absolute',
-    bottom: 40,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
-  },
-  footerBrand: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#5a9e31',
   },
 });

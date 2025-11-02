@@ -3,11 +3,15 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Ale
 import { useNavigation } from '@react-navigation/native';
 // import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
 import Header from '../components/common/Header';
+import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import { ProfilePhotoService, ProfilePhotoConfig } from '../services/ProfilePhotoService';
+import { safeAlert } from '../utils/safeAlert';
 
-export default function ProfileScreen() {
+const ProfileScreen = memo(() => {
+  const { user, logout } = useAuth();
   const { userProfile, updateProfileImage } = useUserProfile();
+  const navigation = useNavigation();
   const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
   const availablePhotos = ProfilePhotoService.getAvailablePhotos();
   // navigation is a stack navigator inside the Profile tab; typing here is kept permissive to allow
@@ -15,33 +19,66 @@ export default function ProfileScreen() {
   // Narrow typing can be added if a shared ParamList is declared.
   const navigation = useNavigation<any>();
 
-  const handlePhotoSelect = (photo: ProfilePhotoConfig) => {
+  const handlePhotoSelect = useCallback((photo: ProfilePhotoConfig) => {
     updateProfileImage(photo.uri);
     setIsPhotoModalVisible(false);
-    Alert.alert('Success', 'Profile photo updated successfully!');
-  };
+    safeAlert('Success', 'Profile photo updated successfully!');
+  }, [updateProfileImage]);
 
-  const handlePhotoPress = () => {
+  const handlePhotoPress = useCallback(() => {
     // Automatically select the uploaded photo
     if (availablePhotos.length > 0) {
       handlePhotoSelect(availablePhotos[0]);
     } else {
-      Alert.alert(
+      safeAlert(
         'No Photos Available',
         'Please add a photo to src/assets/images/profile-photos/rajinder_singh.jpg',
         [{ text: 'OK', style: 'default' }]
       );
     }
-  };
+  }, [availablePhotos, handlePhotoSelect]);
+
+  const handleLogout = useCallback(() => {
+    safeAlert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: () => {
+            console.log('Logging out...');
+            logout();
+            console.log('Logout complete, AppNavigator will handle navigation');
+            // Force a small delay to ensure state updates are processed
+            setTimeout(() => {
+              console.log('Logout state should be updated by now');
+            }, 100);
+          },
+        },
+      ]
+    );
+  }, [logout]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
       <Header />
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView 
+        contentContainerStyle={{ padding: 20 }}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        removeClippedSubviews={true}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.profileHeader}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handlePhotoPress}>
             <Image 
-              source={{ uri: userProfile.profileImage }}
+              source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.avatar}
               resizeMode="contain"
             />
@@ -117,6 +154,13 @@ export default function ProfileScreen() {
             </View>
             <Text>›</Text>
           </View>
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={{ marginRight: 15, fontSize: 18 }}>🚪</Text>
+              <Text style={styles.logoutText}>Logout</Text>
+            </View>
+            <Text>›</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -138,9 +182,9 @@ export default function ProfileScreen() {
                   onPress={() => handlePhotoSelect(photo)}
                 >
                   <Image 
-                    source={{ uri: photo.uri }} 
+                    source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
                     style={styles.photoPreview} 
-                    resizeMode="contain" 
+                    resizeMode="contain"
                   />
                   <Text style={styles.photoName}>{photo.name}</Text>
                   <Text style={styles.photoDimensions}>
@@ -160,7 +204,9 @@ export default function ProfileScreen() {
       </Modal>
     </View>
   );
-}
+});
+
+export default ProfileScreen;
 
 const styles = StyleSheet.create({
   profileHeader: {
@@ -172,22 +218,22 @@ const styles = StyleSheet.create({
     height: 100, 
     borderRadius: 50, 
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowColor: '#5a9e31',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: '#5a9e31',
     position: 'relative',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#5a9e31',
   },
   avatar: { 
-    width: 94, 
-    height: 94, 
-    borderRadius: 47,
+    width: 92, 
+    height: 92, 
+    borderRadius: 46,
   },
   editIcon: {
     position: 'absolute',
@@ -199,8 +245,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#5a9e31',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   editIconText: {
     fontSize: 14,
@@ -280,5 +331,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  logoutText: {
+    color: '#ef4444',
   },
 });

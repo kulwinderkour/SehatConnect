@@ -3,13 +3,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import ConsultationsScreen from '../screens/ConsultationsScreen';
+import VideoConsultScreen from '../screens/VideoConsultScreen';
+import VideoCallScreen from '../screens/VideoCallScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import PharmacyScreen from '../screens/PharmacyScreen';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import { useI18n } from '../i18n';
 
-// Create tab navigator instance
+// Create navigator instances
 const Tab = createBottomTabNavigator();
+const ConsultStack = createStackNavigator();
 
 // Custom tab icon component with original design
 const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }) => (
@@ -18,7 +21,7 @@ const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }
       <Text style={[styles.iconEmoji, isActive && styles.iconEmojiActive]}>{emoji}</Text>
     </View>
   </View>
-);
+));
 
 // Main tab navigator component
 export default function TabNavigator() {
@@ -49,6 +52,10 @@ export default function TabNavigator() {
         tabBarActiveTintColor: '#5a9e31',
         tabBarInactiveTintColor: '#6b7280',
         tabBarShowLabel: true,
+        lazy: true, // Enable lazy loading for better performance
+        unmountOnBlur: false, // Keep screens mounted for smoother transitions
+        animationEnabled: true, // Enable smooth animations
+        tabBarHideOnKeyboard: true, // Hide tab bar when keyboard is open
       }}
     >
       {tabScreens.map((screen) => (
@@ -56,7 +63,9 @@ export default function TabNavigator() {
       ))}
     </Tab.Navigator>
   );
-}
+});
+
+export default TabNavigator;
 
 const styles = StyleSheet.create({
   tabBar: {

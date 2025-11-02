@@ -56,7 +56,7 @@ export default function Header() {
 
   // Custom gradient configuration
   const gradientConfig = {
-    colors: ['#5a9e31', '#4a8a2a'],
+    colors: ['#059669', '#047857'],
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 }
   };
@@ -124,9 +124,9 @@ export default function Header() {
             activeOpacity={0.6}
           >
             <Image 
-              source={{ uri: userProfile.profileImage }}
+              source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.profilePhoto}
-              resizeMode="cover"
+              resizeMode="contain"
             />
           </TouchableOpacity>
         </View>

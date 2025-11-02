@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,6 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
+import { safeAlert } from '../utils/safeAlert';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -60,12 +60,15 @@ export default function LoginScreen() {
   ];
 
   const handleLogin = async () => {
+    console.log('Login button pressed', { email, password });
+    
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      safeAlert('Error', 'Please fill in all fields');
       return;
     }
 
     setLoading(true);
+    console.log('Starting login process...');
 
     // Simulate API delay
     setTimeout(() => {
@@ -73,7 +76,11 @@ export default function LoginScreen() {
         u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
       );
 
+      console.log('User found:', user ? 'Yes' : 'No');
+
       if (user) {
+        console.log('Updating user profile and auth state...');
+        
         // Update user profile with logged in user data
         updateProfile({
           fullName: user.fullName,
@@ -97,19 +104,13 @@ export default function LoginScreen() {
         });
 
         setLoading(false);
-        Alert.alert(
-          'Login Successful!',
-          `Welcome back, ${user.shortName}!`,
-          [
-            {
-              text: 'OK',
-              onPress: () => (navigation as any).replace('MainApp')
-            }
-          ]
-        );
+        console.log('Login successful, AppNavigator will handle navigation automatically');
+        
+        // AppNavigator will automatically navigate to MainApp when isAuthenticated becomes true
       } else {
         setLoading(false);
-        Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
+        console.log('Login failed - invalid credentials');
+        safeAlert('Login Failed', 'Invalid email or password. Please try again.');
       }
     }, 1500);
   };
@@ -129,7 +130,7 @@ export default function LoginScreen() {
   };
 
   const handleForgotPassword = () => {
-    Alert.alert(
+    safeAlert(
       'Forgot Password?',
       'For demo purposes, use these credentials:\n\nPatient: rajinder@example.com / password123\nDoctor: doctor@example.com / doctor123\nAdmin: admin@example.com / admin123',
       [{ text: 'OK' }]

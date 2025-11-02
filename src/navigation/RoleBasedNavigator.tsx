@@ -10,37 +10,23 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 // Role-based navigator that shows different interfaces based on user role
 export default function RoleBasedNavigator() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
-  // Determine which tab navigator to use based on role
-  const getTabNavigator = () => {
-    if (user?.role === 'doctor') {
-      return DoctorTabNavigator;
-    }
-    // Show admin interface for admins (you can create AdminTabNavigator later)
-    if (user?.role === 'admin') {
-      return TabNavigator; // For now, show patient interface
-    }
-    // Default to patient interface
-    return TabNavigator;
-  };
+  // If not authenticated, don't render anything (AppNavigator will handle this)
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
-  const TabNavigatorComponent = getTabNavigator();
+  // Show doctor interface for doctors
+  if (user?.role === 'doctor') {
+    return <DoctorTabNavigator />;
+  }
 
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen 
-        name="MainTabs" 
-        component={TabNavigatorComponent}
-      />
-      <Stack.Screen 
-        name="GovernmentSchemes" 
-        component={GovernmentSchemesScreen}
-      />
-    </Stack.Navigator>
-  );
+  // Show admin interface for admins (you can create AdminTabNavigator later)
+  if (user?.role === 'admin') {
+    return <TabNavigator />; // For now, show patient interface
+  }
+
+  // Default to patient interface
+  return <TabNavigator />;
 }

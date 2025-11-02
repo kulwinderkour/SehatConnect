@@ -32,13 +32,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const login = (userData: User) => {
+    console.log('AuthContext.login called with:', userData);
     setUser(userData);
     setIsAuthenticated(true);
+    console.log('Auth state updated - isAuthenticated:', true);
   };
 
   const logout = () => {
+    console.log('AuthContext.logout called');
     setUser(null);
     setIsAuthenticated(false);
+    console.log('Auth state updated - isAuthenticated:', false);
+    // AppNavigator will handle navigation automatically
   };
 
   return (

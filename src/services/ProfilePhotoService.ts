@@ -1,8 +1,8 @@
-import { PROFILE_PHOTO_URI } from '../assets/images/profile-photos';
+// import { PROFILE_PHOTO_URI } from '../assets/images/profile-photos';
 
 export interface ProfilePhotoConfig {
   name: string;
-  uri: string;
+  uri: any; // Can be string (for remote) or number (for local require())
   dimensions: {
     width: number;
     height: number;
@@ -15,7 +15,7 @@ export interface ProfilePhotoConfig {
 export const PROFILE_PHOTOS: ProfilePhotoConfig[] = [
   {
     name: 'rajinder_singh',
-    uri: PROFILE_PHOTO_URI,
+    uri: require('../assets/images/profile-photos/rajinder_singh.jpg'),
     dimensions: { width: 400, height: 400 },
     fileSize: 45000
   }

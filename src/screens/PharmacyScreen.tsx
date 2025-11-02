@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, Modal, Alert } from 'react-native';
 // lucide-react-native icons removed
 import Header from '../components/common/Header';
@@ -41,7 +41,7 @@ const stockStyle = (cls: StockClass) => {
   }
 };
 
-const PharmacyCard = ({ name, statusClass, statusText, meta, infoRight, infoLeft }: PharmacyCardProps) => (
+const PharmacyCard = memo(({ name, statusClass, statusText, meta, infoRight, infoLeft }: PharmacyCardProps) => (
   <View style={styles.card}>
     <View style={styles.phHeader}>
       <Text style={styles.phName}>{name}</Text>
@@ -58,27 +58,29 @@ const PharmacyCard = ({ name, statusClass, statusText, meta, infoRight, infoLeft
   {!!infoRight && <Text style={styles.infoRight}>{infoRight}</Text>}
     </View>
   </View>
-);
+));
 
-export default function PharmacyScreen() {
+const PharmacyScreen = memo(() => {
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showCart, setShowCart] = useState(false);
 
-  // Sample medicine data
-  const medicines: Medicine[] = [
+  // Sample medicine data - memoized for performance
+  const medicines: Medicine[] = useMemo(() => [
     { id: '1', name: 'Amlodipine 5mg', price: 45, pharmacy: 'Sharma Medical Store', stock: 'inStock' },
     { id: '2', name: 'Paracetamol 500mg', price: 25, pharmacy: 'Apollo Pharmacy', stock: 'inStock' },
     { id: '3', name: 'Vitamin D3', price: 99, pharmacy: 'City Medical', stock: 'lowStock' },
     { id: '4', name: 'Metformin 500mg', price: 35, pharmacy: 'Sharma Medical Store', stock: 'inStock' },
     { id: '5', name: 'Aspirin 75mg', price: 15, pharmacy: 'Apollo Pharmacy', stock: 'outStock' },
-  ];
+  ], []);
 
-  const filteredMedicines = medicines.filter(medicine =>
-    medicine.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMedicines = useMemo(() => 
+    medicines.filter(medicine =>
+      medicine.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [medicines, searchQuery]
   );
 
-  const addToCart = (medicine: Medicine) => {
+  const addToCart = useCallback((medicine: Medicine) => {
     const existingItem = cart.find(item => item.medicine.id === medicine.id);
     if (existingItem) {
       setCart(cart.map(item =>
@@ -90,13 +92,13 @@ export default function PharmacyScreen() {
       setCart([...cart, { medicine, quantity: 1 }]);
     }
     Alert.alert('Added to Cart', `${medicine.name} added to cart`);
-  };
+  }, [cart]);
 
-  const removeFromCart = (medicineId: string) => {
+  const removeFromCart = useCallback((medicineId: string) => {
     setCart(cart.filter(item => item.medicine.id !== medicineId));
-  };
+  }, [cart]);
 
-  const updateQuantity = (medicineId: string, quantity: number) => {
+  const updateQuantity = useCallback((medicineId: string, quantity: number) => {
     if (quantity === 0) {
       removeFromCart(medicineId);
     } else {
@@ -106,16 +108,24 @@ export default function PharmacyScreen() {
           : item
       ));
     }
-  };
+  }, [cart, removeFromCart]);
 
-  const getTotalPrice = () => {
+  const getTotalPrice = useCallback(() => {
     return cart.reduce((total, item) => total + (item.medicine.price * item.quantity), 0);
-  };
+  }, [cart]);
 
   return (
   <View style={styles.screenContainer}>
       <Header />
-  <ScrollView contentContainerStyle={styles.scrollContent}>
+  <ScrollView 
+    contentContainerStyle={styles.scrollContent}
+    showsVerticalScrollIndicator={false}
+    bounces={true}
+    scrollEventThrottle={16}
+    removeClippedSubviews={true}
+    keyboardShouldPersistTaps="handled"
+    nestedScrollEnabled={true}
+  >
         <View style={styles.searchBar}>
           {/* Icon removed */}
           <TextInput
@@ -294,7 +304,9 @@ export default function PharmacyScreen() {
       </Modal>
     </View>
   );
-}
+});
+
+export default PharmacyScreen;
 
 const styles = StyleSheet.create({
   sectionTitle: { fontSize: 18, fontWeight: '700', color: '#333', marginBottom: 15 },

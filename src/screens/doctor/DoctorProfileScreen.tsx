@@ -1,193 +1,281 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal } from 'react-native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import Header from '../../components/common/Header';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUserProfile } from '../../contexts/UserProfileContext';
+import { ProfilePhotoService, ProfilePhotoConfig } from '../../services/ProfilePhotoService';
+import { safeAlert } from '../../utils/safeAlert';
 
 export default function DoctorProfileScreen() {
   const { user, logout } = useAuth();
-  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+  const { userProfile, updateProfileImage } = useUserProfile();
+  const navigation = useNavigation();
+  const [isPhotoModalVisible, setIsPhotoModalVisible] = useState(false);
+  const availablePhotos = ProfilePhotoService.getAvailablePhotos();
 
-  const handleEditProfile = () => {
-    Alert.alert('Edit Profile', 'Opening profile editor...');
+  const handlePhotoSelect = (photo: ProfilePhotoConfig) => {
+    updateProfileImage(photo.uri);
+    setIsPhotoModalVisible(false);
+    safeAlert('Success', 'Profile photo updated successfully!');
   };
 
-  const handleChangePassword = () => {
-    Alert.alert('Change Password', 'Opening password change form...');
+  const handlePhotoPress = () => {
+    // Automatically select the uploaded photo
+    if (availablePhotos.length > 0) {
+      handlePhotoSelect(availablePhotos[0]);
+    } else {
+      safeAlert(
+        'No Photos Available',
+        'Please add a photo to src/assets/images/profile-photos/',
+        [{ text: 'OK', style: 'default' }]
+      );
+    }
   };
 
-  const handleAvailability = () => {
-    Alert.alert('Availability', 'Managing availability settings...');
-  };
-
-  const handleNotifications = () => {
-    Alert.alert('Notifications', 'Managing notification preferences...');
-  };
-
-  const handleSupport = () => {
-    Alert.alert('Support', 'Contacting support team...');
+  const handleMenuPress = (menuItem: string) => {
+    if (menuItem === 'Logout') {
+      handleLogout();
+    } else {
+      safeAlert(menuItem, 'This feature will be available soon!');
+    }
   };
 
   const handleLogout = () => {
-    Alert.alert(
+    safeAlert(
       'Logout',
       'Are you sure you want to logout?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
           style: 'destructive',
           onPress: () => {
+            console.log('Doctor logging out...');
             logout();
-            Alert.alert('Logged Out', 'You have been successfully logged out.');
-          }
-        }
+            // The AppNavigator will automatically show Login screen when isAuthenticated becomes false
+            console.log('Doctor logout complete, AppNavigator will handle navigation');
+          },
+        },
       ]
     );
   };
 
-  const ProfileSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {children}
-    </View>
-  );
-
-  const MenuItem = ({ 
-    icon, 
-    title, 
-    subtitle, 
-    onPress, 
-    showArrow = true 
-  }: { 
-    icon: string; 
-    title: string; 
-    subtitle?: string; 
-    onPress: () => void;
-    showArrow?: boolean;
-  }) => (
-    <TouchableOpacity 
-      style={styles.menuItem} 
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View style={styles.menuItemLeft}>
-        <Text style={styles.menuIcon}>{icon}</Text>
-        <View style={styles.menuTextContainer}>
-          <Text style={styles.menuTitle}>{title}</Text>
-          {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
-        </View>
-      </View>
-      {showArrow && <Text style={styles.menuArrow}>›</Text>}
-    </TouchableOpacity>
-  );
-
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Profile Header */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Doctor Profile Header */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-              {user?.shortName?.charAt(0) || 'D'}
-            </Text>
-          </View>
-          <Text style={styles.doctorName}>{user?.fullName}</Text>
-          <Text style={styles.doctorSpecialty}>{user?.specialty}</Text>
-          <Text style={styles.doctorHospital}>{user?.hospital}</Text>
-          <Text style={styles.doctorExperience}>{user?.experience} years experience</Text>
+          <TouchableOpacity style={styles.avatarContainer} onPress={handlePhotoPress}>
+            <Image 
+              source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
+              style={styles.avatar}
+              resizeMode="contain"
+            />
+            <View style={styles.editIcon}>
+              <Text style={styles.editIconText}>📷</Text>
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.name}>Dr. {user?.fullName || userProfile.fullName}</Text>
+          <Text style={styles.specialty}>{user?.specialty || 'General Medicine'}</Text>
+          <Text style={styles.hospital}>{user?.hospital || 'SehatConnect Hospital'}</Text>
+          <Text style={styles.doctorId}>Doctor ID: {user?.patientId || 'DOC001'}</Text>
+          <Text style={styles.editHint}>Tap photo to change</Text>
         </View>
 
         {/* Professional Information */}
-        <ProfileSection title="Professional Information">
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Specialty</Text>
-              <Text style={styles.infoValue}>{user?.specialty || 'Not specified'}</Text>
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Professional Information</Text>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Medical License')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>📋</Text>
+              <Text style={styles.menuText}>Medical License</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Hospital</Text>
-              <Text style={styles.infoValue}>{user?.hospital || 'Not specified'}</Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Specialization')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>🎓</Text>
+              <Text style={styles.menuText}>Specialization & Qualifications</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Experience</Text>
-              <Text style={styles.infoValue}>{user?.experience || 0} years</Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Experience')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>💼</Text>
+              <Text style={styles.menuText}>Work Experience</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user?.email}</Text>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Availability')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>⏰</Text>
+              <Text style={styles.menuText}>Availability Schedule</Text>
             </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Doctor ID</Text>
-              <Text style={styles.infoValue}>{user?.patientId}</Text>
-            </View>
-          </View>
-        </ProfileSection>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Account Settings */}
-        <ProfileSection title="Account Settings">
-          <View style={styles.menuCard}>
-            <MenuItem
-              icon="✏️"
-              title="Edit Profile"
-              subtitle="Update personal information"
-              onPress={handleEditProfile}
-            />
-            <MenuItem
-              icon="🔒"
-              title="Change Password"
-              subtitle="Update your password"
-              onPress={handleChangePassword}
-            />
-            <MenuItem
-              icon="⏰"
-              title="Availability"
-              subtitle="Manage working hours"
-              onPress={handleAvailability}
-            />
-            <MenuItem
-              icon="🔔"
-              title="Notifications"
-              subtitle="Notification preferences"
-              onPress={handleNotifications}
-            />
-          </View>
-        </ProfileSection>
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Account Settings</Text>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Personal Information')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>👤</Text>
+              <Text style={styles.menuText}>Personal Information</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Contact Details')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>📞</Text>
+              <Text style={styles.menuText}>Contact Details</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Banking Information')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>🏦</Text>
+              <Text style={styles.menuText}>Banking Information</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* App Settings */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>App Settings</Text>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Notification Settings')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>🔔</Text>
+              <Text style={styles.menuText}>Notification Settings</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Privacy & Security')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>🔒</Text>
+              <Text style={styles.menuText}>Privacy & Security</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Language')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>🌐</Text>
+              <Text style={styles.menuText}>Language: English</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Support & Help */}
-        <ProfileSection title="Support & Help">
-          <View style={styles.menuCard}>
-            <MenuItem
-              icon="❓"
-              title="Help & Support"
-              subtitle="Get help and support"
-              onPress={handleSupport}
-            />
-            <MenuItem
-              icon="ℹ️"
-              title="About SehatConnect"
-              subtitle="App version and information"
-              onPress={() => Alert.alert('About', 'SehatConnect v2.0\nDoctor Portal')}
-            />
-          </View>
-        </ProfileSection>
-
-        {/* Logout */}
-        <View style={styles.logoutSection}>
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Support & Help</Text>
           <TouchableOpacity 
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            activeOpacity={0.7}
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Help & Support')}
           >
-            <Text style={styles.logoutIcon}>🚪</Text>
-            <Text style={styles.logoutText}>Logout</Text>
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>❓</Text>
+              <Text style={styles.menuText}>Help & Support</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('About SehatConnect')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>ℹ️</Text>
+              <Text style={styles.menuText}>About SehatConnect</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress('Logout')}
+          >
+            <View style={styles.menuItemContent}>
+              <Text style={styles.menuIcon}>🚪</Text>
+              <Text style={[styles.menuText, styles.logoutText]}>Logout</Text>
+            </View>
+            <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Photo Selection Modal */}
+      <Modal
+        visible={isPhotoModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setIsPhotoModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Profile Photo</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
+              {availablePhotos.map((photo, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.photoOption}
+                  onPress={() => handlePhotoSelect(photo)}
+                >
+                  <Image 
+                    source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
+                    style={styles.photoPreview} 
+                    resizeMode="contain" 
+                  />
+                  <Text style={styles.photoName}>{photo.name}</Text>
+                  <Text style={styles.photoDimensions}>
+                    {photo.dimensions.width}x{photo.dimensions.height}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setIsPhotoModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -196,9 +284,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
-  },
-  scrollView: {
-    flex: 1,
   },
   scrollContainer: {
     padding: 20,
@@ -209,104 +294,116 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 4,
+    shadowRadius: 10,
+    elevation: 3,
   },
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 16,
+    shadowColor: '#2563eb',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: '#2563eb',
+    position: 'relative',
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: -3,
+    right: -3,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#2563eb',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    borderWidth: 3,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
+  editIconText: {
+    fontSize: 14,
     color: '#fff',
   },
-  doctorName: {
+  name: {
     fontSize: 24,
     fontWeight: '700',
     color: '#111827',
     marginBottom: 4,
+    textAlign: 'center',
   },
-  doctorSpecialty: {
+  specialty: {
     fontSize: 16,
     color: '#2563eb',
     fontWeight: '600',
     marginBottom: 2,
+    textAlign: 'center',
   },
-  doctorHospital: {
+  hospital: {
     fontSize: 14,
     color: '#6b7280',
     marginBottom: 4,
+    textAlign: 'center',
   },
-  doctorExperience: {
-    fontSize: 14,
-    color: '#6b7280',
+  doctorId: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginBottom: 8,
+    textAlign: 'center',
   },
-  section: {
-    marginBottom: 24,
+  editHint: {
+    fontSize: 12,
+    color: '#9ca3af',
+    fontStyle: 'italic',
+  },
+  menuSection: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 12,
-  },
-  infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '600',
-  },
-  menuCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
   },
   menuItem: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  menuItemLeft: {
+  menuItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
@@ -314,48 +411,87 @@ const styles = StyleSheet.create({
   menuIcon: {
     fontSize: 20,
     marginRight: 16,
+    width: 24,
+    textAlign: 'center',
   },
-  menuTextContainer: {
-    flex: 1,
-  },
-  menuTitle: {
+  menuText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  menuSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  menuArrow: {
-    fontSize: 20,
-    color: '#9ca3af',
-  },
-  logoutSection: {
-    marginTop: 20,
-  },
-  logoutButton: {
-    backgroundColor: '#ef4444',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#ef4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  logoutIcon: {
-    fontSize: 20,
-    marginRight: 8,
+    color: '#374151',
+    fontWeight: '500',
   },
   logoutText: {
+    color: '#ef4444',
+  },
+  menuArrow: {
+    fontSize: 18,
+    color: '#9ca3af',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    margin: 20,
+    maxHeight: '80%',
+    minWidth: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  photoScroll: {
+    marginBottom: 20,
+  },
+  photoOption: {
+    alignItems: 'center',
+    marginRight: 15,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#f8f9fa',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  photoPreview: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+  },
+  photoName: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  photoDimensions: {
+    fontSize: 10,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#6b7280',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
   },
 });
