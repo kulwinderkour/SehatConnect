@@ -28,8 +28,8 @@ export default function RoleBasedNavigator() {
     return <DoctorTabNavigator />;
   }
 
-  // Show patient/admin interface with stack navigator for modal screens
-  console.log('RoleBasedNavigator: Rendering Patient/Admin Stack Navigator');
+  // Show patient interface with stack navigator for modal screens
+  console.log('RoleBasedNavigator: Rendering Patient Stack Navigator');
   return (
     <Stack.Navigator 
       initialRouteName="MainTabs"

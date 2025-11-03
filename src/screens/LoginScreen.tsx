@@ -47,15 +47,6 @@ export default function LoginScreen() {
       specialty: 'General Medicine',
       hospital: 'Apollo Hospital',
       experience: 12
-    },
-    {
-      email: 'admin@example.com',
-      password: 'admin123',
-      fullName: 'Admin User',
-      patientId: 'ADM001',
-      shortName: 'Admin',
-      profileImage: 'https://via.placeholder.com/100x100/5a9e31/ffffff?text=A',
-      role: 'admin' as const
     }
   ];
 
@@ -115,11 +106,10 @@ export default function LoginScreen() {
     }, 1500);
   };
 
-  const handleDemoLogin = (userType: 'patient' | 'doctor' | 'admin') => {
+  const handleDemoLogin = (userType: 'patient' | 'doctor') => {
     const user = mockUsers.find(u => {
       if (userType === 'patient') return u.email === 'rajinder@example.com';
       if (userType === 'doctor') return u.email === 'doctor@example.com';
-      if (userType === 'admin') return u.email === 'admin@example.com';
       return false;
     });
 
@@ -132,7 +122,7 @@ export default function LoginScreen() {
   const handleForgotPassword = () => {
     safeAlert(
       'Forgot Password?',
-      'For demo purposes, use these credentials:\n\nPatient: rajinder@example.com / password123\nDoctor: doctor@example.com / doctor123\nAdmin: admin@example.com / admin123',
+      'For demo purposes, use these credentials:\n\nPatient: rajinder@example.com / password123\nDoctor: doctor@example.com / doctor123',
       [{ text: 'OK' }]
     );
   };
@@ -234,12 +224,6 @@ export default function LoginScreen() {
                 onPress={() => handleDemoLogin('doctor')}
               >
                 <Text style={styles.demoButtonText}>👨‍⚕️ Doctor</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.demoButton}
-                onPress={() => handleDemoLogin('admin')}
-              >
-                <Text style={styles.demoButtonText}>⚙️ Admin</Text>
               </TouchableOpacity>
             </View>
           </View>

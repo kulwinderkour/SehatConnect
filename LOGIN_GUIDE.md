@@ -9,7 +9,6 @@ The app includes mock authentication with these demo accounts:
 |------|-------|----------|-------------|
 | **Patient** | `rajinder@example.com` | `password123` | Main patient account |
 | **Doctor** | `doctor@example.com` | `doctor123` | Doctor account |
-| **Admin** | `admin@example.com` | `admin123` | Admin account |
 
 ### **Features**
 - ✅ **Beautiful UI** with gradient header and modern design
@@ -29,8 +28,7 @@ The app includes mock authentication with these demo accounts:
 3. **Login screen appears** automatically
 4. **Use demo credentials** or click demo buttons:
    - Click "👤 Patient" to auto-fill patient credentials
-   - Click "👨‍⚕️ Doctor" to auto-fill doctor credentials  
-   - Click "⚙️ Admin" to auto-fill admin credentials
+   - Click "👨‍⚕️ Doctor" to auto-fill doctor credentials
 5. **Click "Sign In"** to login
 6. **Success!** - You'll be redirected to the main app
 
