@@ -408,24 +408,6 @@ export default function HomeScreen() {
           title={getText('doctorsTopDoctors')}
           onSeeAllPress={() => {}}
         />
-
-
-        {/* Nearby Services Section */}
-        <Text style={styles.sectionTitle}>{getText('servicesNearby')}</Text>
-        <View style={styles.serviceCard}>
-          <Text style={styles.serviceTitle}>
-            Dr. Sharma {getText('statusAvailable')}
-          </Text>
-          <Text style={styles.serviceSubtitle}>
-            {getText('specialtyGeneralMedicine')} • 2.5 km
-          </Text>
-          <View style={styles.serviceStatus}>
-            <View style={styles.availabilityIndicator} />
-            <Text style={styles.availabilityText}>
-              {getText('statusAvailable')}
-            </Text>
-          </View>
-        </View>
       </ScrollView>
 
       {/* Schedule Modal */}
@@ -458,7 +440,8 @@ export const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 24,
     paddingBottom: 32,
   },
   // Grid-based quick actions with improved alignment and responsive design

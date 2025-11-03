@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, TouchableOpacity, Animated, Image } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
+import { Bell } from 'lucide-react-native';
 import { useI18n, getLanguageDisplayName } from '../../i18n';
 import { useNavigation } from '@react-navigation/native';
 import { useUserProfile } from '../../contexts/UserProfileContext';
@@ -65,13 +65,6 @@ export default function Header() {
     }
   }, [navigation]);
 
-  // Custom gradient configuration
-  const gradientConfig = {
-    colors: ['#059669', '#047857'],
-    start: { x: 0, y: 0 },
-    end: { x: 1, y: 1 }
-  };
-
   return (
     <>
       {/* Back button when nested and can go back */}
@@ -80,68 +73,52 @@ export default function Header() {
           onPress={handleBackPress}
           style={{ position: 'absolute', left: 8, top: 12, zIndex: 30, padding: 8 }}
         >
-          <Text style={{ color: '#fff', fontSize: 18 }}></Text>
+          <Text style={{ color: '#333', fontSize: 18 }}>←</Text>
         </TouchableOpacity>
       )}
-      {/* First header section - App title */}
-      <LinearGradient 
-        colors={gradientConfig.colors} 
-        start={gradientConfig.start}
-        end={gradientConfig.end}
-        style={styles.firstHeaderContainer}
-      >
-        <View style={styles.topSection}>
-          <Text style={styles.appTitle}>{getText('appTitle')}</Text>
-          <View style={styles.topRightContainer}>
+      
+      {/* Modern header section */}
+      <View style={styles.headerContainer}>
+        <View style={styles.headerContent}>
+          {/* Left side - Avatar and user info */}
+          <View style={styles.leftSection}>
+            <TouchableOpacity 
+              style={styles.profilePhotoContainer}
+              onPress={handleProfilePress}
+              activeOpacity={0.6}
+            >
+              <Image 
+                source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
+                style={styles.profilePhoto}
+                resizeMode="cover"
+              />
+            </TouchableOpacity>
+            <View style={styles.userInfoContainer}>
+              <Text style={styles.userGreeting}>Hi, {userProfile.shortName}</Text>
+              <View style={styles.patientBadge}>
+                <Text style={styles.patientIdText}>Patient ID: {userProfile.patientId}</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Right side - Language selector and Bell icon */}
+          <View style={styles.rightSection}>
             <Pressable 
               style={styles.languageSelector}
               onPress={showLanguageModal}
-              android_ripple={{ color: 'rgba(255,255,255,0.2)' }}
+              android_ripple={{ color: 'rgba(90, 158, 49, 0.1)' }}
             >
               <Text style={styles.languageText}>{currentLanguageName} ▾</Text>
             </Pressable>
             <TouchableOpacity 
-              style={styles.actionButton}
-              activeOpacity={0.7}
+              style={styles.notificationButton}
+              activeOpacity={0.6}
             >
-              <Text style={styles.actionButtonIcon}>🔔</Text>
+              <Bell size={22} color="#f59e0b" strokeWidth={2} />
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
-
-      {/* Second header section - User greeting */}
-      <LinearGradient 
-        colors={gradientConfig.colors} 
-        start={gradientConfig.start}
-        end={gradientConfig.end}
-        style={styles.secondHeaderContainer}
-      >
-        <View style={styles.bottomSection}>
-          <View style={styles.userInfoContainer}>
-            <Text style={styles.userGreeting}>
-              {getText('greetingHello')} {userProfile.shortName},
-            </Text>
-            <View style={styles.patientIdContainer}>
-              <Text style={styles.patientIdText}>
-                {getText('userPatientId')}: {userProfile.patientId}
-              </Text>
-            </View>
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.profilePhotoContainer}
-            onPress={handleProfilePress}
-            activeOpacity={0.6}
-          >
-            <Image 
-              source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
-              style={styles.profilePhoto}
-              resizeMode="cover"
-            />
-          </TouchableOpacity>
-        </View>
-      </LinearGradient>
+      </View>
 
       {/* Language selection modal */}
       <Modal
@@ -184,147 +161,93 @@ export default function Header() {
   );
 }
 
-// Custom styles with original design patterns
+// Custom styles with modern white design
 const styles = StyleSheet.create({
-  firstHeaderContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 11,
-    paddingBottom: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  secondHeaderContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
+  headerContainer: {
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 8,
+    paddingTop: 16,
     paddingBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  topSection: {
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  topRightContainer: {
+  leftSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    flex: 1,
   },
-  appTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 0.6,
+  profilePhotoContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    marginRight: 12,
+    marginLeft: 0,
   },
-  languageSelector: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  languageText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  bottomSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  profilePhoto: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#e2e8f0',
   },
   userInfoContainer: {
     flex: 1,
-    paddingRight: 12,
-  },
-  profilePhotoContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  profilePhoto: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 3,
-    borderColor: 'rgba(255,255,255,0.4)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   userGreeting: {
-    color: '#fff',
-    fontSize: 18,
+    color: '#1e293b',
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 7,
-    letterSpacing: 0.3,
-  },
-  userSubGreeting: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
-    fontWeight: '400',
     marginBottom: 2,
-    lineHeight: 18,
+    letterSpacing: -0.3,
   },
-  patientIdContainer: {
+  patientBadge: {
+    marginTop: 4,
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
     alignSelf: 'flex-start',
-    marginLeft: -4,
   },
-  patientIdText: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 12,
-    fontWeight: '500',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  actionButtonsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingTop: 8,
-  },
-  actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  notificationButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  actionButtonIcon: {
-    fontSize: 18,
-    color: '#fff',
+  patientIdText: {
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  languageSelector: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+    marginRight: 12,
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  languageText: {
+    color: '#475569',
+    fontSize: 12,
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
