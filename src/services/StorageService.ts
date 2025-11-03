@@ -1,33 +1,23 @@
-// Temporarily disabled until app is rebuilt
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * Storage Service - Handles persistent data storage
- * 
- * TEMPORARY: Using in-memory storage until app is rebuilt with AsyncStorage
- * 
- * TO ENABLE FULL PERSISTENCE:
- * 1. Stop Metro (Ctrl+C)
- * 2. Run: cd android && ./gradlew clean && cd ..
- * 3. Run: npx react-native run-android
- * 4. Then uncomment the AsyncStorage code below
+ * Storage Service - Handles persistent data storage using AsyncStorage
  */
-
-// Temporary in-memory storage
-const storage: { [key: string]: any } = {};
 
 export class StorageService {
   /**
    * Save profile image URI
    */
-  static async saveProfileImage(userId: string, imageUri: string): Promise<void> {
+  static async saveProfileImage(userId: string, imageUri: string | number): Promise<void> {
     try {
       const key = `profile_image_${userId}`;
+      // Handle both local require() numbers and string URIs
       const uriString = typeof imageUri === 'number' ? `local:${imageUri}` : imageUri;
-      storage[key] = uriString;
-      console.log('✅ Profile image saved (in-memory):', key);
+      await AsyncStorage.setItem(key, uriString);
+      console.log('✅ Profile image saved to AsyncStorage:', key);
     } catch (error) {
       console.error('❌ Error saving profile image:', error);
+      throw error;
     }
   }
 
@@ -37,10 +27,16 @@ export class StorageService {
   static async getProfileImage(userId: string): Promise<any | null> {
     try {
       const key = `profile_image_${userId}`;
-      const savedUri = storage[key];
+      const savedUri = await AsyncStorage.getItem(key);
       
       if (savedUri) {
-        console.log('✅ Profile image loaded (in-memory):', key);
+        // Handle local require() format
+        if (savedUri.startsWith('local:')) {
+          const localId = parseInt(savedUri.replace('local:', ''), 10);
+          console.log('✅ Profile image loaded from AsyncStorage (local):', key);
+          return localId;
+        }
+        console.log('✅ Profile image loaded from AsyncStorage:', key);
         return savedUri;
       } else {
         console.log('ℹ️ No saved profile image found');
@@ -58,10 +54,11 @@ export class StorageService {
   static async saveUserProfile(userId: string, profileData: any): Promise<void> {
     try {
       const key = `user_profile_${userId}`;
-      storage[key] = JSON.stringify(profileData);
-      console.log('✅ User profile saved (in-memory):', key);
+      await AsyncStorage.setItem(key, JSON.stringify(profileData));
+      console.log('✅ User profile saved to AsyncStorage:', key);
     } catch (error) {
       console.error('❌ Error saving user profile:', error);
+      throw error;
     }
   }
 
@@ -71,10 +68,10 @@ export class StorageService {
   static async getUserProfile(userId: string): Promise<any | null> {
     try {
       const key = `user_profile_${userId}`;
-      const data = storage[key];
+      const data = await AsyncStorage.getItem(key);
       
       if (data) {
-        console.log('✅ User profile loaded (in-memory):', key);
+        console.log('✅ User profile loaded from AsyncStorage:', key);
         return JSON.parse(data);
       }
       return null;
@@ -89,11 +86,14 @@ export class StorageService {
    */
   static async clearUserData(userId: string): Promise<void> {
     try {
-      delete storage[`profile_image_${userId}`];
-      delete storage[`user_profile_${userId}`];
-      console.log('ℹ️ User data cleared');
+      await AsyncStorage.multiRemove([
+        `profile_image_${userId}`,
+        `user_profile_${userId}`
+      ]);
+      console.log('✅ User data cleared from AsyncStorage');
     } catch (error) {
       console.error('❌ Error clearing user data:', error);
+      throw error;
     }
   }
 
@@ -102,20 +102,21 @@ export class StorageService {
    */
   static async clearAll(): Promise<void> {
     try {
-      Object.keys(storage).forEach(key => delete storage[key]);
-      console.log('✅ All storage cleared');
+      await AsyncStorage.clear();
+      console.log('✅ All storage cleared from AsyncStorage');
     } catch (error) {
       console.error('❌ Error clearing all storage:', error);
+      throw error;
     }
   }
 
   /**
    * Get all keys in storage
    */
-  static async getAllKeys(): Promise<string[]> {
+  static async getAllKeys(): Promise<readonly string[]> {
     try {
-      const keys = Object.keys(storage);
-      console.log('📦 Storage keys:', keys);
+      const keys = await AsyncStorage.getAllKeys();
+      console.log('📦 Storage keys from AsyncStorage:', keys);
       return keys;
     } catch (error) {
       console.error('❌ Error getting all keys:', error);
