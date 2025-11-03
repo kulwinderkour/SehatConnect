@@ -1,6 +1,7 @@
 import React, { useState, memo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import ImageCropPicker from 'react-native-image-crop-picker';
 // import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
 import Header from '../components/common/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,18 +25,59 @@ const ProfileScreen = memo(() => {
     safeAlert('Success', 'Profile photo updated successfully!');
   }, [updateProfileImage]);
 
-  const handlePhotoPress = useCallback(() => {
-    // Automatically select the uploaded photo
-    if (availablePhotos.length > 0) {
-      handlePhotoSelect(availablePhotos[0]);
-    } else {
-      safeAlert(
-        'No Photos Available',
-        'Please add a photo to src/assets/images/profile-photos/rajinder_singh.jpg',
-        [{ text: 'OK', style: 'default' }]
-      );
+  // Open camera to take a new photo
+  const openCamera = useCallback(async () => {
+    try {
+      const image = await ImageCropPicker.openCamera({
+        width: 400,
+        height: 400,
+        cropping: true,
+        cropperCircleOverlay: true,
+        compressImageQuality: 0.8,
+        includeBase64: false,
+        useFrontCamera: true,
+        mediaType: 'photo',
+      });
+      
+      updateProfileImage(image.path);
+      setIsPhotoModalVisible(false);
+      safeAlert('Success', 'Profile photo updated successfully!');
+    } catch (error: any) {
+      if (error.code !== 'E_PICKER_CANCELLED') {
+        console.error('Camera error:', error);
+        safeAlert('Error', 'Failed to take photo. Please try again.');
+      }
     }
-  }, [availablePhotos, handlePhotoSelect]);
+  }, [updateProfileImage]);
+
+  // Open gallery to select existing photo
+  const openGallery = useCallback(async () => {
+    try {
+      const image = await ImageCropPicker.openPicker({
+        width: 400,
+        height: 400,
+        cropping: true,
+        cropperCircleOverlay: true,
+        compressImageQuality: 0.8,
+        includeBase64: false,
+        mediaType: 'photo',
+      });
+      
+      updateProfileImage(image.path);
+      setIsPhotoModalVisible(false);
+      safeAlert('Success', 'Profile photo updated successfully!');
+    } catch (error: any) {
+      if (error.code !== 'E_PICKER_CANCELLED') {
+        console.error('Gallery error:', error);
+        safeAlert('Error', 'Failed to select photo. Please try again.');
+      }
+    }
+  }, [updateProfileImage]);
+
+  const handlePhotoPress = useCallback(() => {
+    // Show modal with camera and gallery options
+    setIsPhotoModalVisible(true);
+  }, []);
 
   const handleLogout = useCallback(() => {
     safeAlert(
@@ -163,7 +205,7 @@ const ProfileScreen = memo(() => {
         </View>
       </ScrollView>
 
-      {/* Photo Selection Modal */}
+      {/* Photo Options Modal */}
       <Modal
         visible={isPhotoModalVisible}
         transparent
@@ -172,26 +214,35 @@ const ProfileScreen = memo(() => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Profile Photo</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.photoScroll}>
-              {availablePhotos.map((photo, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.photoOption}
-                  onPress={() => handlePhotoSelect(photo)}
-                >
-                  <Image 
-                    source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
-                    style={styles.photoPreview} 
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.photoName}>{photo.name}</Text>
-                  <Text style={styles.photoDimensions}>
-                    {photo.dimensions.width}x{photo.dimensions.height}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            <Text style={styles.modalTitle}>Change Profile Photo</Text>
+            <Text style={styles.modalSubtitle}>Choose how you want to update your photo</Text>
+            
+            <TouchableOpacity
+              style={styles.photoOptionButton}
+              onPress={openCamera}
+            >
+              <View style={styles.photoOptionIcon}>
+                <Text style={styles.photoOptionEmoji}>📷</Text>
+              </View>
+              <View style={styles.photoOptionText}>
+                <Text style={styles.photoOptionTitle}>Take Photo</Text>
+                <Text style={styles.photoOptionDescription}>Use camera to take a new photo</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.photoOptionButton}
+              onPress={openGallery}
+            >
+              <View style={styles.photoOptionIcon}>
+                <Text style={styles.photoOptionEmoji}>🖼️</Text>
+              </View>
+              <View style={styles.photoOptionText}>
+                <Text style={styles.photoOptionTitle}>Choose from Gallery</Text>
+                <Text style={styles.photoOptionDescription}>Select from your photo library</Text>
+              </View>
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.cancelButton}
               onPress={() => setIsPhotoModalVisible(false)}
@@ -283,41 +334,54 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#333',
+    color: '#111827',
     textAlign: 'center',
-    marginBottom: 20,
-  },
-  photoScroll: {
-    marginBottom: 20,
-  },
-  photoOption: {
-    alignItems: 'center',
-    marginRight: 15,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: '#f8f9fa',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  photoPreview: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
     marginBottom: 8,
   },
-  photoName: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#333',
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
     textAlign: 'center',
-    marginBottom: 2,
+    marginBottom: 30,
   },
-  photoDimensions: {
-    fontSize: 10,
-    color: '#666',
-    textAlign: 'center',
+  photoOptionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  photoOptionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  photoOptionEmoji: {
+    fontSize: 24,
+  },
+  photoOptionText: {
+    flex: 1,
+  },
+  photoOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  photoOptionDescription: {
+    fontSize: 13,
+    color: '#6b7280',
   },
   cancelButton: {
     backgroundColor: '#6c757d',
