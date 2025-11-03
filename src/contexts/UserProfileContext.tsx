@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { ProfilePhotoService } from '../services/ProfilePhotoService';
+import { StorageService } from '../services/StorageService';
 
 interface UserProfile {
   fullName: string;
@@ -14,6 +15,7 @@ interface UserProfileContextType {
   userProfile: UserProfile;
   updateProfileImage: (imageUri: any) => void;
   updateProfile: (updates: Partial<UserProfile>) => void;
+  loadSavedProfile: (userId: string) => Promise<void>;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
@@ -35,22 +37,67 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
     phone: "+91 98765 43210"
   });
 
-  const updateProfileImage = (imageUri: any) => {
-    setUserProfile(prev => ({
-      ...prev,
-      profileImage: imageUri
-    }));
+  const updateProfileImage = async (imageUri: any) => {
+    console.log('Updating profile image:', imageUri);
+    
+    setUserProfile(prev => {
+      const updated = {
+        ...prev,
+        profileImage: imageUri
+      };
+      
+      // Save to storage
+      StorageService.saveProfileImage(prev.patientId, imageUri).catch(err => 
+        console.error('Failed to save profile image:', err)
+      );
+      
+      return updated;
+    });
   };
 
-  const updateProfile = (updates: Partial<UserProfile>) => {
-    setUserProfile(prev => ({
-      ...prev,
-      ...updates
-    }));
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    console.log('Updating profile:', updates);
+    
+    setUserProfile(prev => {
+      const updated = {
+        ...prev,
+        ...updates
+      };
+      
+      // Save profile image if it was updated
+      if (updates.profileImage) {
+        StorageService.saveProfileImage(updated.patientId, updates.profileImage).catch(err =>
+          console.error('Failed to save profile image:', err)
+        );
+      }
+      
+      return updated;
+    });
+  };
+
+  const loadSavedProfile = async (userId: string) => {
+    console.log('Loading saved profile for user:', userId);
+    
+    try {
+      // Load saved profile image
+      const savedImage = await StorageService.getProfileImage(userId);
+      
+      if (savedImage) {
+        console.log('Found saved profile image:', savedImage);
+        setUserProfile(prev => ({
+          ...prev,
+          profileImage: savedImage
+        }));
+      } else {
+        console.log('No saved profile image found, using default');
+      }
+    } catch (error) {
+      console.error('Error loading saved profile:', error);
+    }
   };
 
   return (
-    <UserProfileContext.Provider value={{ userProfile, updateProfileImage, updateProfile }}>
+    <UserProfileContext.Provider value={{ userProfile, updateProfileImage, updateProfile, loadSavedProfile }}>
       {children}
     </UserProfileContext.Provider>
   );

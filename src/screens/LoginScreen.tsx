@@ -23,7 +23,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
   const { login: authLogin } = useAuth();
-  const { updateProfile } = useUserProfile();
+  const { updateProfile, loadSavedProfile } = useUserProfile();
 
   // Mock user credentials for demo
   const mockUsers = [
@@ -72,12 +72,18 @@ export default function LoginScreen() {
       if (user) {
         console.log('Updating user profile and auth state...');
         
+        // Load saved profile image first (this is async)
+        loadSavedProfile(user.patientId).then(() => {
+          console.log('Saved profile loaded');
+        }).catch(err => {
+          console.error('Failed to load saved profile:', err);
+        });
+        
         // Update user profile with logged in user data
         updateProfile({
           fullName: user.fullName,
           patientId: user.patientId,
           shortName: user.shortName,
-          profileImage: user.profileImage,
           email: user.email
         });
 
