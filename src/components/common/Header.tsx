@@ -137,7 +137,7 @@ export default function Header() {
             <Image 
               source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.profilePhoto}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </TouchableOpacity>
         </View>

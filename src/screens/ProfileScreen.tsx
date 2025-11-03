@@ -1,7 +1,8 @@
 import React, { useState, memo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Modal, Alert, Platform, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import ImageCropPicker from 'react-native-image-crop-picker';
+import { Camera, Image as ImageIcon } from 'lucide-react-native';
 // import LinearGradient from 'react-native-linear-gradient'; // Commented out as unused
 import Header from '../components/common/Header';
 import { useAuth } from '../contexts/AuthContext';
@@ -205,52 +206,69 @@ const ProfileScreen = memo(() => {
         </View>
       </ScrollView>
 
-      {/* Photo Options Modal */}
+      {/* Photo Options Modal - Material Design */}
       <Modal
         visible={isPhotoModalVisible}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setIsPhotoModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setIsPhotoModalVisible(false)}
+        >
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Change Profile Photo</Text>
-            <Text style={styles.modalSubtitle}>Choose how you want to update your photo</Text>
+            {/* Dialog Title */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Change Profile Photo</Text>
+              <Text style={styles.modalSubtitle}>Choose how you want to update your photo</Text>
+            </View>
             
-            <TouchableOpacity
-              style={styles.photoOptionButton}
-              onPress={openCamera}
-            >
-              <View style={styles.photoOptionIcon}>
-                <Text style={styles.photoOptionEmoji}>📷</Text>
-              </View>
-              <View style={styles.photoOptionText}>
-                <Text style={styles.photoOptionTitle}>Take Photo</Text>
-                <Text style={styles.photoOptionDescription}>Use camera to take a new photo</Text>
-              </View>
-            </TouchableOpacity>
+            {/* Dialog Content */}
+            <View style={styles.modalBody}>
+              <Pressable
+                style={styles.materialOptionButton}
+                onPress={openCamera}
+                android_ripple={{ color: 'rgba(90, 158, 49, 0.1)' }}
+              >
+                <View style={[styles.materialIconContainer, styles.cameraIconContainer]}>
+                  <Camera size={24} color="#5a9e31" strokeWidth={2} />
+                </View>
+                <View style={styles.materialOptionText}>
+                  <Text style={styles.materialOptionTitle}>Take Photo</Text>
+                  <Text style={styles.materialOptionDescription}>Use camera to take a new photo</Text>
+                </View>
+              </Pressable>
 
-            <TouchableOpacity
-              style={styles.photoOptionButton}
-              onPress={openGallery}
-            >
-              <View style={styles.photoOptionIcon}>
-                <Text style={styles.photoOptionEmoji}>🖼️</Text>
-              </View>
-              <View style={styles.photoOptionText}>
-                <Text style={styles.photoOptionTitle}>Choose from Gallery</Text>
-                <Text style={styles.photoOptionDescription}>Select from your photo library</Text>
-              </View>
-            </TouchableOpacity>
+              <View style={styles.materialDivider} />
 
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setIsPhotoModalVisible(false)}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+              <Pressable
+                style={styles.materialOptionButton}
+                onPress={openGallery}
+                android_ripple={{ color: 'rgba(90, 158, 49, 0.1)' }}
+              >
+                <View style={[styles.materialIconContainer, styles.galleryIconContainer]}>
+                  <ImageIcon size={24} color="#5a9e31" strokeWidth={2} />
+                </View>
+                <View style={styles.materialOptionText}>
+                  <Text style={styles.materialOptionTitle}>Choose from Gallery</Text>
+                  <Text style={styles.materialOptionDescription}>Select from your photo library</Text>
+                </View>
+              </Pressable>
+            </View>
+
+            {/* Dialog Actions */}
+            <View style={styles.modalActions}>
+              <Pressable
+                style={styles.materialCancelButton}
+                onPress={() => setIsPhotoModalVisible(false)}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
+              >
+                <Text style={styles.materialCancelButtonText}>CANCEL</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
+        </Pressable>
       </Modal>
     </View>
   );
@@ -314,86 +332,112 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 3,
   },
   menuItem: { paddingHorizontal: 20, paddingVertical: 15, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  // Material Design Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    margin: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 16, // More rounded corners for modern look
+    width: '90%',
+    maxWidth: 400,
     maxHeight: '80%',
-    minWidth: '90%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 24 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 24, // Material Design elevation for dialogs
+  },
+  modalHeader: {
+    paddingTop: 24,
+    paddingHorizontal: 24,
+    paddingBottom: 20,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontSize: 20, // Material Design Headline 6
+    fontWeight: '500', // Medium weight
+    color: 'rgba(0, 0, 0, 0.87)', // Material Design text primary
+    marginBottom: 4,
+    letterSpacing: 0.15,
   },
   modalSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginBottom: 30,
+    fontSize: 14, // Material Design Body 2
+    fontWeight: '400', // Regular weight
+    color: 'rgba(0, 0, 0, 0.6)', // Material Design text secondary
+    lineHeight: 20,
+    letterSpacing: 0.25,
   },
-  photoOptionButton: {
+  modalBody: {
+    paddingHorizontal: 24,
+    paddingBottom: 8,
+  },
+  materialOptionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    paddingVertical: 16,
+    paddingHorizontal: 0,
+    minHeight: 48, // Material Design minimum touch target
   },
-  photoOptionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#fff',
+  materialIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
   },
-  photoOptionEmoji: {
-    fontSize: 24,
+  cameraIconContainer: {
+    backgroundColor: 'rgba(90, 158, 49, 0.12)',
   },
-  photoOptionText: {
+  galleryIconContainer: {
+    backgroundColor: 'rgba(90, 158, 49, 0.12)',
+  },
+  materialOptionText: {
     flex: 1,
   },
-  photoOptionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+  materialOptionTitle: {
+    fontSize: 16, // Material Design Subtitle 1
+    fontWeight: '400', // Regular weight
+    color: 'rgba(0, 0, 0, 0.87)', // Material Design text primary
     marginBottom: 4,
+    letterSpacing: 0.15,
   },
-  photoOptionDescription: {
-    fontSize: 13,
-    color: '#6b7280',
+  materialOptionDescription: {
+    fontSize: 14, // Material Design Body 2
+    fontWeight: '400', // Regular weight
+    color: 'rgba(0, 0, 0, 0.6)', // Material Design text secondary
+    lineHeight: 20,
+    letterSpacing: 0.25,
   },
-  cancelButton: {
-    backgroundColor: '#6c757d',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+  materialDivider: {
+    height: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.12)', // Material Design divider color
+    marginLeft: 56, // Align with text content (40 icon + 16 margin)
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 8,
+    paddingTop: 8,
+    paddingBottom: 8,
+    minHeight: 52, // Material Design dialog actions height
+  },
+  materialCancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minHeight: 36, // Material Design button minimum height
+    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 4,
   },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  materialCancelButtonText: {
+    fontSize: 14, // Material Design Button text
+    fontWeight: '500', // Medium weight
+    color: '#5a9e31', // Material Design primary color
+    letterSpacing: 1.25, // Material Design button letter spacing
   },
   logoutText: {
     color: '#ef4444',

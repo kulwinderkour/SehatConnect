@@ -1,13 +1,14 @@
 ﻿import React, { useCallback, useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import ConsultationsScreen from '../screens/ConsultationsScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import PharmacyScreen from '../screens/PharmacyScreen';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import { useI18n } from '../i18n';
-import { Home, Stethoscope, FileText, Pill, User } from 'lucide-react-native';
+import { useUserProfile } from '../contexts/UserProfileContext';
+import { Home, Stethoscope, FileText, Pill } from 'lucide-react-native';
 
 // Create navigator instances
 const Tab = createBottomTabNavigator();
@@ -30,6 +31,23 @@ const CustomTabIcon = ({
   </View>
 );
 
+// Custom profile photo tab icon component
+const ProfilePhotoTabIcon = ({ isActive }: { isActive: boolean }) => {
+  const { userProfile } = useUserProfile();
+  
+  return (
+    <View style={styles.tabIconContainer}>
+      <View style={[styles.profilePhotoWrapper, isActive && styles.profilePhotoWrapperActive]}>
+        <Image 
+          source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
+          style={styles.profilePhotoTab}
+          resizeMode="cover"
+        />
+      </View>
+    </View>
+  );
+};
+
 // Main tab navigator component
 export default function TabNavigator() {
   console.log('TabNavigator: Rendering');
@@ -42,11 +60,11 @@ export default function TabNavigator() {
     () => {
       console.log('TabNavigator: Creating tab screens array');
       return [
-        { name: 'Home', component: HomeScreen, icon: Home, label: getText('navHome') },
-        { name: 'Consult', component: ConsultationsScreen, icon: Stethoscope, label: getText('navConsult') },
-        { name: 'Records', component: RecordsScreen, icon: FileText, label: getText('navRecords') },
-        { name: 'Pharmacy', component: PharmacyScreen, icon: Pill, label: getText('navPharmacy') },
-        { name: 'Profile', component: ProfileStackNavigator, icon: User, label: getText('navProfile') },
+        { name: 'Home', component: HomeScreen, icon: Home, label: getText('navHome'), isProfile: false },
+        { name: 'Consult', component: ConsultationsScreen, icon: Stethoscope, label: getText('navConsult'), isProfile: false },
+        { name: 'Records', component: RecordsScreen, icon: FileText, label: getText('navRecords'), isProfile: false },
+        { name: 'Pharmacy', component: PharmacyScreen, icon: Pill, label: getText('navPharmacy'), isProfile: false },
+        { name: 'Profile', component: ProfileStackNavigator, icon: null, label: getText('navProfile'), isProfile: true },
       ];
     },
     [getText]
@@ -78,7 +96,17 @@ export default function TabNavigator() {
       }}
     >
       {tabScreens.map((screen) => (
-        <Tab.Screen key={screen.name} name={screen.name} component={screen.component} options={{ tabBarIcon: createIconRenderer(screen.icon), tabBarLabel: screen.label }} />
+        <Tab.Screen 
+          key={screen.name} 
+          name={screen.name} 
+          component={screen.component} 
+          options={{ 
+            tabBarIcon: screen.isProfile 
+              ? ({ focused }: { focused: boolean }) => <ProfilePhotoTabIcon isActive={focused} />
+              : createIconRenderer(screen.icon!), 
+            tabBarLabel: screen.label 
+          }} 
+        />
       ))}
     </Tab.Navigator>
   );
@@ -113,6 +141,24 @@ const styles = StyleSheet.create({
   },
   iconWrapperActive: {
     backgroundColor: 'rgba(90, 158, 49, 0.12)',
+  },
+  profilePhotoWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#f3f4f6',
+    marginBottom: 4,
+  },
+  profilePhotoWrapperActive: {
+    borderColor: '#5a9e31',
+    borderWidth: 3,
+  },
+  profilePhotoTab: {
+    width: '100%',
+    height: '100%',
   },
   tabLabel: {
     fontSize: 11,
