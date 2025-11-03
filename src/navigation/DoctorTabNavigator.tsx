@@ -1,21 +1,22 @@
 import React, { useMemo, useCallback } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import DoctorDashboardScreen from '../screens/doctor/DoctorDashboardScreen';
 import PatientManagementScreen from '../screens/doctor/PatientManagementScreen';
 import AppointmentManagementScreen from '../screens/doctor/AppointmentManagementScreen';
 import PrescriptionScreen from '../screens/doctor/PrescriptionScreen';
 import DoctorProfileScreen from '../screens/doctor/DoctorProfileScreen';
+import { LayoutDashboard, Users, CalendarDays, FileText, UserCircle } from 'lucide-react-native';
 
 // Create tab navigator instance
 const Tab = createBottomTabNavigator();
 
-// Custom tab icon component for doctor interface
+// Custom tab icon component for doctor interface with modern icons
 const DoctorTabIcon = ({ 
-  emoji, 
+  IconComponent, 
   isActive 
 }: { 
-  emoji: string; 
+  IconComponent: React.ComponentType<{ size: number; color: string }>; 
   isActive: boolean; 
 }) => (
   <View style={styles.tabIconContainer}>
@@ -23,12 +24,10 @@ const DoctorTabIcon = ({
       styles.iconWrapper,
       isActive && styles.iconWrapperActive
     ]}>
-      <Text style={[
-        styles.iconEmoji,
-        isActive && styles.iconEmojiActive
-      ]}>
-        {emoji}
-      </Text>
+      <IconComponent 
+        size={22} 
+        color={isActive ? '#2563eb' : '#6b7280'} 
+      />
     </View>
   </View>
 );
@@ -40,44 +39,47 @@ export default function DoctorTabNavigator() {
     {
       name: 'Dashboard',
       component: DoctorDashboardScreen,
-      icon: '📊',
+      icon: LayoutDashboard,
       label: 'Dashboard',
     },
     {
       name: 'Patients',
       component: PatientManagementScreen,
-      icon: '👥',
+      icon: Users,
       label: 'Patients',
     },
     {
       name: 'Appointments',
       component: AppointmentManagementScreen,
-      icon: '📅',
+      icon: CalendarDays,
       label: 'Appointments',
     },
     {
       name: 'Prescriptions',
       component: PrescriptionScreen,
-      icon: '💊',
+      icon: FileText,
       label: 'Prescriptions',
     },
     {
       name: 'Profile',
       component: DoctorProfileScreen,
-      icon: '👨‍⚕️',
+      icon: UserCircle,
       label: 'Profile',
     },
   ], []);
 
   // Custom icon renderer
-  const createIconRenderer = useCallback((icon: string) => {
-    return ({ focused }: { focused: boolean }) => (
-      <DoctorTabIcon
-        emoji={icon}
-        isActive={focused}
-      />
-    );
-  }, []);
+  const createIconRenderer = useCallback(
+    (IconComponent: React.ComponentType<{ size: number; color: string }>) => {
+      return ({ focused }: { focused: boolean }) => (
+        <DoctorTabIcon
+          IconComponent={IconComponent}
+          isActive={focused}
+        />
+      );
+    }, 
+    []
+  );
 
   return (
     <Tab.Navigator
@@ -125,24 +127,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapper: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
     backgroundColor: 'transparent',
   },
   iconWrapperActive: {
-    backgroundColor: 'rgba(37, 99, 235, 0.1)', // Blue theme
-  },
-  iconEmoji: {
-    fontSize: 20,
-    color: '#6b7280',
-  },
-  iconEmojiActive: {
-    fontSize: 22,
-    color: '#2563eb', // Blue theme
+    backgroundColor: 'rgba(37, 99, 235, 0.12)', // Blue theme
   },
   tabLabel: {
     fontSize: 11,

@@ -71,8 +71,6 @@ const appTranslations: Record<AppLanguage, TranslationMap> = {
     statusWarning: 'Warning',
     statusAvailable: 'Available',
     statusMinAway: 'min away',
-    // Services
-    servicesNearby: 'Nearby Services',
   },
   hi: {
     // App branding
@@ -120,8 +118,6 @@ const appTranslations: Record<AppLanguage, TranslationMap> = {
     statusWarning: 'चेतावनी',
     statusAvailable: 'उपलब्ध',
     statusMinAway: 'मिनट दूर',
-    // Services
-    servicesNearby: 'निकट सेवाएँ',
   },
   pa: {
     // App branding
@@ -169,8 +165,6 @@ const appTranslations: Record<AppLanguage, TranslationMap> = {
     statusWarning: 'ਚੇਤਾਵਨੀ',
     statusAvailable: 'ਉਪਲਬਧ',
     statusMinAway: 'ਮਿੰਟ ਦੂਰ',
-    // Services
-    servicesNearby: 'ਨੇੜਲੇ ਸੇਵਾਵਾਂ',
   },
 };
 

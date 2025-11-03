@@ -133,25 +133,6 @@ export interface QuickAction {
   isEnabled: boolean;
 }
 
-export interface NearbyService {
-  id: string;
-  name: string;
-  type: ServiceType;
-  distance: number;
-  rating: number;
-  isAvailable: boolean;
-  address: string;
-  phone?: string;
-  workingHours: string;
-}
-
-export type ServiceType = 
-  | 'hospital' 
-  | 'clinic' 
-  | 'pharmacy' 
-  | 'lab' 
-  | 'ambulance';
-
 // API Response types
 export interface DoctorListResponse {
   doctors: Doctor[];

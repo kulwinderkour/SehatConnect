@@ -1,21 +1,31 @@
 ﻿import React, { useCallback, useMemo } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import ConsultationsScreen from '../screens/ConsultationsScreen';
 import RecordsScreen from '../screens/RecordsScreen';
 import PharmacyScreen from '../screens/PharmacyScreen';
 import ProfileStackNavigator from './ProfileStackNavigator';
 import { useI18n } from '../i18n';
+import { Home, Stethoscope, FileText, Pill, User } from 'lucide-react-native';
 
 // Create navigator instances
 const Tab = createBottomTabNavigator();
 
-// Custom tab icon component with original design
-const CustomTabIcon = ({ emoji, isActive }: { emoji: string; isActive: boolean }) => (
+// Custom tab icon component with modern icons
+const CustomTabIcon = ({ 
+  IconComponent, 
+  isActive 
+}: { 
+  IconComponent: React.ComponentType<{ size: number; color: string }>; 
+  isActive: boolean;
+}) => (
   <View style={styles.tabIconContainer}>
     <View style={[styles.iconWrapper, isActive && styles.iconWrapperActive]}>
-      <Text style={[styles.iconEmoji, isActive && styles.iconEmojiActive]}>{emoji}</Text>
+      <IconComponent 
+        size={22} 
+        color={isActive ? '#5a9e31' : '#6b7280'} 
+      />
     </View>
   </View>
 );
@@ -32,11 +42,11 @@ export default function TabNavigator() {
     () => {
       console.log('TabNavigator: Creating tab screens array');
       return [
-        { name: 'Home', component: HomeScreen, icon: '🏠', label: getText('navHome') },
-        { name: 'Consult', component: ConsultationsScreen, icon: '👨‍⚕️', label: getText('navConsult') },
-        { name: 'Records', component: RecordsScreen, icon: '📋', label: getText('navRecords') },
-        { name: 'Pharmacy', component: PharmacyScreen, icon: '💊', label: getText('navPharmacy') },
-        { name: 'Profile', component: ProfileStackNavigator, icon: '👤', label: getText('navProfile') },
+        { name: 'Home', component: HomeScreen, icon: Home, label: getText('navHome') },
+        { name: 'Consult', component: ConsultationsScreen, icon: Stethoscope, label: getText('navConsult') },
+        { name: 'Records', component: RecordsScreen, icon: FileText, label: getText('navRecords') },
+        { name: 'Pharmacy', component: PharmacyScreen, icon: Pill, label: getText('navPharmacy') },
+        { name: 'Profile', component: ProfileStackNavigator, icon: User, label: getText('navProfile') },
       ];
     },
     [getText]
@@ -45,7 +55,9 @@ export default function TabNavigator() {
   console.log('TabNavigator: Tab screens created, count:', tabScreens.length);
 
   const createIconRenderer = useCallback(
-    (icon: string) => ({ focused }: { focused: boolean }) => <CustomTabIcon emoji={icon} isActive={focused} />,
+    (IconComponent: React.ComponentType<{ size: number; color: string }>) => 
+      ({ focused }: { focused: boolean }) => 
+        <CustomTabIcon IconComponent={IconComponent} isActive={focused} />,
     []
   );
 
@@ -91,24 +103,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   iconWrapper: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
     backgroundColor: 'transparent',
   },
   iconWrapperActive: {
-    backgroundColor: 'rgba(90, 158, 49, 0.1)',
-  },
-  iconEmoji: {
-    fontSize: 20,
-    color: '#6b7280',
-  },
-  iconEmojiActive: {
-    fontSize: 22,
-    color: '#5a9e31',
+    backgroundColor: 'rgba(90, 158, 49, 0.12)',
   },
   tabLabel: {
     fontSize: 11,
