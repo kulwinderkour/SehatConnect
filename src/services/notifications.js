@@ -39,11 +39,12 @@ export const requestNotificationPermissions = async () => {
       await Notifications.setNotificationChannelAsync('medicine-reminders', {
         name: 'Medicine Reminders',
         importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
+        vibrationPattern: [0, 300, 500, 300, 500],
         lightColor: '#FF231F7C',
-        sound: 'pill_reminder.mp3',
+        sound: 'default', // Use default sound to ensure phone rings
         enableVibrate: true,
         enableLights: true,
+        showBadge: true,
       });
     }
 
@@ -76,7 +77,7 @@ export const scheduleMedicineReminder = async (intake, scheduledDateTime, minute
       content: {
         title: `💊 Time to take ${intake.medicineName}`,
         body: `${intake.slotLabel} dose • Tap to mark as taken`,
-        sound: 'pill_reminder.mp3',
+        sound: 'default', // Use default sound to ensure phone rings
         data: {
           intakeId: intake._id || intake.id,
           action: 'mark_taken',
@@ -205,7 +206,7 @@ export const scheduleSnoozeReminder = async (intake, snoozeMinutes = 15) => {
       content: {
         title: `💊 Reminder: ${intake.medicineName}`,
         body: `Don't forget to take your ${intake.slotLabel} dose`,
-        sound: 'pill_reminder.mp3',
+        sound: 'default', // Use default sound to ensure phone rings
         data: {
           intakeId: intake._id || intake.id,
           action: 'mark_taken',
@@ -215,6 +216,7 @@ export const scheduleSnoozeReminder = async (intake, snoozeMinutes = 15) => {
           isSnoozed: true,
         },
         badge: 1,
+        priority: Notifications.AndroidNotificationPriority.MAX,
       },
       trigger: {
         date: triggerTime,
@@ -244,7 +246,7 @@ export const scheduleMissedDoseNotification = async (intake) => {
       content: {
         title: `⚠️ Missed Dose: ${intake.medicineName}`,
         body: `You missed your ${intake.slotLabel} dose. Please consult your doctor if needed.`,
-        sound: 'pill_reminder.mp3',
+        sound: 'default', // Use default sound to ensure phone rings
         data: {
           intakeId: intake._id || intake.id,
           action: 'view_history',
@@ -252,6 +254,7 @@ export const scheduleMissedDoseNotification = async (intake) => {
           isMissed: true,
         },
         badge: 1,
+        priority: Notifications.AndroidNotificationPriority.MAX,
       },
       trigger: {
         date: triggerTime,

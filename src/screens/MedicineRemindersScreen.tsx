@@ -12,6 +12,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   Bell, 
   BellOff, 
@@ -20,12 +21,14 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Volume2,
   Plus,
   Trash2,
+  WifiOff,
+  Edit3,
 } from 'lucide-react-native';
 import MedicineReminderService from '../services/MedicineReminderService';
 import ApiService from '../services/ApiService';
+import TimeEditorModal from '../components/common/TimeEditorModal';
 
 interface ReminderStats {
   totalReminders: number;
@@ -55,6 +58,12 @@ interface Reminder {
   adherenceRate: number;
 }
 
+const STORAGE_KEYS = {
+  REMINDERS: 'medicine_reminders_cache',
+  TODAY_REMINDERS: 'today_reminders_cache',
+  STATS: 'reminder_stats_cache',
+};
+
 const MedicineRemindersScreen = ({ navigation }: any) => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [todayReminders, setTodayReminders] = useState<Reminder[]>([]);
@@ -62,55 +71,164 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('today'); // 'today' | 'all'
+  const [isOffline, setIsOffline] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [showTimeEditor, setShowTimeEditor] = useState(false);
 
   useEffect(() => {
     loadReminders();
   }, []);
 
+  // Load reminders from local storage (offline mode)
+  const loadRemindersFromStorage = async () => {
+    try {
+      const [cachedReminders, cachedToday, cachedStats] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.REMINDERS),
+        AsyncStorage.getItem(STORAGE_KEYS.TODAY_REMINDERS),
+        AsyncStorage.getItem(STORAGE_KEYS.STATS),
+      ]);
+
+      if (cachedReminders) {
+        const parsed = JSON.parse(cachedReminders);
+        setReminders(parsed);
+      }
+
+      if (cachedToday) {
+        const parsed = JSON.parse(cachedToday);
+        setTodayReminders(parsed);
+        
+        // Schedule notifications for cached reminders
+        for (const reminder of parsed) {
+          try {
+            await MedicineReminderService.scheduleReminder({
+              id: reminder._id,
+              medicineName: reminder.medicineName,
+              dosage: reminder.dosage,
+              frequency: reminder.frequency,
+              times: reminder.times,
+              startDate: new Date(reminder.startDate),
+              endDate: new Date(reminder.endDate),
+              instructions: reminder.instructions,
+              beforeMeal: reminder.beforeMeal,
+              afterMeal: reminder.afterMeal,
+              withMeal: reminder.withMeal,
+              enableVoice: reminder.enableNotification,
+              prescriptionId: reminder.prescriptionId,
+            });
+          } catch (err) {
+            console.error('Error scheduling reminder:', err);
+          }
+        }
+      }
+
+      if (cachedStats) {
+        setStats(JSON.parse(cachedStats));
+      }
+    } catch (error) {
+      console.error('Error loading from storage:', error);
+    }
+  };
+
+  // Save reminders to local storage
+  const saveRemindersToStorage = async (remindersData: Reminder[], todayData: Reminder[], statsData: ReminderStats | null) => {
+    try {
+      await Promise.all([
+        AsyncStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(remindersData)),
+        AsyncStorage.setItem(STORAGE_KEYS.TODAY_REMINDERS, JSON.stringify(todayData)),
+        statsData ? AsyncStorage.setItem(STORAGE_KEYS.STATS, JSON.stringify(statsData)) : Promise.resolve(),
+      ]);
+    } catch (error) {
+      console.error('Error saving to storage:', error);
+    }
+  };
+
   const loadReminders = async () => {
     try {
       setLoading(true);
       
-      // Load reminders from backend
+      // Try to load from backend first
       const [todayResponse, allResponse, statsResponse] = await Promise.all([
         ApiService.get('/reminders/today'),
         ApiService.get('/reminders?isActive=true'),
         ApiService.get('/reminders/stats'),
       ]);
 
-      if (todayResponse.success) {
-        setTodayReminders(todayResponse.data as Reminder[]);
+      // Check if we're offline (network error)
+      if (!todayResponse.success && todayResponse.error?.includes('Network request failed')) {
+        setIsOffline(true);
+        console.log('📴 Offline mode: Loading from local storage');
+        await loadRemindersFromStorage();
+        return;
+      }
+
+      setIsOffline(false);
+
+      // Debug logging
+      console.log('📋 Reminders API Response:', {
+        todaySuccess: todayResponse.success,
+        todayData: todayResponse.data,
+        todayCount: Array.isArray(todayResponse.data) ? todayResponse.data.length : 0,
+        allSuccess: allResponse.success,
+        allData: allResponse.data,
+        allCount: Array.isArray(allResponse.data) ? allResponse.data.length : 0,
+      });
+
+      if (todayResponse.success && todayResponse.data) {
+        const todayData = Array.isArray(todayResponse.data) 
+          ? (todayResponse.data as Reminder[])
+          : [];
+        setTodayReminders(todayData);
         
         // Schedule notifications for today's reminders
-        for (const reminder of todayResponse.data as Reminder[]) {
-          await MedicineReminderService.scheduleReminder({
-            id: reminder._id,
-            medicineName: reminder.medicineName,
-            dosage: reminder.dosage,
-            frequency: reminder.frequency,
-            times: reminder.times,
-            startDate: new Date(reminder.startDate),
-            endDate: new Date(reminder.endDate),
-            instructions: reminder.instructions,
-            beforeMeal: reminder.beforeMeal,
-            afterMeal: reminder.afterMeal,
-            withMeal: reminder.withMeal,
-            enableVoice: reminder.enableNotification,
-            prescriptionId: reminder.prescriptionId,
-          });
+        for (const reminder of todayData) {
+          try {
+            await MedicineReminderService.scheduleReminder({
+              id: reminder._id,
+              medicineName: reminder.medicineName,
+              dosage: reminder.dosage,
+              frequency: reminder.frequency,
+              times: reminder.times,
+              startDate: new Date(reminder.startDate),
+              endDate: new Date(reminder.endDate),
+              instructions: reminder.instructions,
+              beforeMeal: reminder.beforeMeal,
+              afterMeal: reminder.afterMeal,
+              withMeal: reminder.withMeal,
+              enableVoice: reminder.enableNotification,
+              prescriptionId: reminder.prescriptionId,
+            });
+          } catch (err) {
+            console.error('Error scheduling reminder:', err);
+          }
         }
       }
 
-      if (allResponse.success) {
-        setReminders(allResponse.data as Reminder[]);
+      if (allResponse.success && allResponse.data) {
+        const allData = Array.isArray(allResponse.data) 
+          ? (allResponse.data as Reminder[])
+          : [];
+        setReminders(allData);
       }
 
-      if (statsResponse.success) {
+      if (statsResponse.success && statsResponse.data) {
         setStats(statsResponse.data as ReminderStats);
       }
+
+      // Save to local storage for offline access
+      await saveRemindersToStorage(
+        allResponse.success && allResponse.data ? (allResponse.data as Reminder[]) : reminders,
+        todayResponse.success && todayResponse.data ? (todayResponse.data as Reminder[]) : todayReminders,
+        statsResponse.success && statsResponse.data ? statsResponse.data as ReminderStats : stats
+      );
     } catch (error) {
       console.error('Error loading reminders:', error);
-      Alert.alert('Error', 'Failed to load reminders');
+      // If network error, try loading from storage
+      if (error instanceof Error && error.message.includes('Network')) {
+        setIsOffline(true);
+        await loadRemindersFromStorage();
+      } else {
+        Alert.alert('Error', 'Failed to load reminders');
+      }
     } finally {
       setLoading(false);
     }
@@ -169,24 +287,109 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
     );
   };
 
-  const testNotification = async (reminder: Reminder) => {
+  const handleEditTimes = (reminder: Reminder) => {
+    setEditingReminder(reminder);
+    setShowTimeEditor(true);
+  };
+
+  const handleSaveTimes = async (newTimes: string[]) => {
+    if (!editingReminder) return;
+
     try {
-      await MedicineReminderService.displayImmediateNotification(
-        reminder.medicineName,
-        reminder.dosage
-      );
-      
-      if (reminder.enableNotification) {
-        await MedicineReminderService.playVoiceAlert(
-          reminder.medicineName,
-          reminder.dosage
-        );
+      // Cancel old notifications
+      await MedicineReminderService.cancelReminder(editingReminder._id);
+
+      // Update reminder times in backend
+      const response = await ApiService.put(`/reminders/${editingReminder._id}`, {
+        times: newTimes,
+      });
+
+      if (response.success) {
+        // Recalculate total doses
+        const startDate = new Date(editingReminder.startDate);
+        const endDate = new Date(editingReminder.endDate);
+        const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const totalDoses = daysDiff * newTimes.length;
+
+        // Update total doses
+        await ApiService.put(`/reminders/${editingReminder._id}`, {
+          totalDoses,
+        });
+
+        // Schedule new notifications with updated times
+        const updatedReminder = {
+          ...editingReminder,
+          times: newTimes,
+        };
+
+        await MedicineReminderService.scheduleReminder({
+          id: updatedReminder._id,
+          medicineName: updatedReminder.medicineName,
+          dosage: updatedReminder.dosage,
+          frequency: updatedReminder.frequency,
+          times: newTimes,
+          startDate: new Date(updatedReminder.startDate),
+          endDate: new Date(updatedReminder.endDate),
+          instructions: updatedReminder.instructions,
+          beforeMeal: updatedReminder.beforeMeal,
+          afterMeal: updatedReminder.afterMeal,
+          withMeal: updatedReminder.withMeal,
+          enableVoice: updatedReminder.enableNotification,
+          prescriptionId: updatedReminder.prescriptionId,
+        });
+
+        // Reload reminders
+        await loadReminders();
+        Alert.alert('Success', 'Reminder times updated successfully!');
+      } else {
+        throw new Error(response.message || 'Failed to update times');
       }
+    } catch (error: any) {
+      console.error('Error updating times:', error);
       
-      Alert.alert('Test Notification', 'Check your notifications!');
-    } catch (error) {
-      console.error('Error testing notification:', error);
-      Alert.alert('Error', 'Failed to send test notification');
+      // If offline, save to local storage
+      if (error.message?.includes('Network') || isOffline) {
+        try {
+          // Update in local storage
+          const cachedReminders = await AsyncStorage.getItem(STORAGE_KEYS.TODAY_REMINDERS);
+          if (cachedReminders) {
+            const reminders = JSON.parse(cachedReminders);
+            const updated = reminders.map((r: Reminder) =>
+              r._id === editingReminder._id ? { ...r, times: newTimes } : r
+            );
+            await AsyncStorage.setItem(STORAGE_KEYS.TODAY_REMINDERS, JSON.stringify(updated));
+            
+            // Schedule notifications locally
+            const updatedReminder = { ...editingReminder, times: newTimes };
+            await MedicineReminderService.scheduleReminder({
+              id: updatedReminder._id,
+              medicineName: updatedReminder.medicineName,
+              dosage: updatedReminder.dosage,
+              frequency: updatedReminder.frequency,
+              times: newTimes,
+              startDate: new Date(updatedReminder.startDate),
+              endDate: new Date(updatedReminder.endDate),
+              instructions: updatedReminder.instructions,
+              beforeMeal: updatedReminder.beforeMeal,
+              afterMeal: updatedReminder.afterMeal,
+              withMeal: updatedReminder.withMeal,
+              enableVoice: updatedReminder.enableNotification,
+              prescriptionId: updatedReminder.prescriptionId,
+            });
+            
+            await loadReminders();
+            Alert.alert('Success', 'Times updated (offline mode). Will sync when online.');
+          }
+        } catch (storageError) {
+          console.error('Error saving to storage:', storageError);
+          Alert.alert('Error', 'Failed to update times. Please try again.');
+        }
+      } else {
+        Alert.alert('Error', 'Failed to update reminder times');
+      }
+    } finally {
+      setEditingReminder(null);
+      setShowTimeEditor(false);
     }
   };
 
@@ -221,8 +424,15 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
           <View style={styles.detailRow}>
             <Clock size={16} color="#6B7280" />
             <Text style={styles.detailText}>
-              {item.times.join(', ')}
+              {item.times.join(' • ')}
             </Text>
+            <TouchableOpacity
+              onPress={() => handleEditTimes(item)}
+              style={styles.editTimeButton}
+            >
+              <Edit3 size={14} color="#4F46E5" />
+              <Text style={styles.editTimeText}>Edit</Text>
+            </TouchableOpacity>
           </View>
 
           {timingText && (
@@ -261,19 +471,11 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
 
         <View style={styles.reminderActions}>
           <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => testNotification(item)}
-          >
-            <Volume2 size={18} color="#4F46E5" />
-            <Text style={styles.actionButtonText}>Test</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
             style={[styles.actionButton, styles.deleteButton]}
             onPress={() => deleteReminder(item._id, item.medicineName)}
           >
             <Trash2 size={18} color="#EF4444" />
-            <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Delete</Text>
+            <Text style={[styles.actionButtonText, styles.deleteButtonText]}>Remove</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -349,6 +551,12 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
           <Bell size={28} color="#4F46E5" />
           <Text style={styles.headerTitle}>Medicine Reminders</Text>
         </View>
+        {isOffline && (
+          <View style={styles.offlineBadge}>
+            <WifiOff size={16} color="#EF4444" />
+            <Text style={styles.offlineText}>Offline</Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.tabContainer}>
@@ -386,6 +594,17 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
           />
         }
       />
+
+      <TimeEditorModal
+        visible={showTimeEditor}
+        onClose={() => {
+          setShowTimeEditor(false);
+          setEditingReminder(null);
+        }}
+        onSave={handleSaveTimes}
+        currentTimes={editingReminder?.times || []}
+        medicineName={editingReminder?.medicineName || ''}
+      />
     </SafeAreaView>
   );
 };
@@ -406,11 +625,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flex: 1,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#111827',
+  },
+  offlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FEE2E2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  offlineText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#EF4444',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -523,10 +757,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexWrap: 'wrap',
   },
   detailText: {
     fontSize: 14,
     color: '#374151',
+    flex: 1,
+  },
+  editTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 6,
+    marginLeft: 'auto',
+  },
+  editTimeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#4F46E5',
   },
   timingBadge: {
     backgroundColor: '#FEF3C7',

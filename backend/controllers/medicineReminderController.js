@@ -54,11 +54,15 @@ exports.getUserReminders = async (req, res) => {
 exports.getTodayReminders = async (req, res) => {
   try {
     const userId = req.user._id;
+    const userEmail = req.user.email;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+
+    console.log(`📋 Fetching today's reminders for user: ${userEmail} (${userId})`);
+    console.log(`   Date range: ${today.toISOString()} to ${tomorrow.toISOString()}`);
 
     const reminders = await MedicineReminder.find({
       userId,
@@ -68,6 +72,8 @@ exports.getTodayReminders = async (req, res) => {
     })
       .populate('prescriptionId', 'diagnosis doctorId')
       .sort({ 'times.0': 1 });
+
+    console.log(`   Found ${reminders.length} reminders`);
 
     res.json({
       success: true,

@@ -4,6 +4,8 @@ import notifee, {
   RepeatFrequency,
   TriggerType,
   TimestampTrigger,
+  IOSNotificationSetting,
+  AuthorizationStatus,
 } from '@notifee/react-native';
 import Tts from 'react-native-tts';
 import { Platform } from 'react-native';
@@ -67,6 +69,7 @@ class MedicineReminderService {
           importance: AndroidImportance.HIGH,
           sound: 'default',
           vibration: true,
+          vibrationPattern: [300, 500, 300, 500],
         });
 
         await notifee.createChannel({
@@ -75,6 +78,7 @@ class MedicineReminderService {
           importance: AndroidImportance.HIGH,
           sound: 'default',
           vibration: true,
+          vibrationPattern: [300, 500, 300, 500],
         });
       }
 
@@ -201,7 +205,7 @@ class MedicineReminderService {
           channelId: reminder.enableVoice ? this.soundChannelId : this.channelId,
           importance: AndroidImportance.HIGH,
           sound: 'default',
-          vibrationPattern: [300, 500],
+          vibrationPattern: [300, 500, 300, 500],
           style: {
             type: AndroidStyle.BIGTEXT,
             text: `${dosage}\n${timingText}\n${instructions || ''}`,
@@ -220,11 +224,14 @@ class MedicineReminderService {
               },
             },
           ],
+          pressAction: {
+            id: 'default',
+            launchActivity: 'default',
+          },
         },
         ios: {
           sound: 'default',
           categoryId: 'medicine-reminder',
-          attachments: [],
         },
         data: {
           reminderId: reminder.id,
@@ -440,7 +447,11 @@ class MedicineReminderService {
           channelId: this.channelId,
           importance: AndroidImportance.HIGH,
           sound: 'default',
-          vibrationPattern: [300, 500],
+          vibrationPattern: [300, 500, 300, 500],
+          pressAction: {
+            id: 'default',
+            launchActivity: 'default',
+          },
         },
         ios: {
           sound: 'default',

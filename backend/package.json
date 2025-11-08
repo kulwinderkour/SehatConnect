@@ -10,6 +10,9 @@
     "setup-db": "node scripts/setupDatabase.js",
     "db-stats": "node scripts/viewDatabaseStats.js",
     "test-api": "node test-api.js",
+    "create-dummy-reminders": "node scripts/createDummyReminders.js",
+    "check-reminders": "node scripts/checkReminders.js",
+    "diagnose": "node scripts/diagnose.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

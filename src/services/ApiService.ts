@@ -10,8 +10,8 @@ import { Platform } from 'react-native';
 // For Physical Device: use your computer's IP address (e.g., 192.168.x.x)
 const API_BASE_URL = __DEV__ 
   ? Platform.OS === 'android' 
-    ? 'http://10.0.2.2:5000/api' // Android Emulator - Backend runs on port 5000
-    : 'http://localhost:5000/api' // iOS Simulator
+    ? 'http://10.0.2.2:5001/api' // Android Emulator - Backend runs on port 5001
+    : 'http://localhost:5001/api' // iOS Simulator
   : 'https://your-production-api.com/api'; // Production
 
 // API response types

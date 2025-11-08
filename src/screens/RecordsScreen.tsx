@@ -1,10 +1,11 @@
 import React, { memo, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { Pill, Clock, Bell, BellOff, Volume2, CheckCircle, XCircle, Plus, Trash2, ClipboardList, TestTube, Smartphone } from 'lucide-react-native';
+import { Pill, Clock, Bell, BellOff, CheckCircle, XCircle, Plus, Trash2, ClipboardList, TestTube, Smartphone, Edit3 } from 'lucide-react-native';
 import Header from '../components/common/Header';
 import MedicineReminderService from '../services/MedicineReminderService';
 import ApiService from '../services/ApiService';
+import TimeEditorModal from '../components/common/TimeEditorModal';
 
 interface Reminder {
   _id: string;
@@ -59,13 +60,13 @@ const Row = memo(({ left, right, rightColor }: { left: React.ReactNode; right: R
 const ReminderCard = memo(({ 
   reminder, 
   onToggle, 
-  onTest, 
-  onDelete 
+  onDelete,
+  onEditTimes
 }: { 
   reminder: Reminder; 
   onToggle: () => void; 
-  onTest: () => void; 
   onDelete: () => void;
+  onEditTimes: () => void;
 }) => {
   const timingText = reminder.beforeMeal
     ? '🍽️ Before meal'
@@ -98,6 +99,13 @@ const ReminderCard = memo(({
           <Clock size={12} color="#52B788" strokeWidth={2.5} />
         </View>
         <Text style={styles.timesText}>{reminder.times.join(' • ')}</Text>
+        <TouchableOpacity
+          onPress={onEditTimes}
+          style={styles.editTimeButton}
+        >
+          <Edit3 size={12} color="#52B788" strokeWidth={2.5} />
+          <Text style={styles.editTimeText}>Edit</Text>
+        </TouchableOpacity>
       </View>
 
       {timingText && (
@@ -137,10 +145,6 @@ const ReminderCard = memo(({
       </View>
 
       <View style={styles.reminderActions}>
-        <TouchableOpacity style={styles.testBtn} onPress={onTest}>
-          <Volume2 size={16} color="#52B788" strokeWidth={2.5} />
-          <Text style={styles.testBtnText}>Test Alert</Text>
-        </TouchableOpacity>
         <TouchableOpacity style={styles.deleteBtn} onPress={onDelete}>
           <Trash2 size={16} color="#EF476F" strokeWidth={2.5} />
           <Text style={styles.deleteBtnText}>Remove</Text>
@@ -154,6 +158,8 @@ const RecordsScreen = memo(() => {
   const [todayReminders, setTodayReminders] = useState<Reminder[]>([]);
   const [stats, setStats] = useState<ReminderStats | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  const [showTimeEditor, setShowTimeEditor] = useState(false);
 
   useEffect(() => {
     loadReminders();
@@ -197,24 +203,6 @@ const RecordsScreen = memo(() => {
     }
   };
 
-  const testNotification = async (reminder: Reminder) => {
-    try {
-      await MedicineReminderService.displayImmediateNotification(
-        reminder.medicineName,
-        reminder.dosage
-      );
-      
-      await MedicineReminderService.playVoiceAlert(
-        reminder.medicineName,
-        reminder.dosage
-      );
-      
-      Alert.alert('Test Notification', 'Check your notifications!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send test notification');
-    }
-  };
-
   const deleteReminder = async (reminderId: string, medicineName: string) => {
     Alert.alert(
       'Delete Reminder',
@@ -236,6 +224,72 @@ const RecordsScreen = memo(() => {
         },
       ]
     );
+  };
+
+  const handleEditTimes = (reminder: Reminder) => {
+    setEditingReminder(reminder);
+    setShowTimeEditor(true);
+  };
+
+  const handleSaveTimes = async (newTimes: string[]) => {
+    if (!editingReminder) return;
+
+    try {
+      // Cancel old notifications
+      await MedicineReminderService.cancelReminder(editingReminder._id);
+
+      // Update reminder times in backend
+      const response = await ApiService.put(`/reminders/${editingReminder._id}`, {
+        times: newTimes,
+      });
+
+      if (response.success) {
+        // Recalculate total doses
+        const startDate = new Date(editingReminder.startDate);
+        const endDate = new Date(editingReminder.endDate);
+        const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const totalDoses = daysDiff * newTimes.length;
+
+        // Update total doses
+        await ApiService.put(`/reminders/${editingReminder._id}`, {
+          totalDoses,
+        });
+
+        // Schedule new notifications with updated times
+        const updatedReminder = {
+          ...editingReminder,
+          times: newTimes,
+        };
+
+        await MedicineReminderService.scheduleReminder({
+          id: updatedReminder._id,
+          medicineName: updatedReminder.medicineName,
+          dosage: updatedReminder.dosage,
+          frequency: updatedReminder.frequency,
+          times: newTimes,
+          startDate: new Date(updatedReminder.startDate),
+          endDate: new Date(updatedReminder.endDate),
+          instructions: updatedReminder.instructions,
+          beforeMeal: updatedReminder.beforeMeal,
+          afterMeal: updatedReminder.afterMeal,
+          withMeal: updatedReminder.withMeal,
+          enableVoice: updatedReminder.enableNotification,
+          prescriptionId: updatedReminder.prescriptionId,
+        });
+
+        // Reload reminders
+        await loadReminders();
+        Alert.alert('Success', 'Reminder times updated successfully!');
+      } else {
+        throw new Error(response.message || 'Failed to update times');
+      }
+    } catch (error: any) {
+      console.error('Error updating times:', error);
+      Alert.alert('Error', 'Failed to update reminder times');
+    } finally {
+      setEditingReminder(null);
+      setShowTimeEditor(false);
+    }
   };
 
   return (
@@ -309,8 +363,8 @@ const RecordsScreen = memo(() => {
                     key={reminder._id}
                     reminder={reminder}
                     onToggle={() => toggleReminder(reminder._id, reminder.isActive)}
-                    onTest={() => testNotification(reminder)}
                     onDelete={() => deleteReminder(reminder._id, reminder.medicineName)}
+                    onEditTimes={() => handleEditTimes(reminder)}
                   />
                 ))
               )}
@@ -406,6 +460,17 @@ const RecordsScreen = memo(() => {
           <Text style={styles.offlineText}>All your health records are stored offline and sync when connected.</Text>
         </View>
       </ScrollView>
+
+      <TimeEditorModal
+        visible={showTimeEditor}
+        onClose={() => {
+          setShowTimeEditor(false);
+          setEditingReminder(null);
+        }}
+        onSave={handleSaveTimes}
+        currentTimes={editingReminder?.times || []}
+        medicineName={editingReminder?.medicineName || ''}
+      />
     </View>
   );
 });
@@ -641,6 +706,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+    flex: 1,
+  },
+  editTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#D8F3DC',
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  editTimeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#2D6A4F',
   },
   timingBadge: {
     backgroundColor: '#FFF3E0',
@@ -707,21 +788,6 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#e8e8e8',
-  },
-  testBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 10,
-    backgroundColor: '#D8F3DC',
-  },
-  testBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#2D6A4F',
   },
   deleteBtn: {
     flex: 1,
