@@ -6,6 +6,7 @@ import Header from '../components/common/Header';
 import MedicineReminderService from '../services/MedicineReminderService';
 import ApiService from '../services/ApiService';
 import TimeEditorModal from '../components/common/TimeEditorModal';
+import prescriptionDecoderService from '../services/PrescriptionDecoderService';
 
 interface Reminder {
   _id: string;
@@ -20,6 +21,11 @@ interface Reminder {
   missedDoses: number;
   adherenceRate: number;
   instructions?: string;
+  frequency?: string;
+  startDate?: string;
+  endDate?: string;
+  enableNotification?: boolean;
+  prescriptionId?: string;
 }
 
 interface ReminderStats {
@@ -27,6 +33,16 @@ interface ReminderStats {
   takenDoses: number;
   missedDoses: number;
   overallAdherence: number;
+}
+
+interface DecodedPrescription {
+  _id: string;
+  medications: any[];
+  tests: any[];
+  summary: string;
+  confidence: number;
+  createdAt: string;
+  safetyAlerts?: string[];
 }
 
 const Category = memo(({ title, icon, iconComponent, children }: any) => (
@@ -160,10 +176,27 @@ const RecordsScreen = memo(() => {
   const [loading, setLoading] = useState(false);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [showTimeEditor, setShowTimeEditor] = useState(false);
+  const [decodedPrescriptions, setDecodedPrescriptions] = useState<DecodedPrescription[]>([]);
+  const [loadingPrescriptions, setLoadingPrescriptions] = useState(false);
 
   useEffect(() => {
     loadReminders();
+    loadDecodedPrescriptions();
   }, []);
+
+  const loadDecodedPrescriptions = async () => {
+    try {
+      setLoadingPrescriptions(true);
+      const response = await prescriptionDecoderService.getPrescriptionHistory(10);
+      if (response.success && response.data?.prescriptions) {
+        setDecodedPrescriptions(response.data.prescriptions);
+      }
+    } catch (error) {
+      console.error('Error loading prescriptions:', error);
+    } finally {
+      setLoadingPrescriptions(false);
+    }
+  };
 
   const loadReminders = async () => {
     try {
@@ -245,8 +278,10 @@ const RecordsScreen = memo(() => {
 
       if (response.success) {
         // Recalculate total doses
-        const startDate = new Date(editingReminder.startDate);
-        const endDate = new Date(editingReminder.endDate);
+        // @ts-ignore - Type coercion for optional dates
+        const startDate = new Date(editingReminder.startDate || new Date().toISOString());
+        // @ts-ignore - Type coercion for optional dates
+        const endDate = new Date(editingReminder.endDate || new Date().toISOString());
         const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
         const totalDoses = daysDiff * newTimes.length;
 
@@ -265,10 +300,13 @@ const RecordsScreen = memo(() => {
           id: updatedReminder._id,
           medicineName: updatedReminder.medicineName,
           dosage: updatedReminder.dosage,
-          frequency: updatedReminder.frequency,
+          // @ts-ignore - Type coercion for optional frequency
+          frequency: updatedReminder.frequency || 'once_daily',
           times: newTimes,
-          startDate: new Date(updatedReminder.startDate),
-          endDate: new Date(updatedReminder.endDate),
+          // @ts-ignore - Type coercion for optional dates
+          startDate: new Date(updatedReminder.startDate || new Date().toISOString()),
+          // @ts-ignore - Type coercion for optional dates
+          endDate: new Date(updatedReminder.endDate || new Date().toISOString()),
           instructions: updatedReminder.instructions,
           beforeMeal: updatedReminder.beforeMeal,
           afterMeal: updatedReminder.afterMeal,
@@ -384,46 +422,55 @@ const RecordsScreen = memo(() => {
           title="Prescriptions" 
           iconComponent={<Pill size={20} color="#fff" strokeWidth={2.5} />}
         >
-          <View style={styles.prescriptionCard}>
-            <View style={styles.prescriptionIconCircle}>
-              <Pill size={18} color="#52B788" strokeWidth={2.5} />
+          {loadingPrescriptions ? (
+            <View style={styles.emptyContainer}>
+              <ActivityIndicator size="small" color="#52B788" />
+              <Text style={styles.emptySubtext}>Loading prescriptions...</Text>
             </View>
-            <View style={styles.prescriptionInfo}>
-              <Text style={styles.prescriptionName}>Amlodipine 5mg</Text>
-              <Text style={styles.prescriptionDosage}>Once daily, morning</Text>
+          ) : decodedPrescriptions.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No prescriptions yet</Text>
+              <Text style={styles.emptySubtext}>Upload prescription images to decode and save them</Text>
             </View>
-            <View style={styles.prescriptionActions}>
-              <View style={styles.prescriptionStatusBadge}>
-                <Text style={styles.prescriptionStatusText}>Active</Text>
+          ) : (
+            decodedPrescriptions.map((prescription) => (
+              <View key={prescription._id} style={styles.prescriptionCard}>
+                <View style={styles.prescriptionIconCircle}>
+                  <Pill size={18} color="#52B788" strokeWidth={2.5} />
+                </View>
+                <View style={styles.prescriptionInfo}>
+                  <Text style={styles.prescriptionName}>
+                    {prescription.medications.length} Medication{prescription.medications.length !== 1 ? 's' : ''}
+                    {prescription.tests.length > 0 && `, ${prescription.tests.length} Test${prescription.tests.length !== 1 ? 's' : ''}`}
+                  </Text>
+                  <Text style={styles.prescriptionDosage} numberOfLines={2}>
+                    {prescription.medications.map(m => m.name).join(', ')}
+                  </Text>
+                  <Text style={styles.prescriptionDate}>
+                    {new Date(prescription.createdAt).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                  </Text>
+                  {prescription.safetyAlerts && prescription.safetyAlerts.length > 0 && (
+                    <Text style={styles.safetyAlert}>⚠️ {prescription.safetyAlerts[0]}</Text>
+                  )}
+                </View>
+                <View style={styles.prescriptionActions}>
+                  <View style={[styles.prescriptionStatusBadge, {
+                    backgroundColor: prescription.confidence >= 80 ? '#D8F3DC' : '#FFF3E0'
+                  }]}>
+                    <Text style={[styles.prescriptionStatusText, {
+                      color: prescription.confidence >= 80 ? '#2D6A4F' : '#F57C00'
+                    }]}>
+                      {prescription.confidence}%
+                    </Text>
+                  </View>
+                </View>
               </View>
-              <TouchableOpacity
-                style={styles.addReminderBtn}
-                onPress={() => Alert.alert('Coming Soon', 'Create reminder from this prescription')}
-              >
-                <Bell size={16} color="#52B788" strokeWidth={2.5} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.prescriptionCard}>
-            <View style={styles.prescriptionIconCircle}>
-              <Pill size={18} color="#52B788" strokeWidth={2.5} />
-            </View>
-            <View style={styles.prescriptionInfo}>
-              <Text style={styles.prescriptionName}>Metformin 500mg</Text>
-              <Text style={styles.prescriptionDosage}>Twice daily, with meals</Text>
-            </View>
-            <View style={styles.prescriptionActions}>
-              <View style={styles.prescriptionStatusBadge}>
-                <Text style={styles.prescriptionStatusText}>Active</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.addReminderBtn}
-                onPress={() => Alert.alert('Coming Soon', 'Create reminder from this prescription')}
-              >
-                <Bell size={16} color="#52B788" strokeWidth={2.5} />
-              </TouchableOpacity>
-            </View>
-          </View>
+            ))
+          )}
         </Category>
 
         <Category 
@@ -635,6 +682,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
+  emptyContainer: {
+    padding: 20,
+    backgroundColor: '#f9f9f9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   emptyText: {
     fontSize: 15,
     color: '#999',
@@ -835,6 +889,17 @@ const styles = StyleSheet.create({
   prescriptionDosage: {
     fontSize: 12,
     color: '#777',
+  },
+  prescriptionDate: {
+    fontSize: 11,
+    color: '#999',
+    marginTop: 4,
+  },
+  safetyAlert: {
+    fontSize: 11,
+    color: '#EF476F',
+    marginTop: 4,
+    fontWeight: '500',
   },
   prescriptionActions: {
     flexDirection: 'row',

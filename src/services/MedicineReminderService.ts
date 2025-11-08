@@ -42,7 +42,7 @@ export interface ScheduledNotification {
 class MedicineReminderService {
   private static instance: MedicineReminderService;
   private channelId = 'medicine-reminders';
-  private soundChannelId = 'medicine-reminders-sound';
+  private soundChannelId = 'medicine-reminders-alarm'; // Changed channel ID
   private storageKey = 'scheduled_reminders';
 
   private constructor() {
@@ -63,22 +63,28 @@ class MedicineReminderService {
     try {
       // Create notification channel for Android
       if (Platform.OS === 'android') {
-        await notifee.createChannel({
-          id: this.channelId,
-          name: 'Medicine Reminders',
-          importance: AndroidImportance.HIGH,
-          sound: 'default',
-          vibration: true,
-          vibrationPattern: [300, 500, 300, 500],
-        });
-
+        // Create alarm-style channel for medicine reminders
         await notifee.createChannel({
           id: this.soundChannelId,
-          name: 'Medicine Reminders with Sound',
+          name: 'Medicine Reminders',
+          description: 'Important medicine reminder notifications with alarm sound',
           importance: AndroidImportance.HIGH,
           sound: 'default',
           vibration: true,
-          vibrationPattern: [300, 500, 300, 500],
+          vibrationPattern: [500, 1000, 500, 1000, 500, 1000],
+          lights: true,
+          lightColor: '#FF6B6B',
+          badge: true,
+        });
+
+        // Fallback basic channel
+        await notifee.createChannel({
+          id: this.channelId,
+          name: 'Medicine Reminders Basic',
+          importance: AndroidImportance.HIGH,
+          sound: 'default',
+          vibration: true,
+          vibrationPattern: [500, 1000, 500, 1000, 500, 1000],
         });
       }
 
@@ -202,10 +208,13 @@ class MedicineReminderService {
         title: `💊 Time for ${medicineName}`,
         body: `${dosage}\n${timingText}\n${instructions || ''}`,
         android: {
-          channelId: reminder.enableVoice ? this.soundChannelId : this.channelId,
+          channelId: this.soundChannelId, // Always use sound channel for medicine reminders
           importance: AndroidImportance.HIGH,
           sound: 'default',
-          vibrationPattern: [300, 500, 300, 500],
+          vibrationPattern: [500, 1000, 500, 1000, 500, 1000],
+          autoCancel: false, // Keep notification until user dismisses
+          ongoing: false,
+          showTimestamp: true,
           style: {
             type: AndroidStyle.BIGTEXT,
             text: `${dosage}\n${timingText}\n${instructions || ''}`,
@@ -231,6 +240,7 @@ class MedicineReminderService {
         },
         ios: {
           sound: 'default',
+          critical: true, // Make it a critical notification on iOS
           categoryId: 'medicine-reminder',
         },
         data: {
@@ -444,10 +454,11 @@ class MedicineReminderService {
         title: `💊 Time for ${medicineName}`,
         body: `Take ${dosage} now`,
         android: {
-          channelId: this.channelId,
+          channelId: this.soundChannelId, // Use alarm channel
           importance: AndroidImportance.HIGH,
           sound: 'default',
-          vibrationPattern: [300, 500, 300, 500],
+          vibrationPattern: [500, 1000, 500, 1000, 500, 1000],
+          autoCancel: false,
           pressAction: {
             id: 'default',
             launchActivity: 'default',
@@ -455,6 +466,7 @@ class MedicineReminderService {
         },
         ios: {
           sound: 'default',
+          critical: true,
         },
       });
     } catch (error) {
@@ -472,6 +484,20 @@ class MedicineReminderService {
     } catch (error) {
       console.error('Error checking notification settings:', error);
       return false;
+    }
+  }
+
+  /**
+   * Open notification channel settings (Android only)
+   * This allows users to change the notification sound
+   */
+  async openNotificationSettings(): Promise<void> {
+    try {
+      if (Platform.OS === 'android') {
+        await notifee.openNotificationSettings(this.soundChannelId);
+      }
+    } catch (error) {
+      console.error('Error opening notification settings:', error);
     }
   }
 }

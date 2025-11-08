@@ -10,13 +10,16 @@ import {
   Alert, 
   Dimensions,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import ImageCropPicker from 'react-native-image-crop-picker';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import PharmacyProfileModal from '../components/pharmacy/PharmacyProfileModal';
 import NearbyPharmaciesModal from '../components/pharmacy/NearbyPharmaciesModal';
+import prescriptionDecoderService from '../services/PrescriptionDecoderService';
 
 const { width } = Dimensions.get('window');
 
@@ -219,6 +222,7 @@ const PharmacyScreen = memo(() => {
   const [pinCode, setPinCode] = useState('144006');
   const [cityName, setCityName] = useState('Jalandhar');
   const [isFetchingLocation, setIsFetchingLocation] = useState(false);
+  const [isDecoding, setIsDecoding] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Top searches data
@@ -445,6 +449,98 @@ const PharmacyScreen = memo(() => {
     }
   }, [pinCode, cityName]);
 
+  // Handle prescription upload
+  const handlePrescriptionUpload = useCallback(async () => {
+    try {
+      Alert.alert(
+        'Upload Prescription',
+        'Choose an option',
+        [
+          {
+            text: 'Camera',
+            onPress: async () => {
+              try {
+                setIsDecoding(true);
+                const image = await ImageCropPicker.openCamera({
+                  width: 1200,
+                  height: 1600,
+                  cropping: true,
+                  compressImageQuality: 0.8,
+                  includeBase64: false,
+                  mediaType: 'photo',
+                });
+                await processPrescriptionImage(image.path);
+              } catch (error: any) {
+                if (error.code !== 'E_PICKER_CANCELLED') {
+                  console.error('Camera error:', error);
+                  Alert.alert('Error', 'Failed to take photo. Please try again.');
+                }
+                setIsDecoding(false);
+              }
+            },
+          },
+          {
+            text: 'Gallery',
+            onPress: async () => {
+              try {
+                setIsDecoding(true);
+                const image = await ImageCropPicker.openPicker({
+                  width: 1200,
+                  height: 1600,
+                  cropping: true,
+                  compressImageQuality: 0.8,
+                  includeBase64: false,
+                  mediaType: 'photo',
+                });
+                await processPrescriptionImage(image.path);
+              } catch (error: any) {
+                if (error.code !== 'E_PICKER_CANCELLED') {
+                  console.error('Gallery error:', error);
+                  Alert.alert('Error', 'Failed to select photo. Please try again.');
+                }
+                setIsDecoding(false);
+              }
+            },
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+          },
+        ],
+        { cancelable: true }
+      );
+    } catch (error) {
+      console.error('Error opening image picker:', error);
+      setIsDecoding(false);
+    }
+  }, []);
+
+  // Process prescription image
+  const processPrescriptionImage = useCallback(async (imageUri: string) => {
+    try {
+      // Show loading animation
+      const decodedPrescription = await prescriptionDecoderService.decodePrescription(
+        imageUri,
+        userProfile?.patientInfo
+      );
+
+      // Navigate to decoder screen with decoded data
+      navigation.navigate('PrescriptionDecoder' as any, {
+        prescription: decodedPrescription,
+        imageUri,
+      });
+    } catch (error: any) {
+      console.error('Error decoding prescription:', error);
+      Alert.alert(
+        'Decoding Failed',
+        error.message || 'Failed to decode prescription. Please ensure the image is clear and try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsDecoding(false);
+    }
+  }, [navigation, userProfile]);
+
   return (
     <View style={styles.container}>
       <ScrollView 
@@ -503,13 +599,15 @@ const PharmacyScreen = memo(() => {
             <Text style={styles.searchPlaceholder}>Search for medicines</Text>
             <TouchableOpacity 
               style={styles.searchBarCameraButton}
-              onPress={() => {
-                // TODO: Add camera functionality for prescription upload
-                Alert.alert('Upload Prescription', 'Camera functionality will be added here');
-              }}
+              onPress={handlePrescriptionUpload}
               activeOpacity={0.7}
+              disabled={isDecoding}
             >
-              <CameraIcon />
+              {isDecoding ? (
+                <ActivityIndicator size="small" color="#1E88E5" />
+              ) : (
+                <CameraIcon />
+              )}
             </TouchableOpacity>
           </TouchableOpacity>
         </View>

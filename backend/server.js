@@ -25,9 +25,9 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Allow cross-origin requests
 }));
 
-// Enable CORS
+// Enable CORS - Allow all origins in development for React Native
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: true, // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -115,8 +115,9 @@ app.use(errorHandler);
 
 // Start server
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Listen on all network interfaces
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log('');
   console.log('╔════════════════════════════════════════════════════════╗');
   console.log('║                                                        ║');
@@ -126,6 +127,7 @@ app.listen(PORT, () => {
   console.log('');
   console.log(`🚀 Server running in ${process.env.NODE_ENV} mode`);
   console.log(`🌐 Server URL: http://localhost:${PORT}`);
+  console.log(`🌐 Network URL: http://192.168.221.67:${PORT}`);
   console.log(`💚 Health Check: http://localhost:${PORT}/health`);
   console.log(`📡 API Endpoint: http://localhost:${PORT}/api`);
   console.log('');

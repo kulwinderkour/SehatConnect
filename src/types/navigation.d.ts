@@ -14,6 +14,10 @@ export type RootStackParamList = {
   GovernmentSchemes: undefined;
   VideoCall: undefined;
   VideoConsult: undefined;
+  PrescriptionDecoder: {
+    prescription: any;
+    imageUri: string;
+  };
 };
 
 export type TabScreenProps<T extends keyof RootTabParamList> =

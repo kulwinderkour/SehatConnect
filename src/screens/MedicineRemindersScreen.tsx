@@ -347,8 +347,13 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
     } catch (error: any) {
       console.error('Error updating times:', error);
       
-      // If offline, save to local storage
-      if (error.message?.includes('Network') || isOffline) {
+      // If offline, save to local storage and schedule locally
+      const isNetworkError = error.message?.includes('Network') || 
+                            error.message?.includes('Failed to fetch') || 
+                            error.message?.includes('Unable to') ||
+                            isOffline;
+      
+      if (isNetworkError) {
         try {
           // Update in local storage
           const cachedReminders = await AsyncStorage.getItem(STORAGE_KEYS.TODAY_REMINDERS);
@@ -359,7 +364,17 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
             );
             await AsyncStorage.setItem(STORAGE_KEYS.TODAY_REMINDERS, JSON.stringify(updated));
             
-            // Schedule notifications locally
+            // Also update "all reminders" cache
+            const allRemindersCache = await AsyncStorage.getItem(STORAGE_KEYS.REMINDERS);
+            if (allRemindersCache) {
+              const allReminders = JSON.parse(allRemindersCache);
+              const updatedAll = allReminders.map((r: Reminder) =>
+                r._id === editingReminder._id ? { ...r, times: newTimes } : r
+              );
+              await AsyncStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(updatedAll));
+            }
+            
+            // Schedule notifications locally with new times
             const updatedReminder = { ...editingReminder, times: newTimes };
             await MedicineReminderService.scheduleReminder({
               id: updatedReminder._id,
@@ -377,16 +392,23 @@ const MedicineRemindersScreen = ({ navigation }: any) => {
               prescriptionId: updatedReminder.prescriptionId,
             });
             
-            await loadReminders();
-            Alert.alert('Success', 'Times updated (offline mode). Will sync when online.');
+            await loadRemindersFromStorage(); // Load from cache instead of network
+            Alert.alert(
+              '✅ Offline Mode', 
+              'Reminder times updated locally! Notifications will trigger at the new times.\n\n(Changes will sync to server when online)',
+              [{ text: 'OK' }]
+            );
+            return; // Don't show error
           }
         } catch (storageError) {
           console.error('Error saving to storage:', storageError);
-          Alert.alert('Error', 'Failed to update times. Please try again.');
+          Alert.alert('Error', 'Failed to update times offline. Please try again.');
+          return;
         }
-      } else {
-        Alert.alert('Error', 'Failed to update reminder times');
       }
+      
+      // Only show error if not a network error
+      Alert.alert('Error', 'Failed to update reminder times');
     } finally {
       setEditingReminder(null);
       setShowTimeEditor(false);

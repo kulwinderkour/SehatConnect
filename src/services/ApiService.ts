@@ -9,9 +9,7 @@ import { Platform } from 'react-native';
 // For iOS Simulator: use localhost
 // For Physical Device: use your computer's IP address (e.g., 192.168.x.x)
 const API_BASE_URL = __DEV__ 
-  ? Platform.OS === 'android' 
-    ? 'http://10.0.2.2:5001/api' // Android Emulator - Backend runs on port 5001
-    : 'http://localhost:5001/api' // iOS Simulator
+  ? 'http://192.168.221.67:5001/api' // Physical Device - Use your computer's IP
   : 'https://your-production-api.com/api'; // Production
 
 // API response types
@@ -172,21 +170,60 @@ class ApiService {
   async uploadFile<T>(endpoint: string, file: FormData): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        ...this.defaultHeaders,
-      },
-      body: file,
-    });
+    try {
+      // Don't set Content-Type header for FormData - let the browser set it with boundary
+      const headers: Record<string, string> = {
+        'Accept': 'application/json',
+      };
 
-    const data = await response.json();
+      if (__DEV__) {
+        console.log('🌐 API Upload Request:', 'POST', endpoint);
+      }
 
-    if (!response.ok) {
-      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: file,
+      });
+
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { error: text || 'Unknown error' };
+        }
+      }
+
+      if (!response.ok) {
+        return {
+          success: false,
+          data: null,
+          error: data.error || data.message || `HTTP error! status: ${response.status}`,
+          message: data.message || 'Upload failed',
+        } as ApiResponse<T>;
+      }
+
+      return data;
+    } catch (error: any) {
+      if (__DEV__) {
+        console.warn('⚠️ File upload failed:', {
+          endpoint,
+          error: error.message,
+        });
+      }
+      
+      return {
+        success: false,
+        data: null,
+        error: error.message || 'Network request failed',
+        message: 'Upload failed',
+      } as ApiResponse<T>;
     }
-
-    return data;
   }
 }
 

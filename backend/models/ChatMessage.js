@@ -55,16 +55,10 @@ const chatMessageSchema = new mongoose.Schema({
 });
 
 // Indexes for better query performance
+// Compound index for efficient message retrieval between two users
 chatMessageSchema.index({ senderId: 1, receiverId: 1, createdAt: -1 });
 chatMessageSchema.index({ appointmentId: 1, createdAt: 1 });
 chatMessageSchema.index({ isRead: 1 });
-
-// Compound index for efficient message retrieval between two users
-chatMessageSchema.index({ 
-  senderId: 1, 
-  receiverId: 1, 
-  createdAt: -1 
-});
 
 const ChatMessage = mongoose.model('ChatMessage', chatMessageSchema);
 

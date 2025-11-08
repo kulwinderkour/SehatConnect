@@ -21,18 +21,11 @@ export interface ChatbotResponse {
 
 // Get the correct backend URL based on platform
 const getBackendURL = () => {
-  // For Android Emulator, use 10.0.2.2 to access host machine's localhost
-  // For iOS Simulator, use localhost
   // For Physical Devices, use your computer's actual IP address (e.g., 192.168.x.x)
   
   if (__DEV__) {
-    if (Platform.OS === 'android') {
-      // Android Emulator - Use special alias to host machine
-      return 'http://10.0.2.2:8000';
-    } else {
-      // iOS Simulator - Use localhost
-      return 'http://localhost:8000';
-    }
+    // Physical Device - Use your computer's IP
+    return 'http://192.168.221.67:8000';
   }
   
   // Production - Update with your production chatbot URL
