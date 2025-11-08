@@ -1,0 +1,11 @@
+{
+  "python.defaultInterpreterPath": "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend-chatbot"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/backend-chatbot"
+  ],
+  "python.analysis.typeCheckingMode": "basic",
+  "python.languageServer": "Pylance"
+}
