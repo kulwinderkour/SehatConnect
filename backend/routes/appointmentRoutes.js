@@ -1,5 +1,5 @@
 /**
- * Appointment Routes
+ * Simplified Appointment Routes
  * /api/appointments
  */
 
@@ -11,15 +11,15 @@ const {
   getAppointmentById,
   cancelAppointment,
   completeAppointment,
-  rescheduleAppointment,
+  updateAppointment,
 } = require('../controllers/appointmentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.post('/', protect, bookAppointment);
 router.get('/', protect, getAppointments);
 router.get('/:id', protect, getAppointmentById);
+router.put('/:id', protect, updateAppointment);
 router.put('/:id/cancel', protect, cancelAppointment);
 router.put('/:id/complete', protect, authorize('doctor'), completeAppointment);
-router.put('/:id/reschedule', protect, rescheduleAppointment);
 
 module.exports = router;

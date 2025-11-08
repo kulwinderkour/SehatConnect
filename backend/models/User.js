@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 /**
- * User Schema - Unified for both Patients and Doctors
- * Handles authentication, profile data, and role-specific information
+ * Simplified User Schema for Demo
+ * Only two users: Demo Patient and Dr. Rajesh Sharma
  */
 
 const userSchema = new mongoose.Schema({
@@ -11,50 +11,44 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['patient', 'doctor'],
-    required: [true, 'User role is required'],
+    required: true,
   },
 
   // Authentication fields
   email: {
     type: String,
-    required: [true, 'Email is required'],
+    required: true,
     unique: true,
     lowercase: true,
     trim: true,
-    match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
   },
 
   password: {
     type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters'],
-    select: false, // Don't return password by default
+    required: true,
+    select: false,
   },
 
   phone: {
     type: String,
-    required: [true, 'Phone number is required'],
-    trim: true,
-    match: [/^[+]?[\d\s-()]+$/, 'Please provide a valid phone number'],
+    required: true,
   },
 
   // Personal Information
   profile: {
     fullName: {
       type: String,
-      required: [true, 'Full name is required'],
-      trim: true,
+      required: true,
     },
     shortName: {
       type: String,
-      trim: true,
     },
     profileImage: {
       type: String,
-      default: 'https://via.placeholder.com/150x150/5a9e31/ffffff?text=User',
+      default: '',
     },
     dateOfBirth: {
-      type: Date,
+      type: String,
     },
     gender: {
       type: String,
@@ -62,17 +56,12 @@ const userSchema = new mongoose.Schema({
     },
     bloodGroup: {
       type: String,
-      enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
     },
     address: {
       street: String,
       city: String,
       state: String,
       pincode: String,
-      coordinates: {
-        lat: Number,
-        lng: Number,
-      },
     },
   },
 
@@ -80,46 +69,27 @@ const userSchema = new mongoose.Schema({
   doctorInfo: {
     specialty: {
       type: String,
-      required: function() {
-        return this.role === 'doctor';
-      },
     },
     qualifications: [{
       type: String,
     }],
     registrationNumber: {
       type: String,
-      unique: true,
-      sparse: true, // Only unique if not null
-      required: function() {
-        return this.role === 'doctor';
-      },
     },
     hospital: {
       type: String,
     },
     experience: {
       type: Number,
-      min: 0,
+      default: 0,
     },
     consultationFee: {
       type: Number,
-      min: 0,
       default: 0,
     },
-    availableSlots: [{
-      day: {
-        type: String,
-        enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
-      },
-      startTime: String,
-      endTime: String,
-    }],
     rating: {
       type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
+      default: 4.5,
     },
     totalReviews: {
       type: Number,
@@ -131,8 +101,6 @@ const userSchema = new mongoose.Schema({
   patientInfo: {
     patientId: {
       type: String,
-      unique: true,
-      sparse: true, // Only unique if not null
     },
     emergencyContact: {
       name: String,
@@ -145,36 +113,6 @@ const userSchema = new mongoose.Schema({
     chronicDiseases: [{
       type: String,
     }],
-    currentMedications: [{
-      type: String,
-    }],
-  },
-
-  // Authentication tokens
-  refreshToken: {
-    type: String,
-    select: false,
-  },
-
-  resetPasswordToken: {
-    type: String,
-    select: false,
-  },
-
-  resetPasswordExpires: {
-    type: Date,
-    select: false,
-  },
-
-  otp: {
-    code: {
-      type: String,
-      select: false,
-    },
-    expiresAt: {
-      type: Date,
-      select: false,
-    },
   },
 
   lastLogin: {
@@ -189,61 +127,25 @@ const userSchema = new mongoose.Schema({
 
   isVerified: {
     type: Boolean,
-    default: false,
+    default: true, // Auto-verified for demo users
   },
-
-  // Timestamps
 }, {
-  timestamps: true, // Automatically adds createdAt and updatedAt
+  timestamps: true,
 });
-
-// Indexes for better query performance
-userSchema.index({ email: 1 });
-userSchema.index({ role: 1 });
-userSchema.index({ 'patientInfo.patientId': 1 });
-userSchema.index({ 'doctorInfo.registrationNumber': 1 });
-userSchema.index({ 'doctorInfo.specialty': 1 });
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  // Only hash password if it's modified
   if (!this.isModified('password')) {
     return next();
   }
 
   try {
-    // Generate salt and hash password
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
   } catch (error) {
     next(error);
   }
-});
-
-// Auto-generate patientId for new patients
-userSchema.pre('save', function(next) {
-  if (this.role === 'patient' && !this.patientInfo.patientId && this.isNew) {
-    if (!this.patientInfo) {
-      this.patientInfo = {};
-    }
-    // Generate unique patient ID: SH + 6 digits
-    const randomNum = Math.floor(100000 + Math.random() * 900000);
-    this.patientInfo.patientId = `SH${randomNum}`;
-  }
-  next();
-});
-
-// Auto-generate shortName if not provided
-userSchema.pre('save', function(next) {
-  if (!this.profile) {
-    this.profile = {};
-  }
-
-  if (!this.profile.shortName && this.profile.fullName) {
-    this.profile.shortName = this.profile.fullName.split(' ')[0];
-  }
-  next();
 });
 
 // Method to compare passwords
@@ -259,9 +161,6 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
 userSchema.methods.getPublicProfile = function() {
   const user = this.toObject();
   delete user.password;
-  delete user.refreshToken;
-  delete user.resetPasswordToken;
-  delete user.resetPasswordExpires;
   return user;
 };
 

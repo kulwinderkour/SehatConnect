@@ -1,66 +1,60 @@
 /**
- * Appointment Controller
- * Handles appointment booking, cancellation, scheduling
+ * Simplified Appointment Controller
+ * All appointments go to Dr. Rajesh Sharma
  */
 
-const { Appointment, User, Notification } = require('../models');
-const { sendAppointmentEmail } = require('../utils/emailService');
+const { Appointment, User } = require('../models');
 
 /**
- * @desc    Book appointment
+ * @desc    Book appointment with Dr. Rajesh Sharma
  * @route   POST /api/appointments
  * @access  Private
  */
 const bookAppointment = async (req, res, next) => {
   try {
-    const { doctorId, appointmentDate, appointmentTime, type, reason } = req.body;
+    const { appointmentDate, appointmentTime, type, reason, symptoms } = req.body;
 
-    // Check if doctor exists
-    const doctor = await User.findOne({ _id: doctorId, role: 'doctor' });
+    console.log('Booking appointment:', { appointmentDate, appointmentTime, type, reason });
+
+    // Find Dr. Rajesh Sharma
+    const doctor = await User.findOne({ email: 'drrajesh@sehat.com', role: 'doctor' });
+    
     if (!doctor) {
       return res.status(404).json({
         success: false,
-        error: 'Doctor not found',
+        error: 'Dr. Rajesh Sharma not found. Please run initialization script.',
       });
     }
 
     // Create appointment
     const appointment = await Appointment.create({
       patientId: req.user._id,
-      doctorId,
+      doctorId: doctor._id,
       appointmentDate,
       appointmentTime,
-      type,
+      type: type || 'video',
       reason,
+      symptoms: symptoms || [],
       status: 'scheduled',
+      payment: {
+        amount: doctor.doctorInfo.consultationFee || 500,
+        status: 'pending',
+      },
     });
 
-    // Send email notification
-    await sendAppointmentEmail(req.user.email, {
-      patientName: req.user.profile.fullName,
-      doctorName: doctor.profile.fullName,
-      date: appointmentDate,
-      time: appointmentTime,
-      specialty: doctor.doctorInfo.specialty,
-      hospital: doctor.doctorInfo.hospital,
-    });
+    // Populate the appointment with user details
+    await appointment.populate('patientId', 'profile patientInfo');
+    await appointment.populate('doctorId', 'profile doctorInfo');
 
-    // Create notification for doctor
-    await Notification.create({
-      userId: doctorId,
-      type: 'appointment',
-      title: 'New Appointment',
-      message: `New appointment booked by ${req.user.profile.fullName}`,
-      relatedId: appointment._id,
-      relatedModel: 'Appointment',
-    });
+    console.log('✅ Appointment created:', appointment._id);
 
     res.status(201).json({
       success: true,
-      message: 'Appointment booked successfully',
+      message: 'Appointment booked successfully with Dr. Rajesh Sharma',
       data: { appointment },
     });
   } catch (error) {
+    console.error('❌ Appointment booking error:', error);
     next(error);
   }
 };
@@ -72,7 +66,7 @@ const bookAppointment = async (req, res, next) => {
  */
 const getAppointments = async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, page = 1, limit = 50 } = req.query;
 
     const query = {};
     
@@ -88,11 +82,11 @@ const getAppointments = async (req, res, next) => {
     }
 
     const appointments = await Appointment.find(query)
-      .populate('patientId', 'profile')
-      .populate('doctorId', 'profile doctorInfo')
+      .populate('patientId', 'profile patientInfo email phone')
+      .populate('doctorId', 'profile doctorInfo email phone')
       .limit(parseInt(limit))
       .skip((parseInt(page) - 1) * parseInt(limit))
-      .sort({ appointmentDate: -1 });
+      .sort({ appointmentDate: -1, createdAt: -1 });
 
     const total = await Appointment.countDocuments(query);
 
@@ -109,6 +103,7 @@ const getAppointments = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.error('❌ Get appointments error:', error);
     next(error);
   }
 };
@@ -121,8 +116,8 @@ const getAppointments = async (req, res, next) => {
 const getAppointmentById = async (req, res, next) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
-      .populate('patientId', 'profile patientInfo')
-      .populate('doctorId', 'profile doctorInfo');
+      .populate('patientId', 'profile patientInfo email phone')
+      .populate('doctorId', 'profile doctorInfo email phone');
 
     if (!appointment) {
       return res.status(404).json({
@@ -194,19 +189,6 @@ const cancelAppointment = async (req, res, next) => {
     appointment.cancelledAt = new Date();
     await appointment.save();
 
-    // Notify the other party
-    const notifyUserId =
-      req.user.role === 'doctor' ? appointment.patientId : appointment.doctorId;
-
-    await Notification.create({
-      userId: notifyUserId,
-      type: 'appointment',
-      title: 'Appointment Cancelled',
-      message: `Your appointment has been cancelled${cancellationReason ? `: ${cancellationReason}` : ''}`,
-      relatedId: appointment._id,
-      relatedModel: 'Appointment',
-    });
-
     res.status(200).json({
       success: true,
       message: 'Appointment cancelled successfully',
@@ -224,7 +206,7 @@ const cancelAppointment = async (req, res, next) => {
  */
 const completeAppointment = async (req, res, next) => {
   try {
-    const { notes, prescriptionId } = req.body;
+    const { notes } = req.body;
 
     const appointment = await Appointment.findOne({
       _id: req.params.id,
@@ -241,10 +223,6 @@ const completeAppointment = async (req, res, next) => {
     appointment.status = 'completed';
     appointment.completedAt = new Date();
     appointment.notes = notes;
-    if (prescriptionId) {
-      appointment.prescriptionId = prescriptionId;
-    }
-
     await appointment.save();
 
     res.status(200).json({
@@ -258,13 +236,13 @@ const completeAppointment = async (req, res, next) => {
 };
 
 /**
- * @desc    Reschedule appointment
- * @route   PUT /api/appointments/:id/reschedule
+ * @desc    Update appointment
+ * @route   PUT /api/appointments/:id
  * @access  Private
  */
-const rescheduleAppointment = async (req, res, next) => {
+const updateAppointment = async (req, res, next) => {
   try {
-    const { appointmentDate, appointmentTime } = req.body;
+    const { appointmentDate, appointmentTime, reason, symptoms, notes, status } = req.body;
 
     const appointment = await Appointment.findById(req.params.id);
 
@@ -276,23 +254,29 @@ const rescheduleAppointment = async (req, res, next) => {
     }
 
     // Check authorization
-    if (
-      appointment.patientId.toString() !== req.user._id.toString() &&
-      appointment.doctorId.toString() !== req.user._id.toString()
-    ) {
+    const isPatient = appointment.patientId.toString() === req.user._id.toString();
+    const isDoctor = appointment.doctorId.toString() === req.user._id.toString();
+
+    if (!isPatient && !isDoctor) {
       return res.status(403).json({
         success: false,
         error: 'Not authorized',
       });
     }
 
-    appointment.appointmentDate = appointmentDate;
-    appointment.appointmentTime = appointmentTime;
+    // Update fields
+    if (appointmentDate) appointment.appointmentDate = appointmentDate;
+    if (appointmentTime) appointment.appointmentTime = appointmentTime;
+    if (reason) appointment.reason = reason;
+    if (symptoms) appointment.symptoms = symptoms;
+    if (notes && isDoctor) appointment.notes = notes;
+    if (status && isDoctor) appointment.status = status;
+
     await appointment.save();
 
     res.status(200).json({
       success: true,
-      message: 'Appointment rescheduled successfully',
+      message: 'Appointment updated successfully',
       data: { appointment },
     });
   } catch (error) {
@@ -306,5 +290,5 @@ module.exports = {
   getAppointmentById,
   cancelAppointment,
   completeAppointment,
-  rescheduleAppointment,
+  updateAppointment,
 };

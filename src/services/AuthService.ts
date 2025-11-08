@@ -51,7 +51,7 @@ export interface User {
 export interface AuthResponse {
   user: User;
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string; // Optional for backward compatibility
 }
 
 class AuthService {
@@ -226,11 +226,17 @@ class AuthService {
    */
   private async saveAuthData(authData: AuthResponse) {
     try {
-      await AsyncStorage.multiSet([
+      const dataToSave: Array<[string, string]> = [
         [STORAGE_KEYS.ACCESS_TOKEN, authData.accessToken],
-        [STORAGE_KEYS.REFRESH_TOKEN, authData.refreshToken],
         [STORAGE_KEYS.USER_DATA, JSON.stringify(authData.user)],
-      ]);
+      ];
+
+      // Only save refresh token if it exists
+      if (authData.refreshToken) {
+        dataToSave.push([STORAGE_KEYS.REFRESH_TOKEN, authData.refreshToken]);
+      }
+
+      await AsyncStorage.multiSet(dataToSave);
 
       // Set token in API service
       apiService.setAuthToken(authData.accessToken);
@@ -293,20 +299,12 @@ class AuthService {
     try {
       const token = await this.getAccessToken();
       if (token) {
+        // Just set the token, don't verify it here
+        // The AuthContext will handle verification
         apiService.setAuthToken(token);
-        
-        // Verify token is still valid
-        try {
-          await this.getCurrentUser();
-        } catch (error) {
-          // Token is invalid, try to refresh
-          try {
-            await this.refreshAccessToken();
-          } catch (refreshError) {
-            // Refresh failed, clear auth data
-            await this.clearAuthData();
-          }
-        }
+        console.log('🔑 Token loaded from storage');
+      } else {
+        console.log('ℹ️ No token found in storage');
       }
     } catch (error) {
       console.error('Auth initialization failed:', error);

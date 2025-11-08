@@ -1,10 +1,11 @@
 /**
- * Authentication Middleware
+ * Simplified Authentication Middleware
  * Protects routes and verifies JWT tokens
  */
 
 const { User } = require('../models');
-const { verifyAccessToken } = require('../utils/jwtUtils');
+const jwt = require('jsonwebtoken');
+const { jwtSecret } = require('../config/jwt');
 
 /**
  * Verify JWT token and attach user to request
@@ -26,10 +27,10 @@ const protect = async (req, res, next) => {
     }
 
     // Verify token
-  const decoded = verifyAccessToken(token);
+    const decoded = jwt.verify(token, jwtSecret);
 
     // Get user from token (exclude password)
-    req.user = await User.findById(decoded.id).select('-password');
+    req.user = await User.findById(decoded.id);
 
     if (!req.user) {
       return res.status(401).json({
@@ -58,7 +59,7 @@ const protect = async (req, res, next) => {
 
 /**
  * Restrict access to specific roles
- * @param  {...string} roles - Allowed roles (e.g., 'admin', 'doctor', 'patient')
+ * @param  {...string} roles - Allowed roles (e.g., 'doctor', 'patient')
  */
 const authorize = (...roles) => {
   return (req, res, next) => {
@@ -72,28 +73,4 @@ const authorize = (...roles) => {
   };
 };
 
-/**
- * Optional authentication - doesn't fail if no token
- * Useful for public routes that have different behavior for logged-in users
- */
-const optionalAuth = async (req, res, next) => {
-  try {
-    let token;
-
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    if (token) {
-  const decoded = verifyAccessToken(token);
-  req.user = await User.findById(decoded.id).select('-password');
-    }
-
-    next();
-  } catch (error) {
-    // Continue without user
-    next();
-  }
-};
-
-module.exports = { protect, authorize, optionalAuth };
+module.exports = { protect, authorize };

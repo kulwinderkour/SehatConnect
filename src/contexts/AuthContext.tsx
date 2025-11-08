@@ -58,28 +58,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('🔐 Initializing auth state...');
       await authService.initialize();
       
-      // Try to get current user if token exists
-      const response = await authService.getCurrentUser();
-      if (response.success && response.data) {
-        const userData = response.data.user;
-        console.log('✅ User authenticated:', userData.email);
-        
-        setUser({
-          _id: userData._id,
-          fullName: userData.profile?.fullName || userData.email,
-          patientId: userData.patientInfo?.patientId || userData._id || '',
-          shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
-          profileImage: userData.profile?.photoUrl || '',
-          email: userData.email,
-          phone: userData.phone,
-          role: userData.role as UserRole,
-          specialty: userData.doctorInfo?.specialty,
-          hospital: userData.doctorInfo?.hospital,
-          experience: userData.doctorInfo?.experience,
-        });
-        setIsAuthenticated(true);
+      // Check if token exists before trying to get current user
+      const token = await authService.getAccessToken();
+      
+      if (token) {
+        // Try to get current user if token exists
+        const response = await authService.getCurrentUser();
+        if (response.success && response.data) {
+          const userData = response.data.user;
+          console.log('✅ User authenticated:', userData.email);
+          
+          setUser({
+            _id: userData._id,
+            fullName: userData.profile?.fullName || userData.email,
+            patientId: userData.patientInfo?.patientId || userData._id || '',
+            shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
+            profileImage: userData.profile?.photoUrl || '',
+            email: userData.email,
+            phone: userData.phone,
+            role: userData.role as UserRole,
+            specialty: userData.doctorInfo?.specialty,
+            hospital: userData.doctorInfo?.hospital,
+            experience: userData.doctorInfo?.experience,
+          });
+          setIsAuthenticated(true);
+        } else {
+          console.log('ℹ️ Token exists but user fetch failed');
+          setIsAuthenticated(false);
+          setUser(null);
+        }
       } else {
-        console.log('ℹ️ No authenticated user found');
+        console.log('ℹ️ No token found, user not authenticated');
+        setIsAuthenticated(false);
+        setUser(null);
       }
     } catch (error) {
       console.log('ℹ️ Auth initialization failed:', error);
