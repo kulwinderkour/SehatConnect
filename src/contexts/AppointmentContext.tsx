@@ -172,12 +172,16 @@ export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       const appointments = await doctorService.getDoctorAppointments(doctorId, date);
 
       // Normalize incoming appointments if needed and then set
-      dispatch({ type: 'SET_APPOINTMENTS', payload: appointments });
+      dispatch({ type: 'SET_APPOINTMENTS', payload: appointments || [] });
 
-      return appointments;
-    } catch (error) {
-      console.error('fetchAppointmentsForDoctor error:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch appointments' });
+      return appointments || [];
+    } catch (error: any) {
+      // Only log error if it's not a network/backend issue
+      if (!error.message?.includes('Network request failed') && !error.message?.includes('Unable to connect')) {
+        console.error('fetchAppointmentsForDoctor error:', error);
+      }
+      dispatch({ type: 'SET_ERROR', payload: null }); // Don't set error for network issues
+      dispatch({ type: 'SET_APPOINTMENTS', payload: [] }); // Set empty array
       return [] as Appointment[];
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });

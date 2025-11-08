@@ -17,9 +17,11 @@ export default function AppointmentManagementScreen() {
   useEffect(() => {
     if (user && (user as any).role === 'doctor') {
       const doctorId = (user as any).patientId;
-      fetchAppointmentsForDoctor(doctorId);
+      fetchAppointmentsForDoctor(doctorId).catch(error => {
+        console.warn('Failed to load appointments:', error);
+      });
     }
-  }, [user, fetchAppointmentsForDoctor]);
+  }, [user?.patientId]); // Only depend on user ID, not the function
 
   // Filter appointments
   const filteredAppointments = useMemo(() => {

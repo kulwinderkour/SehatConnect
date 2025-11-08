@@ -1,23 +1,12 @@
 /**
  * Simplified Authentication Controller
- * Handles login/logout for two demo users only
+ * Only supports demo credentials - no tokens, no JWT
  */
 
 const { User } = require('../models');
-const jwt = require('jsonwebtoken');
-const { jwtSecret, jwtExpire } = require('../config/jwt');
 
 /**
- * Generate JWT token
- */
-const generateToken = (userId) => {
-  return jwt.sign({ id: userId }, jwtSecret, {
-    expiresIn: jwtExpire,
-  });
-};
-
-/**
- * @desc    Login user
+ * @desc    Login user (demo credentials only)
  * @route   POST /api/auth/login
  * @access  Public
  */
@@ -34,8 +23,8 @@ const login = async (req, res, next) => {
       });
     }
 
-    // Find user (include password for comparison)
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    // Find user
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     
     if (!user) {
       console.log('User not found:', email);
@@ -60,9 +49,6 @@ const login = async (req, res, next) => {
     user.lastLogin = new Date();
     await user.save({ validateBeforeSave: false });
 
-    // Generate token
-    const token = generateToken(user._id);
-
     console.log('Login successful:', { email, role: user.role });
 
     res.status(200).json({
@@ -70,7 +56,6 @@ const login = async (req, res, next) => {
       message: 'Login successful',
       data: {
         user: user.getPublicProfile(),
-        accessToken: token,
       },
     });
   } catch (error) {
@@ -80,18 +65,19 @@ const login = async (req, res, next) => {
 };
 
 /**
- * @desc    Get current user
+ * @desc    Get current user (returns first patient as demo user)
  * @route   GET /api/auth/me
- * @access  Private
+ * @access  Public
  */
 const getCurrentUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id);
+    // Return first patient found (demo user)
+    const user = await User.findOne({ role: 'patient' });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        error: 'User not found',
+        error: 'No demo user found. Run: node backend/scripts/initDemoUsers.js',
       });
     }
 
@@ -109,7 +95,7 @@ const getCurrentUser = async (req, res, next) => {
 /**
  * @desc    Logout user
  * @route   POST /api/auth/logout
- * @access  Private
+ * @access  Public
  */
 const logout = async (req, res, next) => {
   try {

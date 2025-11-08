@@ -14,17 +14,20 @@ const {
   getOrderById,
   cancelOrder,
 } = require('../controllers/pharmacyController');
-const { protect } = require('../middleware/authMiddleware');
+const { setDemoUser } = require('../middleware/demoUser');
+
+// Use demo user middleware (replaces auth)
+router.use(setDemoUser);
 
 // Pharmacy routes
 router.get('/nearby', getNearbyPharmacies);
 router.get('/', searchPharmacies);
 router.get('/:id', getPharmacyById);
 
-// Order routes
-router.post('/orders', protect, placeOrder);
-router.get('/orders', protect, getOrders);
-router.get('/orders/:id', protect, getOrderById);
-router.put('/orders/:id/cancel', protect, cancelOrder);
+// Order routes (Authentication removed - open access)
+router.post('/orders', placeOrder);
+router.get('/orders', getOrders);
+router.get('/orders/:id', getOrderById);
+router.put('/orders/:id/cancel', cancelOrder);
 
 module.exports = router;

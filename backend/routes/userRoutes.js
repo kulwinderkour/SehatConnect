@@ -16,19 +16,22 @@ const {
   getDoctors,
   getDoctorById,
 } = require('../controllers/userController');
-const { protect, authorize } = require('../middleware/authMiddleware');
 const { uploadImage } = require('../middleware/upload');
+const { setDemoUser } = require('../middleware/demoUser');
 
-// Profile routes
-router.get('/profile', protect, getProfile);
-router.put('/profile', protect, updateProfile);
-router.post('/profile-photo', protect, uploadImage.single('photo'), uploadProfilePhoto);
+// Use demo user middleware (replaces auth)
+router.use(setDemoUser);
 
-// Family members routes
-router.get('/family-members', protect, getFamilyMembers);
-router.post('/family-members', protect, addFamilyMember);
-router.put('/family-members/:id', protect, updateFamilyMember);
-router.delete('/family-members/:id', protect, deleteFamilyMember);
+// Profile routes (Authentication removed - open access)
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+router.post('/profile-photo', uploadImage.single('photo'), uploadProfilePhoto);
+
+// Family members routes (Authentication removed - open access)
+router.get('/family-members', getFamilyMembers);
+router.post('/family-members', addFamilyMember);
+router.put('/family-members/:id', updateFamilyMember);
+router.delete('/family-members/:id', deleteFamilyMember);
 
 // Doctor routes
 router.get('/doctors', getDoctors);

@@ -1,52 +1,15 @@
-/Users/abhishekswami/Developer/SIH2/SehatConnet/backend-chatbot/chat_api.py:73: DeprecationWarning: 
+/Users/abhishekswami/Developer/SehatConnect/backend-chatbot/chat_api.py:73: DeprecationWarning: 
         on_event is deprecated, use lifespan event handlers instead.
 
         Read more about it in the
         [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
         
   @app.on_event("startup")
-INFO:     Started server process [9087]
+INFO:     Started server process [12871]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-============================================================
-🚀 Starting Sehat Medical Chatbot API v2.0
-============================================================
-📥 Loading sentence transformer model...
-✅ Model loaded successfully!
-📊 Checking for dataset...
-✅ Dataset already available: /Users/abhishekswami/Developer/SIH2/SehatConnet/backend-chatbot/symptom2disease.csv
-📊 Loading dataset from: /Users/abhishekswami/Developer/SIH2/SehatConnet/backend-chatbot/symptom2disease.csv
-✅ Dataset loaded: 1200 records
-🔄 Loading embeddings (cached if available)...
-✅ Embeddings ready: (1200, 384)
-============================================================
-🎉 Server ready! API available at: http://0.0.0.0:8000
-📖 API docs: http://0.0.0.0:8000/docs
-💡 Dataset cached - fast restarts enabled!
-============================================================
-INFO:     127.0.0.1:60094 - "GET /health HTTP/1.1" 200 OK
-INFO:     10.172.101.158:60111 - "GET /health HTTP/1.1" 200 OK
-INFO:     10.172.101.158:60126 - "GET /health HTTP/1.1" 200 OK
-💬 Query: I have fever and headache...
-✅ Response: Chicken pox (confidence: 0.82)
-INFO:     10.172.101.158:60138 - "POST /chat HTTP/1.1" 200 OK
-💬 Query: Hi...
-✅ Response: Jaundice (confidence: 0.15)
-INFO:     10.172.101.158:60206 - "POST /chat HTTP/1.1" 200 OK
-💬 Query: i am feeling sad...
-✅ Response: Migraine (confidence: 0.35)
-INFO:     10.172.101.158:60493 - "POST /chat HTTP/1.1" 200 OK
-💬 Query: I am having headache...
-✅ Response: Dengue (confidence: 0.64)
-INFO:     10.172.101.158:60493 - "POST /chat HTTP/1.1" 200 OK
-INFO:     10.172.101.158:57595 - "GET /health HTTP/1.1" 200 OK
-INFO:     10.172.101.158:57902 - "GET /health HTTP/1.1" 200 OK
-💬 Query: Hi...
-✅ Response: Jaundice (confidence: 0.15)
-INFO:     10.172.101.158:57978 - "POST /chat HTTP/1.1" 200 OK
-INFO:     10.172.101.158:58269 - "GET /health HTTP/1.1" 200 OK
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [9087]
+INFO:     Finished server process [12871]

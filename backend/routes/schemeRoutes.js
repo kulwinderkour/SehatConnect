@@ -13,13 +13,17 @@ const {
   getSchemesByCategory,
   incrementApplications,
 } = require('../controllers/governmentSchemeController');
-const { protect } = require('../middleware/authMiddleware');
+const { setDemoUser } = require('../middleware/demoUser');
 
+// Use demo user middleware (replaces auth)
+router.use(setDemoUser);
+
+// Authentication removed - open access
 router.get('/', getSchemes);
-router.get('/bookmarked', protect, getBookmarkedSchemes);
+router.get('/bookmarked', getBookmarkedSchemes);
 router.get('/category/:category', getSchemesByCategory);
 router.get('/:id', getSchemeById);
-router.put('/:id/bookmark', protect, toggleBookmark);
-router.put('/:id/apply', protect, incrementApplications);
+router.put('/:id/bookmark', toggleBookmark);
+router.put('/:id/apply', incrementApplications);
 
 module.exports = router;

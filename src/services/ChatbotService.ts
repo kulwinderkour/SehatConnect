@@ -21,22 +21,22 @@ export interface ChatbotResponse {
 
 // Get the correct backend URL based on platform
 const getBackendURL = () => {
-  // IMPORTANT: Update this IP when running on a physical device
-  // To find your IP: Run `ifconfig | grep "inet " | grep -v 127.0.0.1` on Mac
-  // or `ipconfig` on Windows and look for your local IP (e.g., 192.168.x.x or 172.x.x.x)
-  
-  // For team collaboration: Each developer should create a .env file (not committed to git)
-  // with their own IP address. This file reads from environment or falls back to localhost.
-  
-  // You can also run: `hostname -I` (Linux/Mac) or check your network settings
-  const BACKEND_IP = __DEV__ ? '10.172.101.158' : 'localhost';
-  
-  // For Android Emulator, use 10.0.2.2 to access host machine
+  // For Android Emulator, use 10.0.2.2 to access host machine's localhost
   // For iOS Simulator, use localhost
-  // For Physical Devices, use your computer's actual IP address
+  // For Physical Devices, use your computer's actual IP address (e.g., 192.168.x.x)
   
-  // ALWAYS use the actual IP for both iOS and Android (works for emulator AND physical devices)
-  return `http://${BACKEND_IP}:8000`;
+  if (__DEV__) {
+    if (Platform.OS === 'android') {
+      // Android Emulator - Use special alias to host machine
+      return 'http://10.0.2.2:8000';
+    } else {
+      // iOS Simulator - Use localhost
+      return 'http://localhost:8000';
+    }
+  }
+  
+  // Production - Update with your production chatbot URL
+  return 'https://your-production-chatbot-api.com';
 };
 
 const BACKEND_URL = getBackendURL();
@@ -193,17 +193,22 @@ class ChatbotService {
    * Check if backend is available (with caching)
    */
   public async checkBackendStatus(): Promise<boolean> {
+    // Skip health check if backend URL is not configured or in production
+    if (!BACKEND_URL || BACKEND_URL.includes('your-production-api.com')) {
+      this.isBackendOnline = false;
+      return false;
+    }
+
     const healthUrl = `${BACKEND_URL}/health`;
-    console.log('='.repeat(60));
-    console.log('🔍 HEALTH CHECK');
-    console.log('='.repeat(60));
-    console.log('🔍 URL:', healthUrl);
-    console.log('🔍 Platform:', Platform.OS);
-    console.log('='.repeat(60));
+    
+    // Only log in development mode
+    if (__DEV__) {
+      console.log('🔍 Checking backend health:', healthUrl);
+    }
     
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // Reduced to 5 seconds
 
       const response = await fetch(healthUrl, {
         method: 'GET',
@@ -219,16 +224,17 @@ class ChatbotService {
       this.isBackendOnline = isOnline;
       this.lastHealthCheck = Date.now();
       
-      console.log('✅ Health check response:', response.status);
-      console.log('✅ Backend is:', isOnline ? 'ONLINE 🟢' : 'OFFLINE 🔴');
-      console.log('='.repeat(60));
+      if (__DEV__ && isOnline) {
+        console.log('✅ Backend is online');
+      }
       
       return isOnline;
     } catch (error: any) {
-      console.log('='.repeat(60));
-      console.error('❌ HEALTH CHECK FAILED');
-      console.error('❌ Error:', error.message);
-      console.log('='.repeat(60));
+      // Don't log as error - backend might not be running, which is expected
+      // Only log in development mode
+      if (__DEV__) {
+        console.log('⚠️ Backend health check failed (backend may not be running):', error.message);
+      }
       this.isBackendOnline = false;
       this.lastHealthCheck = Date.now();
       return false;

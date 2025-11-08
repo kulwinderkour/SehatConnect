@@ -35,7 +35,7 @@ const prescriptionSchema = new mongoose.Schema({
     type: String,
   }],
 
-  // Medications
+  // Medications with Smart Reminder Support
   medications: [{
     name: {
       type: String,
@@ -48,10 +48,15 @@ const prescriptionSchema = new mongoose.Schema({
     frequency: {
       type: String,
       required: [true, 'Frequency is required'],
+      enum: ['once_daily', 'twice_daily', 'thrice_daily', 'every_6_hours', 'every_8_hours', 'every_12_hours', 'as_needed', 'custom'],
     },
     duration: {
       type: String,
       required: [true, 'Duration is required'],
+    },
+    durationDays: {
+      type: Number,
+      required: [true, 'Duration in days is required'],
     },
     instructions: {
       type: String,
@@ -60,6 +65,47 @@ const prescriptionSchema = new mongoose.Schema({
       type: String,
       enum: ['before_meal', 'after_meal', 'anytime'],
       default: 'after_meal',
+    },
+    // Time slots for flexible scheduling
+    timeSlots: [{
+      label: {
+        type: String,
+        required: true,
+        // e.g., "Morning", "Afternoon", "Evening", "Night"
+      },
+      start: {
+        type: String,
+        required: true,
+        // e.g., "07:00" (24-hour format)
+      },
+      end: {
+        type: String,
+        required: true,
+        // e.g., "09:00" (24-hour format)
+      }
+    }],
+    // Chosen times by patient (within time slots)
+    chosenTimes: [{
+      label: {
+        type: String,
+        required: true,
+      },
+      time: {
+        type: String,
+        required: true,
+        // e.g., "08:15" (24-hour format)
+      },
+      intakeId: {
+        type: String,
+        // Reference to scheduled intake logs
+      }
+    }],
+    startDate: {
+      type: Date,
+      default: Date.now,
+    },
+    endDate: {
+      type: Date,
     },
   }],
 
@@ -93,6 +139,12 @@ const prescriptionSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true,
+  },
+
+  status: {
+    type: String,
+    enum: ['active', 'completed', 'cancelled'],
+    default: 'active',
   },
 
   // Timestamps

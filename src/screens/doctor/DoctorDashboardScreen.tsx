@@ -108,28 +108,47 @@ export default function DoctorDashboardScreen() {
   const [todayCount, setTodayCount] = useState<number>(0);
 
   useEffect(() => {
+    if (!user || (user as any).role !== 'doctor') return;
+    
     let intervalId: any;
+    let consecutiveFailures = 0;
+    const MAX_FAILURES = 3; // Stop polling after 3 consecutive failures
+    const doctorId = (user as any).patientId;
+    
     const load = async () => {
-      if (user && (user as any).role === 'doctor') {
-        const doctorId = (user as any).patientId;
+      try {
         await fetchAppointmentsForDoctor(doctorId);
+        consecutiveFailures = 0; // Reset on success
+      } catch (error) {
+        consecutiveFailures++;
+        console.warn('Failed to load appointments, will retry:', consecutiveFailures);
       }
     };
 
     load();
 
-    // Poll every 15 seconds for new appointments
+    // Poll every 30 seconds for new appointments (increased from 15s to reduce load)
+    // Only poll if we haven't had too many failures
     intervalId = setInterval(() => {
-      if (user && (user as any).role === 'doctor') {
-        const doctorId = (user as any).patientId;
-        fetchAppointmentsForDoctor(doctorId);
+      if (consecutiveFailures >= MAX_FAILURES) {
+        console.warn('Too many failures, stopping polling');
+        clearInterval(intervalId);
+        return;
       }
-    }, 15000);
+      
+      fetchAppointmentsForDoctor(doctorId)
+        .then(() => {
+          consecutiveFailures = 0; // Reset on success
+        })
+        .catch(() => {
+          consecutiveFailures++;
+        });
+    }, 30000); // Increased to 30 seconds
 
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [user, fetchAppointmentsForDoctor]);
+  }, [user?.patientId, fetchAppointmentsForDoctor]); // Include fetchAppointmentsForDoctor but it's stable
 
   // compute today's appointments count when appointments change
   useEffect(() => {

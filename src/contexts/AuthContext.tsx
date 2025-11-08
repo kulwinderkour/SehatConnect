@@ -56,44 +56,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = async () => {
     try {
       console.log('🔐 Initializing auth state...');
-      await authService.initialize();
       
-      // Check if token exists before trying to get current user
-      const token = await authService.getAccessToken();
-      
-      if (token) {
-        // Try to get current user if token exists
-        const response = await authService.getCurrentUser();
-        if (response.success && response.data) {
-          const userData = response.data.user;
-          console.log('✅ User authenticated:', userData.email);
-          
-          setUser({
-            _id: userData._id,
-            fullName: userData.profile?.fullName || userData.email,
-            patientId: userData.patientInfo?.patientId || userData._id || '',
-            shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
-            profileImage: userData.profile?.photoUrl || '',
-            email: userData.email,
-            phone: userData.phone,
-            role: userData.role as UserRole,
-            specialty: userData.doctorInfo?.specialty,
-            hospital: userData.doctorInfo?.hospital,
-            experience: userData.doctorInfo?.experience,
-          });
-          setIsAuthenticated(true);
-        } else {
-          console.log('ℹ️ Token exists but user fetch failed');
-          setIsAuthenticated(false);
-          setUser(null);
-        }
+      const response = await authService.getCurrentUser();
+      if (response.success && response.data) {
+        const userData = response.data.user;
+        console.log('✅ User found in storage:', userData.email);
+        
+        setUser({
+          _id: userData._id,
+          fullName: userData.profile?.fullName || userData.email,
+          patientId: userData.patientInfo?.patientId || userData._id || '',
+          shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
+          profileImage: userData.profile?.photoUrl || '',
+          email: userData.email,
+          phone: userData.phone,
+          role: userData.role as UserRole,
+          specialty: userData.doctorInfo?.specialty,
+          hospital: userData.doctorInfo?.hospital,
+          experience: userData.doctorInfo?.experience,
+        });
+        setIsAuthenticated(true);
       } else {
-        console.log('ℹ️ No token found, user not authenticated');
+        console.log('ℹ️ No user data found');
         setIsAuthenticated(false);
         setUser(null);
       }
     } catch (error) {
-      console.log('ℹ️ Auth initialization failed:', error);
+      console.log('ℹ️ Auth initialization completed');
       setIsAuthenticated(false);
       setUser(null);
     } finally {
@@ -134,30 +123,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const register = async (data: RegisterData) => {
-    try {
-      console.log('📝 Registering user:', data.email);
-      const response = await authService.register({
-        email: data.email,
-        password: data.password,
-        phone: data.phone,
-        role: data.role,
-        profile: {
-          fullName: data.fullName,
-          dateOfBirth: data.dateOfBirth || '1990-01-01',
-          gender: data.gender || 'other',
-        },
-      });
-
-      if (!response.success) {
-        throw new Error(response.message || 'Registration failed');
-      }
-
-      console.log('✅ Registration successful, OTP sent to:', data.email);
-      return { success: true, message: response.message };
-    } catch (error: any) {
-      console.error('❌ Registration failed:', error);
-      throw error;
-    }
+    // Registration not supported - only demo credentials
+    throw new Error('Registration not supported. Please use demo credentials: patient@sehat.com / Patient@123 or drrajesh@sehat.com / Rajesh@123');
   };
 
   const logout = async () => {
@@ -169,7 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout failed:', error);
-      // Even if logout API fails, clear local state
+      // Even if logout fails, clear local state
       setUser(null);
       setIsAuthenticated(false);
     }

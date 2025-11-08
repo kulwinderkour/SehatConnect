@@ -15,18 +15,21 @@ const {
   updateReminder,
   deleteReminder,
 } = require('../controllers/healthController');
-const { protect } = require('../middleware/authMiddleware');
+const { setDemoUser } = require('../middleware/demoUser');
 
-// Health metrics routes
-router.post('/metrics', protect, addHealthMetric);
-router.get('/metrics', protect, getHealthMetrics);
-router.get('/metrics/latest', protect, getLatestMetrics);
+// Use demo user middleware (replaces auth)
+router.use(setDemoUser);
 
-// Medicine reminders routes
-router.post('/reminders', protect, createReminder);
-router.get('/reminders', protect, getReminders);
-router.put('/reminders/:id', protect, updateReminder);
-router.delete('/reminders/:id', protect, deleteReminder);
-router.put('/reminders/:id/doses/:doseId/taken', protect, markDoseTaken);
+// Health metrics routes (Authentication removed - open access)
+router.post('/metrics', addHealthMetric);
+router.get('/metrics', getHealthMetrics);
+router.get('/metrics/latest', getLatestMetrics);
+
+// Medicine reminders routes (Authentication removed - open access)
+router.post('/reminders', createReminder);
+router.get('/reminders', getReminders);
+router.put('/reminders/:id', updateReminder);
+router.delete('/reminders/:id', deleteReminder);
+router.put('/reminders/:id/doses/:doseId/taken', markDoseTaken);
 
 module.exports = router;

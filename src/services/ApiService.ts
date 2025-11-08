@@ -10,8 +10,8 @@ import { Platform } from 'react-native';
 // For Physical Device: use your computer's IP address (e.g., 192.168.x.x)
 const API_BASE_URL = __DEV__ 
   ? Platform.OS === 'android' 
-    ? 'http://10.0.2.2:5001/api' // Android Emulator
-    : 'http://localhost:5001/api' // iOS Simulator
+    ? 'http://10.0.2.2:5000/api' // Android Emulator - Backend runs on port 5000
+    : 'http://localhost:5000/api' // iOS Simulator
   : 'https://your-production-api.com/api'; // Production
 
 // API response types
@@ -42,15 +42,7 @@ class ApiService {
     };
   }
 
-  // Set authentication token
-  setAuthToken(token: string) {
-    this.defaultHeaders['Authorization'] = `Bearer ${token}`;
-  }
-
-  // Remove authentication token
-  clearAuthToken() {
-    delete this.defaultHeaders['Authorization'];
-  }
+  // Authentication removed - no tokens needed
 
   // Generic request method
   private async request<T>(
@@ -68,37 +60,80 @@ class ApiService {
     };
 
     try {
-      console.log('🌐 API Request:', {
-        url,
-        method: options.method || 'GET',
-        headers: config.headers,
-      });
+      // Only log in development mode
+      if (__DEV__) {
+        console.log('🌐 API Request:', options.method || 'GET', endpoint);
+      }
 
-      const response = await fetch(url, config);
+      let response;
+      try {
+        response = await fetch(url, config);
+      } catch (fetchError: any) {
+        // Catch network errors (backend not running, no internet, etc.)
+        if (fetchError.message === 'Network request failed' || fetchError.name === 'TypeError') {
+          console.warn('⚠️ Network request failed - backend may not be running:', endpoint);
+          return {
+            success: false,
+            data: null,
+            error: 'Network request failed. Please check if the backend server is running.',
+            message: 'Unable to connect to server',
+          } as ApiResponse<T>;
+        }
+        throw fetchError;
+      }
       
-      console.log('📡 API Response:', {
-        status: response.status,
-        ok: response.ok,
-        url,
-      });
-
-      const data = await response.json();
-      console.log('📦 Response Data:', data);
+      // Check if response is JSON before parsing
+      let data;
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        // If not JSON, read as text
+        const text = await response.text();
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { error: text || 'Unknown error' };
+        }
+      }
 
       if (!response.ok) {
         const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`;
-        console.error('❌ API Error:', errorMessage);
-        throw new Error(errorMessage);
+        
+        // Don't log errors for expected failures - silently handle them
+        // Only log 500 errors as they indicate server issues
+        if (__DEV__ && response.status >= 500) {
+          console.warn('⚠️ Server error:', { endpoint, status: response.status });
+        }
+        
+        // Return error response instead of throwing
+        return {
+          success: false,
+          data: null,
+          error: errorMessage,
+          message: errorMessage,
+        } as ApiResponse<T>;
       }
 
       return data;
     } catch (error: any) {
-      console.error('💥 API Request failed:', {
-        endpoint,
-        error: error.message,
-        stack: error.stack,
-      });
-      throw error;
+      // Only log unexpected errors (not network failures, those are handled above)
+      if (!error.message?.includes('Network request failed') && !error.message?.includes('Unable to connect')) {
+        if (__DEV__) {
+          console.warn('⚠️ API Request failed:', {
+            endpoint,
+            error: error.message,
+          });
+        }
+      }
+      
+      // Return error response instead of throwing
+      return {
+        success: false,
+        data: null,
+        error: error.message || 'Unknown error',
+        message: error.message || 'Request failed',
+      } as ApiResponse<T>;
     }
   }
 
@@ -140,7 +175,7 @@ class ApiService {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': this.defaultHeaders['Authorization'] || '',
+        ...this.defaultHeaders,
       },
       body: file,
     });

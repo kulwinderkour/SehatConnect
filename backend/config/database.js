@@ -8,10 +8,6 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
   try {
     const options = {
-      // Use new URL parser
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      
       // Server selection timeout
       serverSelectionTimeoutMS: 5000,
       

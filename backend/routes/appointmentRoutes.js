@@ -13,13 +13,17 @@ const {
   completeAppointment,
   updateAppointment,
 } = require('../controllers/appointmentController');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { setDemoUser } = require('../middleware/demoUser');
 
-router.post('/', protect, bookAppointment);
-router.get('/', protect, getAppointments);
-router.get('/:id', protect, getAppointmentById);
-router.put('/:id', protect, updateAppointment);
-router.put('/:id/cancel', protect, cancelAppointment);
-router.put('/:id/complete', protect, authorize('doctor'), completeAppointment);
+// Use demo user middleware (replaces auth)
+router.use(setDemoUser);
+
+// Authentication removed - open access
+router.post('/', bookAppointment);
+router.get('/', getAppointments);
+router.get('/:id', getAppointmentById);
+router.put('/:id', updateAppointment);
+router.put('/:id/cancel', cancelAppointment);
+router.put('/:id/complete', completeAppointment);
 
 module.exports = router;

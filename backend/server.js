@@ -19,14 +19,17 @@ connectDB();
 
 // Middleware
 
-// Security headers
-app.use(helmet());
+// Security headers - Configure helmet for development with React Native
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for development
+  crossOriginEmbedderPolicy: false, // Allow cross-origin requests
+}));
 
 // Enable CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
@@ -63,6 +66,9 @@ const healthRoutes = require('./routes/healthRoutes');
 const chatbotRoutes = require('./routes/chatbotRoutes');
 const emergencyRoutes = require('./routes/emergencyRoutes');
 const schemeRoutes = require('./routes/schemeRoutes');
+const medicineReminderRoutes = require('./routes/medicineReminderRoutes');
+const prescriptionRoutes = require('./routes/prescription.routes');
+const intakeRoutes = require('./routes/intake.routes');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 // API info endpoint
@@ -81,6 +87,9 @@ app.get('/api', (req, res) => {
       chatbot: '/api/chatbot',
       emergency: '/api/emergency',
       schemes: '/api/schemes',
+      reminders: '/api/reminders',
+      prescriptions: '/api/prescriptions',
+      intake: '/api/intake',
     },
   });
 });
@@ -94,6 +103,9 @@ app.use('/api/health', healthRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/schemes', schemeRoutes);
+app.use('/api/reminders', medicineReminderRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
+app.use('/api/intake', intakeRoutes);
 
 // 404 handler
 app.use(notFound);

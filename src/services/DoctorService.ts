@@ -180,17 +180,33 @@ class DoctorService {
   }
 
   // Get doctor's upcoming appointments
+  // Note: Uses /appointments endpoint which returns appointments based on user role
   async getDoctorAppointments(doctorId: string, date?: string): Promise<Appointment[]> {
     try {
       const params: Record<string, string> = {};
       if (date) {
         params.date = date;
       }
-      const response = await apiService.get<{ appointments: Appointment[] }>(`/doctors/${doctorId}/appointments`, params);
-      return response.data.appointments;
-    } catch (error) {
-      console.error('Failed to fetch doctor appointments:', error);
-      throw new Error('Unable to fetch doctor appointments');
+      // Use the appointments endpoint - backend will filter by user role automatically
+      const response = await apiService.get<{ appointments: Appointment[] }>('/appointments', params);
+      
+      // Check if response indicates failure
+      if (!response.success) {
+        // Silently return empty array - don't log errors for expected failures
+        return [];
+      }
+      
+      // Extract appointments from the response data structure
+      // Backend returns: { success: true, data: { appointments: [...], pagination: {...} } }
+      const appointmentsData = response.data;
+      if (appointmentsData && typeof appointmentsData === 'object' && 'appointments' in appointmentsData) {
+        return Array.isArray(appointmentsData.appointments) ? appointmentsData.appointments : [];
+      }
+      // Fallback: if data is directly an array
+      return Array.isArray(appointmentsData) ? appointmentsData : [];
+    } catch (error: any) {
+      // Silently return empty array for any error - don't log
+      return [];
     }
   }
 

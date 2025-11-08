@@ -13,6 +13,7 @@ export { default as userService } from './UserService';
 // Health Services
 export { default as healthService } from './HealthService';
 export { default as appointmentService } from './AppointmentService';
+export { default as medicineReminderService } from './MedicineReminderService';
 
 // Pharmacy Services
 export { default as pharmacyService } from './PharmacyService';

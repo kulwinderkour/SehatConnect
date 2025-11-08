@@ -1,40 +1,90 @@
 /**
- * Authentication Service
- * Handles all authentication operations with the backend
+ * Simplified Authentication Service
+ * Only supports demo credentials - no tokens, no API calls
  */
 
-import apiService from './ApiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Storage keys
 const STORAGE_KEYS = {
-  ACCESS_TOKEN: '@sehatconnect:accessToken',
-  REFRESH_TOKEN: '@sehatconnect:refreshToken',
   USER_DATA: '@sehatconnect:userData',
 };
 
-// Types
-export interface RegisterData {
-  email: string;
-  password: string;
-  phone: string;
-  role: 'patient' | 'doctor';
-  profile: {
-    fullName: string;
-    dateOfBirth: string;
-    gender: 'male' | 'female' | 'other';
-    bloodGroup?: string;
-  };
-}
+// Demo user data
+const DEMO_USERS = {
+  patient: {
+    _id: 'demo-patient-id',
+    email: 'patient@sehat.com',
+    phone: '+91-9876543210',
+    role: 'patient' as const,
+    profile: {
+      fullName: 'Demo Patient',
+      shortName: 'Demo',
+      profileImage: '',
+      dateOfBirth: '1990-01-15',
+      gender: 'male' as const,
+      bloodGroup: 'O+',
+      address: {
+        street: '123 Health Street',
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110001',
+      },
+    },
+    patientInfo: {
+      patientId: 'SH100001',
+      emergencyContact: {
+        name: 'Emergency Contact',
+        phone: '+91-9876543211',
+        relation: 'Family',
+      },
+      allergies: ['Penicillin'],
+      chronicDiseases: [],
+    },
+    isVerified: true,
+  },
+  doctor: {
+    _id: 'demo-doctor-id',
+    email: 'drrajesh@sehat.com',
+    phone: '+91-9876543212',
+    role: 'doctor' as const,
+    profile: {
+      fullName: 'Dr. Rajesh Sharma',
+      shortName: 'Dr. Rajesh',
+      profileImage: '',
+      dateOfBirth: '1980-05-20',
+      gender: 'male' as const,
+      address: {
+        street: '456 Medical Complex',
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110002',
+      },
+    },
+    doctorInfo: {
+      specialty: 'General Physician',
+      qualifications: ['MBBS', 'MD'],
+      registrationNumber: 'MCI-12345',
+      hospital: 'City Hospital',
+      experience: 15,
+      consultationFee: 500,
+      rating: 4.8,
+      totalReviews: 150,
+    },
+    isVerified: true,
+  },
+};
 
+// Demo credentials
+const DEMO_CREDENTIALS = {
+  'patient@sehat.com': 'Patient@123',
+  'drrajesh@sehat.com': 'Rajesh@123',
+};
+
+// Types
 export interface LoginData {
   email: string;
   password: string;
-}
-
-export interface OTPVerification {
-  userId: string;
-  otp: string;
 }
 
 export interface User {
@@ -50,72 +100,34 @@ export interface User {
 
 export interface AuthResponse {
   user: User;
-  accessToken: string;
-  refreshToken?: string; // Optional for backward compatibility
 }
 
 class AuthService {
   /**
-   * Register new user
-   */
-  async register(data: RegisterData) {
-    try {
-      const response = await apiService.post<{ userId: string; email: string; phone: string }>(
-        '/auth/register',
-        data
-      );
-      return response;
-    } catch (error) {
-      console.error('Registration failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Verify OTP
-   */
-  async verifyOTP(data: OTPVerification) {
-    try {
-      const response = await apiService.post<AuthResponse>('/auth/verify-otp', data);
-      
-      if (response.success && response.data) {
-        // Store tokens and user data
-        await this.saveAuthData(response.data);
-      }
-      
-      return response;
-    } catch (error) {
-      console.error('OTP verification failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Resend OTP
-   */
-  async resendOTP(userId: string) {
-    try {
-      const response = await apiService.post('/auth/resend-otp', { userId });
-      return response;
-    } catch (error) {
-      console.error('Resend OTP failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Login user
+   * Login user with demo credentials only
    */
   async login(data: LoginData) {
     try {
-      const response = await apiService.post<AuthResponse>('/auth/login', data);
+      const { email, password } = data;
+      const emailLower = email.toLowerCase();
       
-      if (response.success && response.data) {
-        await this.saveAuthData(response.data);
+      // Check if credentials match demo users
+      if (emailLower in DEMO_CREDENTIALS && DEMO_CREDENTIALS[emailLower as keyof typeof DEMO_CREDENTIALS] === password) {
+        const userType = emailLower.includes('patient') ? 'patient' : 'doctor';
+        const user = DEMO_USERS[userType];
+        
+        // Save user data locally
+        await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
+        
+        return {
+          success: true,
+          data: { user },
+          message: 'Login successful',
+        };
+      } else {
+        throw new Error('Invalid credentials. Use demo credentials: patient@sehat.com / Patient@123 or drrajesh@sehat.com / Rajesh@123');
       }
-      
-      return response;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
       throw error;
     }
@@ -126,149 +138,36 @@ class AuthService {
    */
   async logout() {
     try {
-      await apiService.post('/auth/logout');
-      await this.clearAuthData();
+      await AsyncStorage.removeItem(STORAGE_KEYS.USER_DATA);
     } catch (error) {
       console.error('Logout failed:', error);
-      // Clear local data even if API call fails
-      await this.clearAuthData();
     }
   }
 
   /**
-   * Get current user
+   * Get current user from local storage
    */
   async getCurrentUser() {
     try {
-      const response = await apiService.get<{ user: User }>('/auth/me');
-      return response;
-    } catch (error) {
+      const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
+      if (userData) {
+        const user = JSON.parse(userData);
+        return {
+          success: true,
+          data: { user },
+        };
+      }
+      return {
+        success: false,
+        data: null,
+      };
+    } catch (error: any) {
       console.error('Get current user failed:', error);
-      throw error;
+      return {
+        success: false,
+        data: null,
+      };
     }
-  }
-
-  /**
-   * Forgot password
-   */
-  async forgotPassword(email: string) {
-    try {
-      const response = await apiService.post('/auth/forgot-password', { email });
-      return response;
-    } catch (error) {
-      console.error('Forgot password failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Reset password
-   */
-  async resetPassword(token: string, newPassword: string) {
-    try {
-      const response = await apiService.post('/auth/reset-password', {
-        token,
-        newPassword,
-      });
-      return response;
-    } catch (error) {
-      console.error('Reset password failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Change password
-   */
-  async changePassword(currentPassword: string, newPassword: string) {
-    try {
-      const response = await apiService.post('/auth/change-password', {
-        currentPassword,
-        newPassword,
-      });
-      return response;
-    } catch (error) {
-      console.error('Change password failed:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Refresh access token
-   */
-  async refreshAccessToken() {
-    try {
-      const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token found');
-      }
-
-      const response = await apiService.post<{ accessToken: string }>('/auth/refresh-token', {
-        refreshToken,
-      });
-
-      if (response.success && response.data) {
-        await AsyncStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, response.data.accessToken);
-        apiService.setAuthToken(response.data.accessToken);
-      }
-
-      return response;
-    } catch (error) {
-      console.error('Refresh token failed:', error);
-      await this.clearAuthData();
-      throw error;
-    }
-  }
-
-  /**
-   * Save authentication data to storage
-   */
-  private async saveAuthData(authData: AuthResponse) {
-    try {
-      const dataToSave: Array<[string, string]> = [
-        [STORAGE_KEYS.ACCESS_TOKEN, authData.accessToken],
-        [STORAGE_KEYS.USER_DATA, JSON.stringify(authData.user)],
-      ];
-
-      // Only save refresh token if it exists
-      if (authData.refreshToken) {
-        dataToSave.push([STORAGE_KEYS.REFRESH_TOKEN, authData.refreshToken]);
-      }
-
-      await AsyncStorage.multiSet(dataToSave);
-
-      // Set token in API service
-      apiService.setAuthToken(authData.accessToken);
-    } catch (error) {
-      console.error('Failed to save auth data:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Clear authentication data
-   */
-  private async clearAuthData() {
-    try {
-      await AsyncStorage.multiRemove([
-        STORAGE_KEYS.ACCESS_TOKEN,
-        STORAGE_KEYS.REFRESH_TOKEN,
-        STORAGE_KEYS.USER_DATA,
-      ]);
-
-      // Clear token from API service
-      apiService.clearAuthToken();
-    } catch (error) {
-      console.error('Failed to clear auth data:', error);
-    }
-  }
-
-  /**
-   * Get stored access token
-   */
-  async getAccessToken(): Promise<string | null> {
-    return await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
   }
 
   /**
@@ -285,26 +184,23 @@ class AuthService {
   }
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated (has stored user data)
    */
   async isAuthenticated(): Promise<boolean> {
-    const token = await this.getAccessToken();
-    return token !== null;
+    const userData = await this.getUserData();
+    return userData !== null;
   }
 
   /**
-   * Initialize auth service (call on app start)
+   * Initialize auth service (load user from storage)
    */
   async initialize() {
     try {
-      const token = await this.getAccessToken();
-      if (token) {
-        // Just set the token, don't verify it here
-        // The AuthContext will handle verification
-        apiService.setAuthToken(token);
-        console.log('🔑 Token loaded from storage');
+      const userData = await this.getUserData();
+      if (userData) {
+        console.log('✅ User data loaded from storage:', userData.email);
       } else {
-        console.log('ℹ️ No token found in storage');
+        console.log('ℹ️ No user data found in storage');
       }
     } catch (error) {
       console.error('Auth initialization failed:', error);

@@ -17,6 +17,7 @@ const FamilyMember = require('./FamilyMember');
 const ChatbotConversation = require('./ChatbotConversation');
 const MedicineReminder = require('./MedicineReminder');
 const GovernmentScheme = require('./GovernmentScheme');
+const IntakeLog = require('./IntakeLog');
 
 module.exports = {
   User,
@@ -33,4 +34,5 @@ module.exports = {
   ChatbotConversation,
   MedicineReminder,
   GovernmentScheme,
+  IntakeLog,
 };

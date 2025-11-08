@@ -15,7 +15,10 @@ export const useChatbot = () => {
   // Load chat history on mount
   useEffect(() => {
     loadHistory();
-    checkBackendStatus();
+    // Check backend status silently (don't show errors if backend is down)
+    checkBackendStatus().catch(() => {
+      // Silently ignore health check failures
+    });
   }, []);
 
   // Save messages whenever they change
@@ -45,8 +48,13 @@ export const useChatbot = () => {
   };
 
   const checkBackendStatus = async () => {
-    const status = await chatbotService.checkBackendStatus();
-    setIsOnline(status);
+    try {
+      const status = await chatbotService.checkBackendStatus();
+      setIsOnline(status);
+    } catch (error) {
+      // Silently handle health check failures - backend might not be running
+      setIsOnline(false);
+    }
   };
 
   const generateMessageId = () => {
