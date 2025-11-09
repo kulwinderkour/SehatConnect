@@ -898,6 +898,8 @@ const PharmacyScreen = memo(() => {
       <NearbyPharmaciesMapModal
         visible={showNearbyPharmaciesModal}
         onClose={() => setShowNearbyPharmaciesModal(false)}
+        pinCode={pinCode}
+        cityName={cityName}
       />
 
       {/* Cart Modal */}

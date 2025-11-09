@@ -21,6 +21,8 @@ const { width, height } = Dimensions.get('window');
 interface NearbyPharmaciesMapModalProps {
   visible: boolean;
   onClose: () => void;
+  pinCode?: string;
+  cityName?: string;
 }
 
 interface PharmacyLocation {
@@ -73,6 +75,8 @@ const ListIcon = () => (
 const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
   visible,
   onClose,
+  pinCode,
+  cityName,
 }) => {
   const mapRef = useRef<MapView>(null);
   const [loading, setLoading] = useState(false);
@@ -86,7 +90,7 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
     if (visible) {
       loadUserLocation();
     }
-  }, [visible]);
+  }, [visible, pinCode]);
 
   // Request location permission
   const requestLocationPermission = async (): Promise<boolean> => {
@@ -132,6 +136,20 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
   const loadUserLocation = async () => {
     setLoading(true);
     try {
+      // If PIN code is provided, try to geocode it first
+      if (pinCode && pinCode.length === 6) {
+        try {
+          const geocodedLocation = await geocodePinCode(pinCode, cityName);
+          if (geocodedLocation) {
+            setUserLocation(geocodedLocation);
+            loadNearbyPharmacies(geocodedLocation.latitude, geocodedLocation.longitude);
+            return;
+          }
+        } catch (error) {
+          console.log('Geocoding failed, falling back to GPS:', error);
+        }
+      }
+
       const hasPermission = await requestLocationPermission();
 
       if (!hasPermission) {
@@ -201,6 +219,34 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
     } catch (error) {
       console.error('Location error:', error);
       setLoading(false);
+    }
+  };
+
+  // Geocode PIN code to coordinates using Google Geocoding API
+  const geocodePinCode = async (pin: string, city?: string): Promise<UserLocation | null> => {
+    try {
+      const apiKey = 'AIzaSyBG2rxa2AEmsJepxbRZ0wN3AG_jh8JWMcY';
+      const address = city ? `${pin}, ${city}, India` : `${pin}, India`;
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.status === 'OK' && data.results && data.results.length > 0) {
+        const location = data.results[0].geometry.location;
+        console.log(`Geocoded ${pin} to:`, location.lat, location.lng);
+        return {
+          latitude: location.lat,
+          longitude: location.lng,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        };
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      return null;
     }
   };
 
