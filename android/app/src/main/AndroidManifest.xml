@@ -29,11 +29,10 @@
       android:networkSecurityConfig="@xml/network_security_config"
       android:supportsRtl="true">
       
-      <!-- Google Maps API Key - Replace with your actual key from Google Cloud Console -->
-      <!-- Get your key from: https://console.cloud.google.com/google/maps-apis/credentials -->
+      <!-- Google Maps API Key -->
       <meta-data
         android:name="com.google.android.geo.API_KEY"
-        android:value="AIzaSyDemoKeyPleaseReplaceWithYourActualGoogleMapsAPIKey"/>
+        android:value="AIzaSyBG2rxa2AEmsJepxbRZ0wN3AG_jh8JWMcY"/>
       
       <activity
         android:name=".MainActivity"

@@ -135,7 +135,7 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
       const hasPermission = await requestLocationPermission();
 
       if (!hasPermission) {
-        // Use default location (Jalandhar)
+        // Use default location (Jalandhar, India)
         const defaultLocation: UserLocation = {
           latitude: 31.3260,
           longitude: 75.5762,
@@ -144,6 +144,10 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
         };
         setUserLocation(defaultLocation);
         loadNearbyPharmacies(defaultLocation.latitude, defaultLocation.longitude);
+        Alert.alert(
+          'Using Default Location',
+          'Location permission denied. Showing pharmacies near Jalandhar, Punjab. You can search for your area using the map.'
+        );
         return;
       }
 
@@ -151,14 +155,34 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
       Geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          const location: UserLocation = {
-            latitude,
-            longitude,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          };
-          setUserLocation(location);
-          loadNearbyPharmacies(latitude, longitude);
+          
+          // Check if we got default emulator location (Mountain View, CA - ~37.4, -122.08)
+          // or any location outside India (latitude: 8-37, longitude: 68-97)
+          const isInIndia = latitude >= 8 && latitude <= 37 && longitude >= 68 && longitude <= 97;
+          const isEmulatorDefault = Math.abs(latitude - 37.4219983) < 0.1 && Math.abs(longitude - (-122.084)) < 0.1;
+          
+          if (!isInIndia || isEmulatorDefault) {
+            console.log('Emulator default or non-India location detected, using Jalandhar');
+            // Use Jalandhar as default for India
+            const indiaLocation: UserLocation = {
+              latitude: 31.3260,
+              longitude: 75.5762,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            };
+            setUserLocation(indiaLocation);
+            loadNearbyPharmacies(31.3260, 75.5762);
+          } else {
+            console.log('Got valid India location:', latitude, longitude);
+            const location: UserLocation = {
+              latitude,
+              longitude,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            };
+            setUserLocation(location);
+            loadNearbyPharmacies(latitude, longitude);
+          }
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -183,8 +207,8 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
   // Load nearby pharmacies using Google Places API
   const loadNearbyPharmacies = async (latitude: number, longitude: number) => {
     try {
-      // IMPORTANT: Replace 'YOUR_GOOGLE_MAPS_API_KEY' with your actual Google Maps API key
-      const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+      // Google Maps API Key
+      const apiKey = 'AIzaSyBG2rxa2AEmsJepxbRZ0wN3AG_jh8JWMcY';
       
       // Using Google Places API Nearby Search
       const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=5000&type=pharmacy&key=${apiKey}`;
@@ -363,7 +387,7 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
   // Get phone details from Google Places Details API
   const getPharmacyDetails = async (placeId: string): Promise<string | null> => {
     try {
-      const apiKey = 'YOUR_GOOGLE_MAPS_API_KEY';
+      const apiKey = 'AIzaSyBG2rxa2AEmsJepxbRZ0wN3AG_jh8JWMcY';
       const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number&key=${apiKey}`;
       
       const response = await fetch(url);
@@ -454,6 +478,12 @@ const NearbyPharmaciesMapModal: React.FC<NearbyPharmaciesMapModalProps> = ({
               showsMyLocationButton={false}
               showsCompass={true}
               showsScale={true}
+              zoomEnabled={true}
+              zoomControlEnabled={true}
+              scrollEnabled={true}
+              pitchEnabled={true}
+              rotateEnabled={true}
+              toolbarEnabled={true}
             >
               {pharmacies.map((pharmacy) => renderMarker(pharmacy))}
             </MapView>
