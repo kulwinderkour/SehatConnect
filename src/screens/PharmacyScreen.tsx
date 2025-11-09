@@ -18,7 +18,7 @@ import ImageCropPicker from 'react-native-image-crop-picker';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfile } from '../contexts/UserProfileContext';
 import PharmacyProfileModal from '../components/pharmacy/PharmacyProfileModal';
-import NearbyPharmaciesModal from '../components/pharmacy/NearbyPharmaciesModal';
+import NearbyPharmaciesMapModal from '../components/pharmacy/NearbyPharmaciesMapModal';
 import prescriptionDecoderService from '../services/PrescriptionDecoderService';
 
 const { width } = Dimensions.get('window');
@@ -895,7 +895,7 @@ const PharmacyScreen = memo(() => {
       />
 
       {/* Nearby Pharmacies Modal */}
-      <NearbyPharmaciesModal
+      <NearbyPharmaciesMapModal
         visible={showNearbyPharmaciesModal}
         onClose={() => setShowNearbyPharmaciesModal(false)}
       />
