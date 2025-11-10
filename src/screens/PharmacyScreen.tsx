@@ -452,6 +452,7 @@ const PharmacyScreen = memo(() => {
   // Handle prescription upload
   const handlePrescriptionUpload = useCallback(async () => {
     try {
+      console.log('📸 Prescription Upload button pressed!');
       Alert.alert(
         'Upload Prescription',
         'Choose an option',
@@ -615,7 +616,10 @@ const PharmacyScreen = memo(() => {
         {/* Nearby Pharmacy Banner */}
         <TouchableOpacity 
           style={styles.nearbyBanner}
-          onPress={() => setShowNearbyPharmaciesModal(true)}
+          onPress={() => {
+            console.log('🗺️ Nearby Pharmacies button pressed!');
+            setShowNearbyPharmaciesModal(true);
+          }}
           activeOpacity={0.8}
         >
           <View style={styles.nearbyBannerContent}>

@@ -4,7 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import TabNavigator from './TabNavigator';
 import DoctorTabNavigator from './DoctorTabNavigator';
 import GovernmentSchemesScreen from '../screens/GovernmentSchemesScreen';
-import VideoCallScreen from '../screens/VideoCallScreen';
 import VideoConsultScreen from '../screens/VideoConsultScreen';
 import PrescriptionDecoderScreen from '../screens/PrescriptionDecoderScreen';
 import { RootStackParamList } from '../types/navigation.d';
@@ -52,14 +51,6 @@ export default function RoleBasedNavigator() {
         options={{
           animationEnabled: true,
           presentation: 'card',
-        }}
-      />
-      <Stack.Screen 
-        name="VideoCall" 
-        component={VideoCallScreen}
-        options={{
-          animationEnabled: true,
-          presentation: 'fullScreenModal',
         }}
       />
       <Stack.Screen 

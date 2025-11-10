@@ -21,9 +21,6 @@ export type TabParamList = {
 export type ConsultStackParamList = {
   ConsultationsMain: undefined;
   VideoConsult: undefined;
-  VideoCall: {
-    doctor: Doctor;
-  };
 };
 
 // Combined navigation types

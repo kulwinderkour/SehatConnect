@@ -166,16 +166,24 @@ const PrescriptionDecoderScreen = () => {
         <View style={styles.confidenceCard}>
           <View style={styles.confidenceHeader}>
             <Text style={styles.confidenceLabel}>Confidence Score</Text>
-            <Text style={styles.confidenceValue}>{prescription.confidence}%</Text>
+            <Text style={styles.confidenceValue}>
+              {prescription.confidence > 1 
+                ? prescription.confidence.toFixed(0)
+                : (prescription.confidence * 100).toFixed(0)}%
+            </Text>
           </View>
           <View style={styles.confidenceBar}>
             <View
               style={[
                 styles.confidenceFill,
-                { width: `${prescription.confidence}%` },
-                prescription.confidence >= 80
+                { 
+                  width: `${prescription.confidence > 1 
+                    ? prescription.confidence 
+                    : prescription.confidence * 100}%` 
+                },
+                prescription.confidence >= 80 || prescription.confidence >= 0.8
                   ? styles.confidenceHigh
-                  : prescription.confidence >= 60
+                  : prescription.confidence >= 60 || prescription.confidence >= 0.6
                   ? styles.confidenceMedium
                   : styles.confidenceLow,
               ]}

@@ -12,7 +12,6 @@ export type RootTabParamList = {
 export type RootStackParamList = {
   MainTabs: undefined;
   GovernmentSchemes: undefined;
-  VideoCall: undefined;
   VideoConsult: undefined;
   PrescriptionDecoder: {
     prescription: any;

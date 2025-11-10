@@ -185,8 +185,12 @@ export default function VideoConsultScreen() {
       return;
     }
 
-    // Navigate to video call screen
-    navigation.navigate('VideoCall', { doctor });
+    // Video calling feature is currently unavailable
+    safeAlert(
+      'Coming Soon',
+      'Video calling feature will be available soon. Please check back later.',
+      [{ text: 'OK' }]
+    );
   }, [navigation]);
 
   // Handle doctor press for more details
