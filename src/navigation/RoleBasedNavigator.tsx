@@ -6,6 +6,7 @@ import DoctorTabNavigator from './DoctorTabNavigator';
 import GovernmentSchemesScreen from '../screens/GovernmentSchemesScreen';
 import VideoCallScreen from '../screens/VideoCallScreen';
 import VideoConsultScreen from '../screens/VideoConsultScreen';
+import AddReminderScreen from '../screens/AddReminderScreen';
 import { RootStackParamList } from '../types/navigation.d';
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -104,6 +105,14 @@ export default function RoleBasedNavigator() {
       <Stack.Screen
         name="VideoConsult"
         component={VideoConsultScreen}
+        options={{
+          animationEnabled: true,
+          presentation: 'card',
+        }}
+      />
+      <Stack.Screen
+        name="AddReminder"
+        component={AddReminderScreen}
         options={{
           animationEnabled: true,
           presentation: 'card',

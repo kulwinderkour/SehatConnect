@@ -1,9 +1,12 @@
-import React, { memo, useState, useEffect } from 'react';
+import React, { memo, useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { Pill, Clock, Bell, BellOff, Volume2, CheckCircle, XCircle, Plus, Trash2, ClipboardList, TestTube, Smartphone } from 'lucide-react-native';
+import { Pill, Clock, Bell, BellOff, Volume2, CheckCircle, XCircle, Plus, Trash2, ClipboardList } from 'lucide-react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Header from '../components/common/Header';
 import MedicineReminderService from '../services/MedicineReminderService';
+import AlarmReminderService from '../services/AlarmReminderService';
+import OfflineReminderService, { OfflineReminder } from '../services/OfflineReminderService';
 import ApiService from '../services/ApiService';
 
 interface Reminder {
@@ -30,8 +33,8 @@ interface ReminderStats {
 
 const Category = memo(({ title, icon, iconComponent, children }: any) => (
   <View style={styles.category}>
-    <LinearGradient 
-      colors={['#52B788', '#40916C']} 
+    <LinearGradient
+      colors={['#52B788', '#40916C']}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
       style={styles.catHeader}
@@ -56,24 +59,24 @@ const Row = memo(({ left, right, rightColor }: { left: React.ReactNode; right: R
   </View>
 ));
 
-const ReminderCard = memo(({ 
-  reminder, 
-  onToggle, 
-  onTest, 
-  onDelete 
-}: { 
-  reminder: Reminder; 
-  onToggle: () => void; 
-  onTest: () => void; 
+const ReminderCard = memo(({
+  reminder,
+  onToggle,
+  onTest,
+  onDelete
+}: {
+  reminder: Reminder;
+  onToggle: () => void;
+  onTest: () => void;
   onDelete: () => void;
 }) => {
   const timingText = reminder.beforeMeal
     ? '🍽️ Before meal'
     : reminder.afterMeal
-    ? '🍽️ After meal'
-    : reminder.withMeal
-    ? '🍽️ With meal'
-    : '';
+      ? '🍽️ After meal'
+      : reminder.withMeal
+        ? '🍽️ With meal'
+        : '';
 
   return (
     <View style={styles.reminderCard}>
@@ -125,11 +128,11 @@ const ReminderCard = memo(({
           </View>
           <Text style={styles.statBadgeText}>{reminder.missedDoses} missed</Text>
         </View>
-        <View style={[styles.adherenceBadgeContainer, { 
-          backgroundColor: reminder.adherenceRate >= 80 ? '#D8F3DC' : '#FFF3E0' 
+        <View style={[styles.adherenceBadgeContainer, {
+          backgroundColor: reminder.adherenceRate >= 80 ? '#D8F3DC' : '#FFF3E0'
         }]}>
-          <Text style={[styles.adherenceBadge, { 
-            color: reminder.adherenceRate >= 80 ? '#2D6A4F' : '#F57C00' 
+          <Text style={[styles.adherenceBadge, {
+            color: reminder.adherenceRate >= 80 ? '#2D6A4F' : '#F57C00'
           }]}>
             {reminder.adherenceRate}%
           </Text>
@@ -151,18 +154,24 @@ const ReminderCard = memo(({
 });
 
 const RecordsScreen = memo(() => {
+  const navigation = useNavigation<any>();
   const [todayReminders, setTodayReminders] = useState<Reminder[]>([]);
+  const [offlineReminders, setOfflineReminders] = useState<OfflineReminder[]>([]);
   const [stats, setStats] = useState<ReminderStats | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadReminders();
-  }, []);
+  // Reload reminders when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      loadReminders();
+      loadOfflineReminders();
+    }, [])
+  );
 
   const loadReminders = async () => {
     try {
       setLoading(true);
-      
+
       const [todayResponse, statsResponse] = await Promise.all([
         ApiService.get('/reminders/today'),
         ApiService.get('/reminders/stats'),
@@ -182,10 +191,19 @@ const RecordsScreen = memo(() => {
     }
   };
 
+  const loadOfflineReminders = async () => {
+    try {
+      const reminders = await OfflineReminderService.getAllReminders();
+      setOfflineReminders(reminders);
+    } catch (error) {
+      console.log('Could not load offline reminders:', error);
+    }
+  };
+
   const toggleReminder = async (reminderId: string, isActive: boolean) => {
     try {
       const response = await ApiService.put(`/reminders/${reminderId}/toggle`, {});
-      
+
       if (response.success) {
         if (!isActive) {
           await MedicineReminderService.cancelReminder(reminderId);
@@ -203,12 +221,12 @@ const RecordsScreen = memo(() => {
         reminder.medicineName,
         reminder.dosage
       );
-      
+
       await MedicineReminderService.playVoiceAlert(
         reminder.medicineName,
         reminder.dosage
       );
-      
+
       Alert.alert('Test Notification', 'Check your notifications!');
     } catch (error) {
       Alert.alert('Error', 'Failed to send test notification');
@@ -241,7 +259,7 @@ const RecordsScreen = memo(() => {
   return (
     <View style={{ flex: 1, backgroundColor: '#F0F8FF' }}>
       <Header />
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={{ padding: 20 }}
         showsVerticalScrollIndicator={false}
         bounces={true}
@@ -250,84 +268,128 @@ const RecordsScreen = memo(() => {
         keyboardShouldPersistTaps="handled"
         style={{ backgroundColor: '#F0F8FF' }}
       >
-        {/* Medicine Reminders Section */}
-        <Category 
-          title="Medicine Reminders" 
-          iconComponent={<Pill size={20} color="#fff" strokeWidth={2.5} />}
-        >
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#52B788" />
-              <Text style={styles.loadingText}>Loading reminders...</Text>
-            </View>
-          ) : (
-            <>
-              {/* Stats Summary */}
-              {stats && (
-                <View style={styles.statsContainer}>
-                  <View style={styles.statBox}>
-                    <View style={styles.statCircle}>
-                      <Text style={styles.statValue}>{stats.totalReminders}</Text>
+        {/* Medicine Reminders Section with Add Button */}
+        <View style={styles.sectionWithButton}>
+          <Category
+            title="Medicine Reminders"
+            iconComponent={<Pill size={20} color="#fff" strokeWidth={2.5} />}
+          >
+            {/* Add Reminder FloatingButton */}
+            <TouchableOpacity
+              style={styles.addReminderFloatBtn}
+              onPress={() => navigation.navigate('AddReminder')}
+            >
+              <Plus size={20} color="#fff" strokeWidth={2.5} />
+              <Text style={styles.addReminderBtnText}>Add Reminder</Text>
+            </TouchableOpacity>
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#52B788" />
+                <Text style={styles.loadingText}>Loading reminders...</Text>
+              </View>
+            ) : (
+              <>
+                {/* Stats Summary */}
+                {stats && (
+                  <View style={styles.statsContainer}>
+                    <View style={styles.statBox}>
+                      <View style={styles.statCircle}>
+                        <Text style={styles.statValue}>{stats.totalReminders}</Text>
+                      </View>
+                      <Text style={styles.statLabel}>Active</Text>
                     </View>
-                    <Text style={styles.statLabel}>Active</Text>
-                  </View>
-                  <View style={styles.statBox}>
-                    <View style={[styles.statCircle, { backgroundColor: '#D8F3DC' }]}>
-                      <Text style={[styles.statValue, { color: '#2D6A4F' }]}>{stats.takenDoses}</Text>
+                    <View style={styles.statBox}>
+                      <View style={[styles.statCircle, { backgroundColor: '#D8F3DC' }]}>
+                        <Text style={[styles.statValue, { color: '#2D6A4F' }]}>{stats.takenDoses}</Text>
+                      </View>
+                      <Text style={styles.statLabel}>Taken</Text>
                     </View>
-                    <Text style={styles.statLabel}>Taken</Text>
-                  </View>
-                  <View style={styles.statBox}>
-                    <View style={[styles.statCircle, { backgroundColor: '#FFE5EC' }]}>
-                      <Text style={[styles.statValue, { color: '#C9184A' }]}>{stats.missedDoses}</Text>
+                    <View style={styles.statBox}>
+                      <View style={[styles.statCircle, { backgroundColor: '#FFE5EC' }]}>
+                        <Text style={[styles.statValue, { color: '#C9184A' }]}>{stats.missedDoses}</Text>
+                      </View>
+                      <Text style={styles.statLabel}>Missed</Text>
                     </View>
-                    <Text style={styles.statLabel}>Missed</Text>
-                  </View>
-                  <View style={styles.statBox}>
-                    <View style={[styles.statCircle, { backgroundColor: stats.overallAdherence >= 80 ? '#D8F3DC' : '#FFF3E0' }]}>
-                      <Text style={[styles.statValue, { color: stats.overallAdherence >= 80 ? '#2D6A4F' : '#F57C00' }]}>
-                        {stats.overallAdherence}%
-                      </Text>
+                    <View style={styles.statBox}>
+                      <View style={[styles.statCircle, { backgroundColor: stats.overallAdherence >= 80 ? '#D8F3DC' : '#FFF3E0' }]}>
+                        <Text style={[styles.statValue, { color: stats.overallAdherence >= 80 ? '#2D6A4F' : '#F57C00' }]}>
+                          {stats.overallAdherence}%
+                        </Text>
+                      </View>
+                      <Text style={styles.statLabel}>Adherence</Text>
                     </View>
-                    <Text style={styles.statLabel}>Adherence</Text>
                   </View>
-                </View>
-              )}
+                )}
 
-              {/* Today's Reminders */}
-              {todayReminders.length === 0 ? (
-                <View style={styles.emptyReminders}>
-                  <View style={styles.emptyIconCircle}>
-                    <BellOff size={32} color="#ccc" strokeWidth={2} />
+                {/* Today's Reminders - Now includes offline reminders */}
+                {todayReminders.length === 0 && offlineReminders.length === 0 ? (
+                  <View style={styles.emptyReminders}>
+                    <View style={styles.emptyIconCircle}>
+                      <BellOff size={32} color="#ccc" strokeWidth={2} />
+                    </View>
+                    <Text style={styles.emptyText}>No reminders yet</Text>
+                    <Text style={styles.emptySubtext}>Tap "Add Reminder" above to create one</Text>
                   </View>
-                  <Text style={styles.emptyText}>No reminders for today</Text>
-                  <Text style={styles.emptySubtext}>Add medicines from prescriptions below</Text>
-                </View>
-              ) : (
-                todayReminders.map((reminder) => (
-                  <ReminderCard
-                    key={reminder._id}
-                    reminder={reminder}
-                    onToggle={() => toggleReminder(reminder._id, reminder.isActive)}
-                    onTest={() => testNotification(reminder)}
-                    onDelete={() => deleteReminder(reminder._id, reminder.medicineName)}
-                  />
-                ))
-              )}
-            </>
-          )}
-        </Category>
+                ) : (
+                  <>
+                    {/* Offline Reminders (local storage) */}
+                    {offlineReminders.length > 0 && (
+                      <View style={styles.offlineRemindersSection}>
+                        <Text style={styles.offlineRemindersTitle}>📱 Your Reminders</Text>
+                        {offlineReminders.map((reminder) => (
+                          <View key={reminder.id} style={styles.offlineReminderCard}>
+                            <View style={styles.offlineReminderIcon}>
+                              <Pill size={20} color="#52B788" strokeWidth={2.5} />
+                            </View>
+                            <View style={styles.offlineReminderInfo}>
+                              <Text style={styles.offlineReminderName}>{reminder.medicineName}</Text>
+                              <Text style={styles.offlineReminderDetails}>
+                                {reminder.dosage} • {reminder.time} • {reminder.frequency === 'daily' ? 'Daily' : 'Once'}
+                              </Text>
+                            </View>
+                            <View style={[
+                              styles.syncBadge,
+                              { backgroundColor: reminder.enabled ? '#D8F3DC' : '#FFEBEE' }
+                            ]}>
+                              <Text style={[
+                                styles.syncBadgeText,
+                                { color: reminder.enabled ? '#2D6A4F' : '#C62828' }
+                              ]}>
+                                {reminder.enabled ? '✓ Active' : 'Disabled'}
+                              </Text>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+                    )}
 
-        <Category 
-          title="Medical History" 
+                    {/* Backend Reminders (if any) */}
+                    {todayReminders.map((reminder) => (
+                      <ReminderCard
+                        key={reminder._id}
+                        reminder={reminder}
+                        onToggle={() => toggleReminder(reminder._id, reminder.isActive)}
+                        onTest={() => testNotification(reminder)}
+                        onDelete={() => deleteReminder(reminder._id, reminder.medicineName)}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            )}
+          </Category>
+        </View>
+
+        <Category
+          title="Medical History"
           iconComponent={<ClipboardList size={20} color="#fff" strokeWidth={2.5} />}
         >
           <Row left="Hypertension" right="Ongoing" rightColor="Ongoing" />
           <Row left="Diabetes Type 2" right="Controlled" rightColor="Controlled" />
         </Category>
 
-        <Category 
-          title="Prescriptions" 
+        <Category
+          title="Prescriptions"
           iconComponent={<Pill size={20} color="#fff" strokeWidth={2.5} />}
         >
           <View style={styles.prescriptionCard}>
@@ -372,39 +434,7 @@ const RecordsScreen = memo(() => {
           </View>
         </Category>
 
-        <Category 
-          title="Lab Reports" 
-          iconComponent={<TestTube size={20} color="#fff" strokeWidth={2.5} />}
-        >
-          <View style={styles.labReportCard}>
-            <View style={styles.labReportIconCircle}>
-              <TestTube size={18} color="#2196F3" strokeWidth={2.5} />
-            </View>
-            <View style={styles.labReportInfo}>
-              <Text style={styles.labReportName}>Blood Sugar Test</Text>
-              <Text style={styles.labReportDate}>Dec 10, 2024</Text>
-            </View>
-          </View>
-          <View style={styles.labReportCard}>
-            <View style={styles.labReportIconCircle}>
-              <TestTube size={18} color="#2196F3" strokeWidth={2.5} />
-            </View>
-            <View style={styles.labReportInfo}>
-              <Text style={styles.labReportName}>Lipid Profile</Text>
-              <Text style={styles.labReportDate}>Nov 25, 2024</Text>
-            </View>
-          </View>
-        </Category>
-
-        <View style={styles.offlineCard}>
-          <View style={styles.offlineHeader}>
-            <View style={styles.offlineIconCircle}>
-              <Smartphone size={18} color="#2D6A4F" strokeWidth={2.5} />
-            </View>
-            <Text style={styles.offlineTitle}>Offline Available</Text>
-          </View>
-          <Text style={styles.offlineText}>All your health records are stored offline and sync when connected.</Text>
-        </View>
+        {/* Lab Reports and Offline sections removed per hackathon requirements */}
       </ScrollView>
     </View>
   );
@@ -511,7 +541,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
   },
-  
+
   // Loading State
   loadingContainer: {
     paddingVertical: 40,
@@ -825,5 +855,86 @@ const styles = StyleSheet.create({
   labReportDate: {
     fontSize: 12,
     color: '#777',
+  },
+  // New styles for Add Reminder button
+  sectionWithButton: {
+    marginBottom: 0,
+  },
+  addReminderFloatBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#52B788',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addReminderBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  // Offline Reminders styles
+  offlineRemindersSection: {
+    marginTop: 8,
+  },
+  offlineRemindersTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#52796F',
+    marginBottom: 12,
+  },
+  offlineReminderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#E8F5E9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  offlineReminderIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  offlineReminderInfo: {
+    flex: 1,
+  },
+  offlineReminderName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  offlineReminderDetails: {
+    fontSize: 13,
+    color: '#777',
+  },
+  syncBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  syncBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });

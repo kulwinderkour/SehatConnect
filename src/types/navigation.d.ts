@@ -14,6 +14,7 @@ export type RootStackParamList = {
   GovernmentSchemes: undefined;
   VideoCall: undefined;
   VideoConsult: undefined;
+  AddReminder: undefined;
 };
 
 export type TabScreenProps<T extends keyof RootTabParamList> =
@@ -24,6 +25,6 @@ export type StackScreenProps<T extends keyof RootStackParamList> =
 
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends RootTabParamList, RootStackParamList {}
+    interface RootParamList extends RootTabParamList, RootStackParamList { }
   }
 }
