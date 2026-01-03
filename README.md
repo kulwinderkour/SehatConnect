@@ -32,6 +32,34 @@ This project includes an AI medical chatbot backend. When you clone/pull the rep
    python3 chat_api.py
    ```
 
+## 👥 Developer Setup (Collaboration)
+
+**Welcome to the team!** Follow these steps to set up your local environment and get the database running.
+
+### 1. Database Setup (Crucial!)
+Since we use a local MongoDB, you need to populate it with our shared demo data so we can all test with the same users.
+
+1.  **Clone the repo** and install dependencies (see Quick Start below).
+2.  **Start your local MongoDB** (or connect to Atlas).
+3.  **Seed the Database**:
+    ```bash
+    cd backend
+    npm run seed
+    ```
+    ✅ This will create:
+    - **Patient**: `patient@sehat.com` / `Patient@123`
+    - **Doctor**: `drrajesh@sehat.com` / `Rajesh@123`
+
+⚠️ **Note:** If you ever need to reset your data, just run `npm run seed` again.
+
+### 2. Environment Variables
+1.  Copy `.env.example` to `.env` in the `backend` folder.
+    ```bash
+    cd backend
+    cp .env.example .env
+    ```
+2.  Update `BACKEND_IP` in `.env` to your machine's local IP (run `./get-ip.sh` to find it). This is required for physical devices to connect.
+
 ## � Backend Server Setup
 
 The project includes a Node.js/Express backend with MongoDB for authentication and data management.
