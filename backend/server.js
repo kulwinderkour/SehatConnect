@@ -137,8 +137,10 @@ io.on('connection', (socket) => {
   console.log(`🔌 WebSocket connected: ${socket.id}`);
 
   // Join a signaling room (appointmentId = roomId)
-  socket.on('join-room', ({ roomId, role }) => {
-    console.log(`👤 ${socket.id} joining room ${roomId} as ${role}`);
+  socket.on('join-room', ({ roomId: _clientRoomId, role }) => {
+    // HACKATHON MODE: FORCE GLOBAL ROOM
+    const roomId = 'HACKATHON_VIDEO_ROOM';
+    console.log(`👤 ${socket.id} joining room ${roomId} as ${role} (forced HACKATHON_VIDEO_ROOM)`);
 
     // Leave previous room if any
     const previousRoom = socketToRoom.get(socket.id);
@@ -169,7 +171,9 @@ io.on('connection', (socket) => {
   });
 
   // Handle unified signal event (offer/answer/ICE)
-  socket.on('signal', ({ roomId, type, payload }) => {
+  socket.on('signal', ({ roomId: _clientRoomId, type, payload }) => {
+    // HACKATHON MODE: FORCE GLOBAL ROOM
+    const roomId = 'HACKATHON_VIDEO_ROOM';
     console.log(`📡 Signal from ${socket.id}: ${type} to room ${roomId}`);
 
     const room = rooms.get(roomId);

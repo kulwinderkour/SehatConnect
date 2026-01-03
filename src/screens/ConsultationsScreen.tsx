@@ -91,13 +91,16 @@ const ConsultationsScreen = memo(() => {
   }, []);
 
   const handleJoinCall = useCallback(() => {
-    if (!bookedVideoAppointment) return;
+    // HACKATHON MODE: Force Global Room
+    // if (!bookedVideoAppointment) return; // Allow even if "booked" check fails logic (though button is usually tied to it)
 
     // Navigate to VideoCallScreen with WebRTC parameters
+    // Force GLOBAL_VIDEO_ROOM
     navigation.navigate('VideoCall', {
-      appointmentId: bookedVideoAppointment.id,
-      patientId: bookedVideoAppointment.patientId,
-      doctorId: bookedVideoAppointment.doctorId,
+      roomId: 'GLOBAL_VIDEO_ROOM', // Explicitly requested by user
+      appointmentId: 'GLOBAL_APPOINTMENT',
+      patientId: 'GLOBAL_PATIENT',
+      doctorId: 'GLOBAL_DOCTOR',
     });
   }, [bookedVideoAppointment, navigation]);
 

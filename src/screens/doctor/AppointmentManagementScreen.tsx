@@ -162,11 +162,12 @@ export default function AppointmentManagementScreen() {
             <TouchableOpacity
               style={styles.joinVideoCallButton}
               onPress={() => {
-                // Navigate to VideoCallScreen with required parameters
+                // HACKATHON MODE: Force Global Room
                 navigation.navigate('VideoCall', {
-                  appointmentId: appointment.id,
-                  patientId: appointment.patientId,
-                  doctorId: appointment.doctorId,
+                  roomId: 'GLOBAL_VIDEO_ROOM',
+                  appointmentId: 'GLOBAL_APPOINTMENT',
+                  patientId: 'GLOBAL_PATIENT',
+                  doctorId: 'GLOBAL_DOCTOR',
                 });
               }}
             >

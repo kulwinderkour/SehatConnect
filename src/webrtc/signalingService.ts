@@ -14,7 +14,7 @@ const SIGNALING_SERVER_URL = __DEV__
     : 'https://your-production-api.com';
 
 // GLOBAL ROOM - Everyone joins this
-const GLOBAL_ROOM_ID = 'GLOBAL_VIDEO_ROOM';
+const GLOBAL_ROOM_ID = 'HACKATHON_VIDEO_ROOM';
 
 type Role = 'patient' | 'doctor';
 
@@ -29,10 +29,12 @@ class SignalingService {
             console.log('🔌 Connecting to signaling server:', SIGNALING_SERVER_URL);
 
             this.socket = io(SIGNALING_SERVER_URL, {
-                transports: ['websocket'],
+                transports: ['polling', 'websocket'], // Try polling first, then upgrade
                 reconnection: true,
-                reconnectionAttempts: 5,
+                reconnectionAttempts: 10,
                 reconnectionDelay: 1000,
+                forceNew: true,
+                timeout: 10000,
             });
 
             this.socket.on('connect', () => {

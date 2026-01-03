@@ -1,6 +1,6 @@
 /**
- * useWebRTC Hook - GLOBAL ROOM
- * Simplified pattern: ONE room, auto-start, simple signaling
+ * useWebRTC Hook - HACKATHON GLOBAL ROOM
+ * Simplified pattern: ONE room, auto-start, robust signaling
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -52,6 +52,12 @@ export const useWebRTC = ({ role, onError }: UseWebRTCProps): UseWebRTCReturn =>
     // CRITICAL: Single peer connection
     const pcRef = useRef<RTCPeerConnection | null>(null);
 
+    // Queue for signals that arrive before PC is ready
+    const pendingSignalsRef = useRef<Array<{ type: string; payload: any }>>([]);
+
+    // Track if we've processed/sent an offer
+    const hasProcessedOfferRef = useRef(false);
+
     /**
      * Request permissions
      */
@@ -76,23 +82,88 @@ export const useWebRTC = ({ role, onError }: UseWebRTCProps): UseWebRTCReturn =>
     };
 
     /**
+     * Process a signal (offer/answer/ICE)
+     */
+    const processSignal = useCallback(async (type: string, payload: any) => {
+        const pc = pcRef.current;
+        if (!pc) {
+            console.log('⚠️ Received signal but no PC, queuing...');
+            pendingSignalsRef.current.push({ type, payload });
+            return;
+        }
+
+        try {
+            if (type === 'offer') {
+                console.log('📥 Processing offer');
+                await pc.setRemoteDescription(new RTCSessionDescription(payload));
+
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+
+                console.log('📤 Sending answer');
+                signalingService.sendSignal({
+                    type: 'answer',
+                    payload: answer,
+                });
+                hasProcessedOfferRef.current = true;
+            }
+
+            if (type === 'answer') {
+                console.log('📥 Processing answer');
+                await pc.setRemoteDescription(new RTCSessionDescription(payload));
+            }
+
+            if (type === 'ice') {
+                console.log('📥 Processing ICE candidate');
+                try {
+                    await pc.addIceCandidate(new RTCIceCandidate(payload));
+                } catch (iceErr) {
+                    console.warn('⚠️ ICE candidate error (may be stale):', iceErr);
+                }
+            }
+        } catch (err) {
+            console.error('❌ Process signal failed:', err);
+        }
+    }, []);
+
+    /**
+     * Process queued signals
+     */
+    const processQueuedSignals = useCallback(async () => {
+        console.log(`📬 Processing ${pendingSignalsRef.current.length} queued signals`);
+        const signals = [...pendingSignalsRef.current];
+        pendingSignalsRef.current = [];
+
+        for (const signal of signals) {
+            await processSignal(signal.type, signal.payload);
+        }
+    }, [processSignal]);
+
+    /**
      * Start call - create PC and get media
      */
     const startCall = useCallback(async () => {
         try {
             console.log('🎬 Starting call as', role);
             setIsConnecting(true);
+            hasProcessedOfferRef.current = false;
 
-            // 1. Connect to signaling
+            // 1. Connect to signaling FIRST
             await signalingService.connect();
 
-            // 2. Get permissions
+            // 2. Set up signal handler BEFORE anything else
+            signalingService.onSignal(async ({ type, payload }: any) => {
+                console.log(`📡 Received signal: ${type}`);
+                await processSignal(type, payload);
+            });
+
+            // 3. Get permissions
             const hasPermissions = await requestPermissions();
             if (!hasPermissions) {
                 throw new Error('Permissions denied');
             }
 
-            // 3. Get media
+            // 4. Get media
             const stream = await mediaDevices.getUserMedia({
                 audio: true,
                 video: true,
@@ -101,68 +172,78 @@ export const useWebRTC = ({ role, onError }: UseWebRTCProps): UseWebRTCReturn =>
             console.log('✅ Got media stream');
             setLocalStream(stream);
 
-            // 4. Create peer connection (ONCE)
-            if (!pcRef.current) {
-                const pc = new RTCPeerConnection(rtcConfig);
-                pcRef.current = pc;
+            // 5. Create peer connection
+            const pc = new RTCPeerConnection(rtcConfig);
+            pcRef.current = pc;
 
-                // Add tracks
-                stream.getTracks().forEach((track) => {
-                    pc.addTrack(track, stream);
-                    console.log(`➕ Added ${track.kind} track`);
-                });
+            // Add tracks
+            stream.getTracks().forEach((track) => {
+                pc.addTrack(track, stream);
+                console.log(`➕ Added ${track.kind} track`);
+            });
 
-                // Handle remote stream
-                pc.ontrack = (event: any) => {
-                    console.log('📥 Received remote track:', event.track.kind);
-                    if (event.streams && event.streams[0]) {
-                        setRemoteStream(event.streams[0]);
-                    }
-                };
+            // Handle remote stream
+            pc.ontrack = (event: any) => {
+                console.log('📥 Received remote track:', event.track.kind);
+                if (event.streams && event.streams[0]) {
+                    setRemoteStream(event.streams[0]);
+                }
+            };
 
-                // Handle ICE candidate
-                pc.onicecandidate = (event: any) => {
-                    if (event.candidate) {
-                        console.log('🧊 Sending ICE candidate');
-                        signalingService.sendSignal({
-                            type: 'ice',
-                            payload: event.candidate, // Send directly, NO toJSON()
-                        });
-                    }
-                };
+            // Handle ICE candidate
+            pc.onicecandidate = (event: any) => {
+                if (event.candidate) {
+                    console.log('🧊 Sending ICE candidate');
+                    signalingService.sendSignal({
+                        type: 'ice',
+                        payload: event.candidate,
+                    });
+                }
+            };
 
-                // Connection state
-                pc.onconnectionstatechange = () => {
-                    console.log('🔄 Connection state:', pc.connectionState);
+            // Connection state
+            pc.onconnectionstatechange = () => {
+                console.log('🔄 Connection state:', pc.connectionState);
 
-                    if (pc.connectionState === 'connected') {
-                        setIsConnected(true);
-                        setIsConnecting(false);
-                        setError(null);
-                    } else if (pc.connectionState === 'failed') {
-                        setIsConnected(false);
-                        setError('Connection failed');
-                        onError?.('Connection failed');
-                    }
-                };
-            }
+                if (pc.connectionState === 'connected') {
+                    setIsConnected(true);
+                    setIsConnecting(false);
+                    setError(null);
+                } else if (pc.connectionState === 'failed') {
+                    setIsConnected(false);
+                    setError('Connection failed');
+                    onError?.('Connection failed');
+                }
+            };
 
-            // 5. Join global room
+            // 6. Process any signals that arrived before PC was ready
+            await processQueuedSignals();
+
+            // 7. Join room
             signalingService.joinRoom(role);
 
-            // 6. PATIENT creates offer
+            // 8. Wait a moment for peer-joined event, then send offer if PATIENT
+            // Using a small delay to allow the other peer to be ready
             if (role === 'patient') {
-                console.log('📝 PATIENT creating offer...');
-                const offer = await pcRef.current!.createOffer({
-                    offerToReceiveAudio: true,
-                    offerToReceiveVideo: true,
-                });
-                await pcRef.current!.setLocalDescription(offer);
+                setTimeout(async () => {
+                    if (pcRef.current && !hasProcessedOfferRef.current) {
+                        console.log('📝 PATIENT creating offer...');
+                        try {
+                            const offer = await pcRef.current.createOffer({
+                                offerToReceiveAudio: true,
+                                offerToReceiveVideo: true,
+                            });
+                            await pcRef.current.setLocalDescription(offer);
 
-                signalingService.sendSignal({
-                    type: 'offer',
-                    payload: offer, // Send directly, NO toJSON()
-                });
+                            signalingService.sendSignal({
+                                type: 'offer',
+                                payload: offer,
+                            });
+                        } catch (offerErr) {
+                            console.error('❌ Create offer failed:', offerErr);
+                        }
+                    }
+                }, 1000); // Wait 1 second for doctor to be ready
             }
         } catch (err: any) {
             console.error('❌ Start call failed:', err);
@@ -170,50 +251,12 @@ export const useWebRTC = ({ role, onError }: UseWebRTCProps): UseWebRTCReturn =>
             setIsConnecting(false);
             onError?.(err.message);
         }
-    }, [role, onError]);
+    }, [role, onError, processSignal, processQueuedSignals]);
 
     /**
-     * Handle incoming signals
+     * Clean up on unmount
      */
     useEffect(() => {
-        const handleSignal = async ({ type, payload }: any) => {
-            const pc = pcRef.current;
-            if (!pc) {
-                console.log('⚠️ Received signal but no PC');
-                return;
-            }
-
-            try {
-                if (type === 'offer') {
-                    console.log('📥 Received offer');
-                    await pc.setRemoteDescription(new RTCSessionDescription(payload));
-
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-
-                    console.log('📤 Sending answer');
-                    signalingService.sendSignal({
-                        type: 'answer',
-                        payload: answer, // Send directly, NO toJSON()
-                    });
-                }
-
-                if (type === 'answer') {
-                    console.log('📥 Received answer');
-                    await pc.setRemoteDescription(new RTCSessionDescription(payload));
-                }
-
-                if (type === 'ice') {
-                    console.log('📥 Received ICE candidate');
-                    await pc.addIceCandidate(new RTCIceCandidate(payload));
-                }
-            } catch (err) {
-                console.error('❌ Handle signal failed:', err);
-            }
-        };
-
-        signalingService.onSignal(handleSignal);
-
         return () => {
             signalingService.offSignal();
         };
@@ -279,6 +322,8 @@ export const useWebRTC = ({ role, onError }: UseWebRTCProps): UseWebRTCReturn =>
         setRemoteStream(null);
         setIsConnected(false);
         setIsConnecting(false);
+        hasProcessedOfferRef.current = false;
+        pendingSignalsRef.current = [];
     }, [localStream]);
 
     return {

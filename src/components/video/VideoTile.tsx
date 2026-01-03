@@ -29,6 +29,9 @@ const VideoTile: React.FC<VideoTileProps> = ({
     showWaiting = false,
     waitingText,
 }) => {
+    // Get stream URL safely
+    const streamURL = stream ? stream.toURL() : null;
+
     // Render waiting state - CRITICAL: Text wrapped
     if (showWaiting && !stream) {
         return (
@@ -68,12 +71,13 @@ const VideoTile: React.FC<VideoTileProps> = ({
     // Render video stream
     return (
         <View style={styles.container}>
-            {stream && (
+            {streamURL && (
                 <RTCView
-                    streamURL={stream.toURL()}
+                    streamURL={streamURL}
                     style={styles.rtcView}
                     objectFit="cover"
-                    mirror={isLocal} // Mirror local video
+                    mirror={isLocal}
+                    zOrder={isLocal ? 1 : 0} // CRITICAL: Local video needs higher zOrder on Android
                 />
             )}
 
