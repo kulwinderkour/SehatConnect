@@ -13,26 +13,6 @@ const mockPatients = [
     nextAppointment: '2024-01-22',
     condition: 'Hypertension',
     status: 'Active'
-  },
-  {
-    id: '2',
-    name: 'Priya Sharma',
-    age: 32,
-    gender: 'Female',
-    lastVisit: '2024-01-10',
-    nextAppointment: '2024-01-25',
-    condition: 'Diabetes',
-    status: 'Active'
-  },
-  {
-    id: '3',
-    name: 'Amit Kumar',
-    age: 28,
-    gender: 'Male',
-    lastVisit: '2024-01-08',
-    nextAppointment: null,
-    condition: 'General Checkup',
-    status: 'Completed'
   }
 ];
 
@@ -69,7 +49,7 @@ export default function PatientManagementScreen() {
   };
 
   const PatientCard = ({ patient }: { patient: any }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.patientCard}
       onPress={() => handlePatientPress(patient)}
       activeOpacity={0.7}
@@ -99,7 +79,7 @@ export default function PatientManagementScreen() {
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -113,7 +93,7 @@ export default function PatientManagementScreen() {
             onChangeText={setSearchQuery}
             placeholderTextColor="#9ca3af"
           />
-          
+
           <View style={styles.filterButtons}>
             {['All', 'Active', 'Completed'].map((filter) => (
               <TouchableOpacity

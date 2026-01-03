@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback } from 'react';
-import { Appointment, AppointmentBookingForm, AppointmentStatus } from '../types/health';
+import { Appointment, AppointmentBookingForm, AppointmentStatus, AppointmentType } from '../types/health';
 import doctorService from '../services/DoctorService';
+import appointmentService from '../services/AppointmentService';
 
 // Appointment state interface
 interface AppointmentState {
@@ -93,28 +94,60 @@ export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
-      const newAppointment: Appointment = {
-        id: generateId(),
-        doctorId: form.doctorId,
-        doctorName: doctor.name,
-        doctorSpecialty: doctor.specialty,
-        patientId: 'patient1', // This should come from auth context
-        patientName: 'Rajinder Singh', // This should come from auth context
-        date: form.date,
-        time: form.time,
-        duration: 30, // Default duration
-        status: 'scheduled' as AppointmentStatus,
+      // Prepare booking data
+      // Note: We override doctorId to demo-doctor-id for demo purposes
+      const bookingData = {
+        doctorId: 'demo-doctor-id',
+        appointmentDate: form.date,
+        appointmentTime: form.time,
         type: form.type,
-        notes: form.notes,
+        reason: form.notes || 'General Consultation',
         symptoms: form.symptoms,
-        followUpRequired: false,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       };
 
-      dispatch({ type: 'ADD_APPOINTMENT', payload: newAppointment });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to book appointment' });
+      console.log('Booking appointment with data:', bookingData);
+
+      // Call API to book appointment
+      const response = await appointmentService.bookAppointment(bookingData);
+
+      if (response.success && response.data) {
+        const backendAppt = response.data.appointment;
+
+        // Map backend response to frontend Appointment structure
+        const newAppointment: Appointment = {
+          id: backendAppt._id,
+          doctorId: backendAppt.doctorId?._id || backendAppt.doctorId || 'unknown', // Safe navigation
+          doctorName: doctor.name, // Use local doctor name as backend might not populate immediately
+          doctorSpecialty: doctor.specialty,
+          patientId: backendAppt.patientId?._id || backendAppt.patientId || 'unknown', // Safe navigation
+          patientName: 'Rajinder Singh', // Fallback or from auth
+          // Convert Date object to YYYY-MM-DD string format
+          date: backendAppt.appointmentDate
+            ? new Date(backendAppt.appointmentDate).toISOString().split('T')[0]
+            : '',
+          // Ensure time is a string
+          time: backendAppt.appointmentTime || '',
+          duration: 30,
+          status: backendAppt.status as AppointmentStatus,
+          type: backendAppt.type as AppointmentType, // Cast as we updated service
+          notes: backendAppt.notes,
+          symptoms: backendAppt.symptoms,
+          followUpRequired: false,
+          createdAt: backendAppt.createdAt,
+          updatedAt: backendAppt.updatedAt,
+        };
+
+        console.log('Appointment booked successfully:', newAppointment);
+        dispatch({ type: 'ADD_APPOINTMENT', payload: newAppointment });
+      } else {
+        throw new Error(response.error || response.message || 'Failed to book appointment');
+      }
+
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Failed to book appointment' });
+      // Re-throw to let the UI know it failed
+      throw error;
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
@@ -171,10 +204,34 @@ export const AppointmentProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       const appointments = await doctorService.getDoctorAppointments(doctorId, date);
 
-      // Normalize incoming appointments if needed and then set
-      dispatch({ type: 'SET_APPOINTMENTS', payload: appointments || [] });
+      // Transform backend appointments to match frontend format
+      const transformedAppointments = (appointments || []).map((apt: any) => ({
+        id: apt._id || apt.id,
+        doctorId: apt.doctorId?._id || apt.doctorId,
+        doctorName: apt.doctorId?.profile?.name || 'Dr. Rajesh Sharma',
+        doctorSpecialty: apt.doctorId?.doctorInfo?.specialty || 'General Medicine',
+        patientId: apt.patientId?._id || apt.patientId,
+        patientName: apt.patientId?.profile?.fullName || 'Unknown Patient',
+        // Convert Date to YYYY-MM-DD string
+        date: apt.appointmentDate
+          ? new Date(apt.appointmentDate).toISOString().split('T')[0]
+          : '',
+        time: apt.appointmentTime || '',
+        duration: apt.duration || 30,
+        status: apt.status || 'scheduled',
+        type: apt.type || 'video-consultation',
+        notes: apt.notes || apt.reason || '',
+        symptoms: apt.symptoms || [],
+        condition: apt.reason || '', // Map reason to condition
+        followUpRequired: apt.followUpRequired || false,
+        createdAt: apt.createdAt,
+        updatedAt: apt.updatedAt,
+      }));
 
-      return appointments || [];
+      // Normalize incoming appointments if needed and then set
+      dispatch({ type: 'SET_APPOINTMENTS', payload: transformedAppointments });
+
+      return transformedAppointments;
     } catch (error: any) {
       // Only log error if it's not a network/backend issue
       if (!error.message?.includes('Network request failed') && !error.message?.includes('Unable to connect')) {

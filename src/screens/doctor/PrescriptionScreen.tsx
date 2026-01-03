@@ -13,24 +13,6 @@ const mockPrescriptions = [
       { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily' }
     ],
     status: 'Active'
-  },
-  {
-    id: '2',
-    patientName: 'Priya Sharma',
-    date: '2024-01-14',
-    medications: [
-      { name: 'Insulin', dosage: '20 units', frequency: 'Before meals' }
-    ],
-    status: 'Active'
-  },
-  {
-    id: '3',
-    patientName: 'Amit Kumar',
-    date: '2024-01-10',
-    medications: [
-      { name: 'Paracetamol', dosage: '500mg', frequency: 'As needed' }
-    ],
-    status: 'Completed'
   }
 ];
 
@@ -70,7 +52,7 @@ export default function PrescriptionScreen() {
   };
 
   const PrescriptionCard = ({ prescription }: { prescription: any }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.prescriptionCard}
       onPress={() => handlePrescriptionPress(prescription)}
       activeOpacity={0.7}
@@ -101,7 +83,7 @@ export default function PrescriptionScreen() {
 
       {prescription.status === 'Active' && (
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.refillButton}
             onPress={() => handleRefillPrescription(prescription)}
           >
@@ -115,7 +97,7 @@ export default function PrescriptionScreen() {
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -129,7 +111,7 @@ export default function PrescriptionScreen() {
             onChangeText={setSearchQuery}
             placeholderTextColor="#9ca3af"
           />
-          
+
           <View style={styles.filterButtons}>
             {['All', 'Active', 'Completed'].map((filter) => (
               <TouchableOpacity

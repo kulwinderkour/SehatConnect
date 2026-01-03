@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 import { ProfilePhotoService } from '../services/ProfilePhotoService';
 import { StorageService } from '../services/StorageService';
 
@@ -25,9 +26,11 @@ interface UserProfileProviderProps {
 }
 
 export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ children }) => {
+  const { user, isAuthenticated } = useAuth();
+
   // Get the first available photo from the service
   const defaultPhoto = ProfilePhotoService.getAvailablePhotos()[0];
-  
+
   const [userProfile, setUserProfile] = useState<UserProfile>({
     fullName: "Rajinder Singh",
     patientId: "SH001234",
@@ -37,51 +40,69 @@ export const UserProfileProvider: React.FC<UserProfileProviderProps> = ({ childr
     phone: "+91 98765 43210"
   });
 
+  // Sync with AuthContext
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log('🔄 Syncing UserProfile with AuthContext:', user.fullName);
+
+      setUserProfile(prev => ({
+        ...prev,
+        fullName: user.fullName,
+        patientId: user.patientId,
+        shortName: user.shortName,
+        // Only update image if auth user has one, otherwise keep existing or default
+        profileImage: user.profileImage || prev.profileImage,
+        email: user.email,
+        phone: user.phone
+      }));
+    }
+  }, [user, isAuthenticated]);
+
   const updateProfileImage = async (imageUri: any) => {
     console.log('Updating profile image:', imageUri);
-    
+
     setUserProfile(prev => {
       const updated = {
         ...prev,
         profileImage: imageUri
       };
-      
+
       // Save to storage
-      StorageService.saveProfileImage(prev.patientId, imageUri).catch(err => 
+      StorageService.saveProfileImage(prev.patientId, imageUri).catch(err =>
         console.error('Failed to save profile image:', err)
       );
-      
+
       return updated;
     });
   };
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     console.log('Updating profile:', updates);
-    
+
     setUserProfile(prev => {
       const updated = {
         ...prev,
         ...updates
       };
-      
+
       // Save profile image if it was updated
       if (updates.profileImage) {
         StorageService.saveProfileImage(updated.patientId, updates.profileImage).catch(err =>
           console.error('Failed to save profile image:', err)
         );
       }
-      
+
       return updated;
     });
   };
 
   const loadSavedProfile = async (userId: string) => {
     console.log('Loading saved profile for user:', userId);
-    
+
     try {
       // Load saved profile image
       const savedImage = await StorageService.getProfileImage(userId);
-      
+
       if (savedImage) {
         console.log('Found saved profile image:', savedImage);
         setUserProfile(prev => ({

@@ -1,14 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Appointment, AppointmentStatus } from '../../types/health';
-import { 
-  Video, 
-  Phone, 
-  Stethoscope, 
-  Calendar, 
-  Clock, 
+import {
+  Video,
+  Phone,
+  Stethoscope,
+  Calendar,
+  Clock,
   RefreshCw,
-  AlertCircle 
+  AlertCircle
 } from 'lucide-react-native';
 
 interface AppointmentCardProps {
@@ -85,37 +85,68 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    if (!dateString) return 'Date Pending';
 
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return 'Tomorrow';
-    } else {
-      return date.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric' 
-      });
+    try {
+      const date = new Date(dateString);
+      // Check for invalid date
+      if (isNaN(date.getTime())) return 'Date Pending';
+
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      if (date.toDateString() === today.toDateString()) {
+        return 'Today';
+      } else if (date.toDateString() === tomorrow.toDateString()) {
+        return 'Tomorrow';
+      } else {
+        return date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
+    } catch (e) {
+      return 'Date Pending';
     }
   };
 
   const formatTime = (timeString: string) => {
-    const time = new Date(`2000-01-01T${timeString}`);
-    return time.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
-    });
+    if (!timeString) return 'Time Pending';
+
+    try {
+      // Handle "09:00 AM" format or "09:00" format safely
+      let dateStr = `2000-01-01T${timeString}`;
+
+      // If timeString is like "09:00 AM", parsing it directly in Date constructor works in some envs but not all
+      // Better to check if it has space
+      if (timeString.includes(' ')) {
+        // It might be "9:00 AM" -> convert to proper format if needed, 
+        // but simplest is to trust the backend or Date parser if standard
+        // For safety, let's just show the string if it looks pre-formatted
+        if (timeString.match(/\d{1,2}:\d{2}\s?(AM|PM)/i)) {
+          return timeString;
+        }
+      }
+
+      const time = new Date(dateStr);
+      if (isNaN(time.getTime())) return timeString || 'Time Pending';
+
+      return time.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return timeString || 'Time Pending';
+    }
   };
 
   if (variant === 'compact') {
     return (
-      <TouchableOpacity 
-        style={styles.compactCard} 
+      <TouchableOpacity
+        style={styles.compactCard}
         onPress={() => onPress(appointment)}
         activeOpacity={0.8}
       >
@@ -159,8 +190,8 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   if (variant === 'upcoming') {
     return (
-      <TouchableOpacity 
-        style={styles.upcomingCard} 
+      <TouchableOpacity
+        style={styles.upcomingCard}
         onPress={() => onPress(appointment)}
         activeOpacity={0.8}
       >
@@ -208,8 +239,8 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   // Default variant
   return (
-    <TouchableOpacity 
-      style={styles.defaultCard} 
+    <TouchableOpacity
+      style={styles.defaultCard}
       onPress={() => onPress(appointment)}
       activeOpacity={0.8}
     >
@@ -235,7 +266,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
         <View style={styles.body}>
           <Text style={styles.doctorName}>{appointment.doctorName}</Text>
           <Text style={styles.specialty}>{appointment.doctorSpecialty}</Text>
-          
+
           <View style={styles.dateTimeContainer}>
             <View style={styles.dateTimeRow}>
               <Calendar size={16} color="#374151" strokeWidth={2} />
@@ -282,7 +313,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
         {showActions && onActionPress && (
           <View style={styles.actions}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.actionButton}
               onPress={() => onActionPress(appointment)}
             >

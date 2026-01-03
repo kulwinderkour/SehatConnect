@@ -229,42 +229,103 @@ const HealthSummaryCard = ({
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { getText } = useI18n();
-  const { addAppointment } = useAppointments();
+  const { addAppointment, state } = useAppointments();
   const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
   const [emergencyWizardVisible, setEmergencyWizardVisible] = useState(false);
   const [userLocation, setUserLocation] = useState<EmergencyLocation | null>(null);
 
+  // Get the next upcoming appointment
+  const nextAppointment = useMemo(() => {
+    const appointments = state.appointments;
+    const now = new Date();
+
+    // Filter for upcoming appointments that are confirmed or scheduled
+    const upcomingAppointments = appointments.filter(apt => {
+      const aptDate = new Date(apt.date);
+      const aptDateTime = new Date(`${apt.date}T${apt.time}`);
+      return (
+        (apt.status === 'confirmed' || apt.status === 'scheduled') &&
+        aptDateTime >= now
+      );
+    });
+
+    // Sort by date and time, return the nearest one
+    if (upcomingAppointments.length > 0) {
+      upcomingAppointments.sort((a, b) => {
+        const dateTimeA = new Date(`${a.date}T${a.time}`);
+        const dateTimeB = new Date(`${b.date}T${b.time}`);
+        return dateTimeA.getTime() - dateTimeB.getTime();
+      });
+      return upcomingAppointments[0];
+    }
+    return null;
+  }, [state.appointments]);
+
+  // Format appointment date/time for display
+  const formatAppointmentDateTime = (date: string, time: string) => {
+    const aptDate = new Date(date);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Format time to 12-hour format
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    const timeStr = `${hour12}:${minutes} ${ampm}`;
+
+    // Check if today or tomorrow
+    if (aptDate.toDateString() === today.toDateString()) {
+      return `Today, ${timeStr}`;
+    } else if (aptDate.toDateString() === tomorrow.toDateString()) {
+      return `Tomorrow, ${timeStr}`;
+    } else {
+      const dateStr = aptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `${dateStr}, ${timeStr}`;
+    }
+  };
+
   // Enhanced health summary data with rich UI elements
-  const healthMetrics = useMemo(() => [
-    { 
-      label: 'Blood Pressure', 
-      value: '120/80',
-      icon: <Heart size={22} color="#fff" />,
-      color: '#ef4444',
-      gradientColors: ['#f87171', '#dc2626'],
-      status: 'Normal',
-      statusColor: '#10b981',
-      trend: [118, 120, 122, 119, 120, 121, 120], // Past week BP data
-    },
-    { 
-      label: 'Next Appointment', 
-      value: 'Tomorrow, 2:00 PM',
-      icon: <CalendarDays size={22} color="#fff" />,
-      color: '#3b82f6',
-      gradientColors: ['#60a5fa', '#2563eb'],
-      subtitle: 'Dr. Mehta – Cardiologist',
-      action: 'Reschedule',
-    },
-    { 
-      label: 'Medicines Due', 
+  const healthMetrics = useMemo(() => {
+    const metrics = [
+      {
+        label: 'Blood Pressure',
+        value: '120/80',
+        icon: <Heart size={22} color="#fff" />,
+        color: '#ef4444',
+        gradientColors: ['#f87171', '#dc2626'],
+        status: 'Normal',
+        statusColor: '#10b981',
+        trend: [118, 120, 122, 119, 120, 121, 120], // Past week BP data
+      },
+    ];
+
+    // Only add Next Appointment if one exists
+    if (nextAppointment) {
+      metrics.push({
+        label: 'Next Appointment',
+        value: formatAppointmentDateTime(nextAppointment.date, nextAppointment.time),
+        icon: <CalendarDays size={22} color="#fff" />,
+        color: '#3b82f6',
+        gradientColors: ['#60a5fa', '#2563eb'],
+        subtitle: `${nextAppointment.doctorName} – ${nextAppointment.doctorSpecialty}`,
+        action: 'Reschedule',
+      });
+    }
+
+    metrics.push({
+      label: 'Medicines Due',
       value: '2 pending',
       icon: <Pill size={22} color="#fff" />,
       color: '#f59e0b',
       gradientColors: ['#fbbf24', '#f59e0b'],
       action: 'Mark Taken',
-    },
-  ], []);
+    });
+
+    return metrics;
+  }, [nextAppointment]);
 
   // Enhanced medical professionals data with proper types
   const medicalProfessionals: Doctor[] = useMemo(() => DOCTORS_DATA, []);
@@ -274,7 +335,7 @@ export default function HomeScreen() {
     const initializeEmergencyServices = async () => {
       try {
         await emergencyAudioService.initialize();
-        
+
         // Don't request location permission on home screen load
         // Location will be requested only when emergency features are used
       } catch (error) {
@@ -305,10 +366,10 @@ export default function HomeScreen() {
     try {
       // Initialize emergency services if not already done
       await emergencyAudioService.initialize();
-      
+
       // Open the Smart SOS Wizard first
       setEmergencyWizardVisible(true);
-      
+
       // Request location permission and get current location for emergency
       // This will happen in background while wizard is open
       setTimeout(async () => {
@@ -318,14 +379,14 @@ export default function HomeScreen() {
             const location = await emergencyLocationService.getCurrentLocation();
             setUserLocation(location);
           }
-          
+
           // Play emergency alert after location is handled
           await emergencyAudioService.playEmergencyAlert('General Emergency', 'en');
         } catch (locationError) {
           console.error('Location permission error:', locationError);
         }
       }, 100);
-      
+
     } catch (error) {
       console.error('Emergency initialization error:', error);
       Alert.alert(
@@ -406,7 +467,7 @@ export default function HomeScreen() {
       {
         icon: <Video size={24} color="#10b981" />,
         title: getText('actionVideoConsult'),
-        subtitle: 'Start video call',
+        subtitle: 'Open consultations',
         color: '#10b981',
         onPress: () => navigation.navigate('Consult' as never),
       },
@@ -465,7 +526,7 @@ export default function HomeScreen() {
 
         {/* Health Summary Section - Tabular Layout */}
         <Text style={styles.sectionTitle}>Health Summary</Text>
-        <HealthSummaryCard 
+        <HealthSummaryCard
           healthMetrics={healthMetrics}
           onReschedule={handleRescheduleAppointment}
           onMarkTaken={handleMarkMedicineTaken}
@@ -478,7 +539,7 @@ export default function HomeScreen() {
           onConsultPress={handleConsultPress}
           variant="default"
           title={getText('doctorsTopDoctors')}
-          onSeeAllPress={() => {}}
+          onSeeAllPress={() => { }}
         />
       </ScrollView>
 

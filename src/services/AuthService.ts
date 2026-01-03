@@ -18,8 +18,8 @@ const DEMO_USERS = {
     phone: '+91-9876543210',
     role: 'patient' as const,
     profile: {
-      fullName: 'Demo Patient',
-      shortName: 'Demo',
+      fullName: 'Rajinder Singh',
+      shortName: 'Rajinder',
       profileImage: '',
       dateOfBirth: '1990-01-15',
       gender: 'male' as const,
@@ -32,7 +32,7 @@ const DEMO_USERS = {
       },
     },
     patientInfo: {
-      patientId: 'SH100001',
+      patientId: 'SH001234',
       emergencyContact: {
         name: 'Emergency Contact',
         phone: '+91-9876543211',
@@ -50,9 +50,9 @@ const DEMO_USERS = {
     role: 'doctor' as const,
     profile: {
       fullName: 'Dr. Rajesh Sharma',
-      shortName: 'Dr. Rajesh',
+      shortName: 'Rajesh',
       profileImage: '',
-      dateOfBirth: '1980-05-20',
+      dateOfBirth: '1985-05-20',
       gender: 'male' as const,
       address: {
         street: '456 Medical Complex',
@@ -66,9 +66,9 @@ const DEMO_USERS = {
       qualifications: ['MBBS', 'MD'],
       registrationNumber: 'MCI-12345',
       hospital: 'City Hospital',
-      experience: 15,
+      experience: 10,
       consultationFee: 500,
-      rating: 4.8,
+      rating: 4.9,
       totalReviews: 150,
     },
     isVerified: true,
@@ -110,15 +110,15 @@ class AuthService {
     try {
       const { email, password } = data;
       const emailLower = email.toLowerCase();
-      
+
       // Check if credentials match demo users
       if (emailLower in DEMO_CREDENTIALS && DEMO_CREDENTIALS[emailLower as keyof typeof DEMO_CREDENTIALS] === password) {
         const userType = emailLower.includes('patient') ? 'patient' : 'doctor';
         const user = DEMO_USERS[userType];
-        
+
         // Save user data locally
         await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(user));
-        
+
         return {
           success: true,
           data: { user },

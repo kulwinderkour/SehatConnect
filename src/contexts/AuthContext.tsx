@@ -56,17 +56,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializeAuth = async () => {
     try {
       console.log('🔐 Initializing auth state...');
-      
+
       const response = await authService.getCurrentUser();
       if (response.success && response.data) {
         const userData = response.data.user;
         console.log('✅ User found in storage:', userData.email);
-        
+
         setUser({
           _id: userData._id,
           fullName: userData.profile?.fullName || userData.email,
           patientId: userData.patientInfo?.patientId || userData._id || '',
-          shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
+          shortName: userData.profile?.shortName || userData.profile?.fullName?.split(' ')[0] || 'User',
           profileImage: userData.profile?.photoUrl || '',
           email: userData.email,
           phone: userData.phone,
@@ -94,16 +94,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('🔐 Logging in user:', email);
       const response = await authService.login({ email, password });
-      
+
       if (response.success && response.data) {
         const userData = response.data.user;
         console.log('✅ Login successful:', userData.email);
-        
+
         setUser({
           _id: userData._id,
           fullName: userData.profile?.fullName || userData.email,
           patientId: userData.patientInfo?.patientId || userData._id || '',
-          shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
+          shortName: userData.profile?.shortName || userData.profile?.fullName?.split(' ')[0] || 'User',
           profileImage: userData.profile?.photoUrl || '',
           email: userData.email,
           phone: userData.phone,
@@ -151,7 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           _id: userData._id,
           fullName: userData.profile?.fullName || userData.email,
           patientId: userData.patientInfo?.patientId || userData._id || '',
-          shortName: userData.profile?.fullName?.split(' ')[0] || 'User',
+          shortName: userData.profile?.shortName || userData.profile?.fullName?.split(' ')[0] || 'User',
           profileImage: userData.profile?.photoUrl || '',
           email: userData.email,
           phone: userData.phone,

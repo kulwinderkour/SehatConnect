@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
+import { Video } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import Header from '../../components/common/Header';
 import { useAppointments } from '../../contexts/AppointmentContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,20 +10,35 @@ import { useAuth } from '../../contexts/AuthContext';
 // Note: appointments are fetched by AppointmentContext.fetchAppointmentsForDoctor
 
 export default function AppointmentManagementScreen() {
+  const navigation = useNavigation<any>();
   const [selectedFilter, setSelectedFilter] = useState('Today');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const { state: appointmentState, fetchAppointmentsForDoctor } = useAppointments();
   const { user } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
 
+  // Initial load and polling for real-time updates
   useEffect(() => {
-    if (user && (user as any).role === 'doctor') {
-      const doctorId = (user as any).patientId;
+    if (!user || (user as any).role !== 'doctor') return;
+
+    // Use the actual doctor ID (user's _id), not patientId
+    const doctorId = (user as any)._id || (user as any).id;
+
+    // Initial fetch
+    fetchAppointmentsForDoctor(doctorId).catch(error => {
+      console.warn('Failed to load appointments:', error);
+    });
+
+    // Poll every 5 seconds for real-time updates
+    const pollInterval = setInterval(() => {
       fetchAppointmentsForDoctor(doctorId).catch(error => {
-        console.warn('Failed to load appointments:', error);
+        console.warn('Polling failed:', error);
       });
-    }
-  }, [user?.patientId]); // Only depend on user ID, not the function
+    }, 5000);
+
+    // Cleanup interval on unmount
+    return () => clearInterval(pollInterval);
+  }, [user?._id]); // Depend on actual user ID
 
   // Filter appointments
   const filteredAppointments = useMemo(() => {
@@ -51,18 +68,38 @@ export default function AppointmentManagementScreen() {
     Alert.alert('Reschedule', `Rescheduling appointment with ${appointment.patientName}`);
   };
 
+  const formatAppointmentDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return 'Tomorrow';
+    } else {
+      return date.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Scheduled': return '#3b82f6';
-      case 'In Progress': return '#f59e0b';
-      case 'Completed': return '#10b981';
-      case 'Cancelled': return '#ef4444';
+    switch (status?.toLowerCase()) {
+      case 'scheduled': return '#3b82f6';
+      case 'in progress': return '#f59e0b';
+      case 'completed': return '#10b981';
+      case 'cancelled': return '#ef4444';
       default: return '#6b7280';
     }
   };
 
   const AppointmentCard = ({ appointment }: { appointment: any }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.appointmentCard}
       onPress={() => handleAppointmentPress(appointment)}
       activeOpacity={0.7}
@@ -70,6 +107,7 @@ export default function AppointmentManagementScreen() {
       <View style={styles.appointmentHeader}>
         <View style={styles.timeContainer}>
           <Text style={styles.appointmentTime}>{appointment.time}</Text>
+          <Text style={styles.appointmentDate}>{formatAppointmentDate(appointment.date)}</Text>
           <Text style={styles.appointmentDuration}>{appointment.duration} min</Text>
         </View>
         <View style={[
@@ -79,7 +117,7 @@ export default function AppointmentManagementScreen() {
           <Text style={styles.statusText}>{appointment.status}</Text>
         </View>
       </View>
-      
+
       <View style={styles.appointmentBody}>
         <Text style={styles.patientName}>{appointment.patientName}</Text>
         <Text style={styles.appointmentType}>{appointment.type}</Text>
@@ -91,13 +129,13 @@ export default function AppointmentManagementScreen() {
 
       {appointment.status === 'Scheduled' && (
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.startButton}
             onPress={() => handleStartAppointment(appointment)}
           >
             <Text style={styles.startButtonText}>Start</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.rescheduleButton}
             onPress={() => handleReschedule(appointment)}
           >
@@ -108,7 +146,7 @@ export default function AppointmentManagementScreen() {
 
       {appointment.status === 'In Progress' && (
         <View style={styles.actionButtons}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.joinButton}
             onPress={() => handleStartAppointment(appointment)}
           >
@@ -116,20 +154,45 @@ export default function AppointmentManagementScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Join Video Call button for scheduled video consultations */}
+      {appointment.type === 'video-consultation' &&
+        (appointment.status?.toLowerCase() === 'scheduled') && (
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={styles.joinVideoCallButton}
+              onPress={() => {
+                // Navigate to VideoCallScreen with required parameters
+                navigation.navigate('VideoCall', {
+                  appointmentId: appointment.id,
+                  patientId: appointment.patientId,
+                  doctorId: appointment.doctorId,
+                });
+              }}
+            >
+              <View style={styles.joinVideoCallButtonContent}>
+                <Video size={20} color="#FFFFFF" strokeWidth={2.5} />
+                <Text style={styles.joinVideoCallButtonText}>Join Video Call</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
     </TouchableOpacity>
   );
 
   const onRefresh = async () => {
     if (!user) return;
     setRefreshing(true);
-    await fetchAppointmentsForDoctor((user as any).patientId);
+    // Use correct doctor ID field
+    const doctorId = (user as any)._id || (user as any).id;
+    await fetchAppointmentsForDoctor(doctorId);
     setRefreshing(false);
   };
 
   return (
     <View style={styles.container}>
       <Header />
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
@@ -310,9 +373,16 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
+  appointmentDate: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2563eb',
+    marginTop: 2,
+  },
   appointmentDuration: {
     fontSize: 12,
     color: '#6b7280',
+    marginTop: 2,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -392,6 +462,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  joinVideoCallButton: {
+    backgroundColor: '#10b981',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+    flex: 1,
+  },
+  joinVideoCallButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  joinVideoCallButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   emptyState: {
     alignItems: 'center',

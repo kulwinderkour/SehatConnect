@@ -22,47 +22,87 @@ export default function RoleBasedNavigator() {
     return null;
   }
 
-  // Show doctor interface for doctors
+  // Show doctor interface for doctors - wrap in stack for modal screens
   if (user?.role === 'doctor') {
-    console.log('RoleBasedNavigator: Rendering DoctorTabNavigator');
-    return <DoctorTabNavigator />;
+    console.log('RoleBasedNavigator: Rendering Doctor Stack Navigator');
+    return (
+      <Stack.Navigator
+        initialRouteName="MainTabs"
+        screenOptions={{
+          headerShown: false,
+          cardStyle: { backgroundColor: '#fff' }
+        }}
+      >
+        <Stack.Screen
+          name="MainTabs"
+          component={DoctorTabNavigator}
+          options={{
+            animationEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="GovernmentSchemes"
+          component={GovernmentSchemesScreen}
+          options={{
+            animationEnabled: true,
+            presentation: 'card',
+          }}
+        />
+        <Stack.Screen
+          name="VideoCall"
+          component={VideoCallScreen}
+          options={{
+            animationEnabled: true,
+            presentation: 'fullScreenModal',
+          }}
+        />
+        <Stack.Screen
+          name="VideoConsult"
+          component={VideoConsultScreen}
+          options={{
+            animationEnabled: true,
+            presentation: 'card',
+          }}
+        />
+      </Stack.Navigator>
+    );
   }
 
   // Show patient interface with stack navigator for modal screens
   console.log('RoleBasedNavigator: Rendering Patient Stack Navigator');
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       initialRouteName="MainTabs"
-      screenOptions={{ 
+      screenOptions={{
         headerShown: false,
         cardStyle: { backgroundColor: '#fff' }
       }}
     >
-      <Stack.Screen 
-        name="MainTabs" 
+      <Stack.Screen
+        name="MainTabs"
         component={TabNavigator}
         options={{
           animationEnabled: true,
         }}
       />
-      <Stack.Screen 
-        name="GovernmentSchemes" 
+      <Stack.Screen
+        name="GovernmentSchemes"
         component={GovernmentSchemesScreen}
         options={{
           animationEnabled: true,
           presentation: 'card',
         }}
       />
-      <Stack.Screen 
-        name="VideoCall" 
+      <Stack.Screen
+        name="VideoCall"
         component={VideoCallScreen}
         options={{
           animationEnabled: true,
           presentation: 'fullScreenModal',
         }}
       />
-      <Stack.Screen 
-        name="VideoConsult" 
+      <Stack.Screen
+        name="VideoConsult"
         component={VideoConsultScreen}
         options={{
           animationEnabled: true,

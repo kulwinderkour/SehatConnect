@@ -22,7 +22,9 @@ export type ConsultStackParamList = {
   ConsultationsMain: undefined;
   VideoConsult: undefined;
   VideoCall: {
-    doctor: Doctor;
+    appointmentId: string;
+    patientId: string;
+    doctorId: string;
   };
 };
 

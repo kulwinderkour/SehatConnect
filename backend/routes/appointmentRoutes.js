@@ -12,6 +12,7 @@ const {
   cancelAppointment,
   completeAppointment,
   updateAppointment,
+  deleteAllAppointments,
 } = require('../controllers/appointmentController');
 const { setDemoUser } = require('../middleware/demoUser');
 
@@ -19,6 +20,7 @@ const { setDemoUser } = require('../middleware/demoUser');
 router.use(setDemoUser);
 
 // Authentication removed - open access
+router.delete('/clear-all', deleteAllAppointments); // Must be before /:id routes
 router.post('/', bookAppointment);
 router.get('/', getAppointments);
 router.get('/:id', getAppointmentById);

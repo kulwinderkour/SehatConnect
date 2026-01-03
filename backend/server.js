@@ -113,21 +113,145 @@ app.use(notFound);
 // Global error handler
 app.use(errorHandler);
 
-// Start server
+// Start server with Socket.IO for WebRTC signaling
 const PORT = process.env.PORT || 5000;
+const http = require('http');
+const { Server } = require('socket.io');
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+// Initialize Socket.IO for WebRTC signaling
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST']
+  }
+});
+
+// WebRTC Signaling Room Management
+const rooms = new Map(); // Map<roomId, Set<socketId>>
+const socketToRoom = new Map(); // Map<socketId, roomId>
+const socketToRole = new Map(); // Map<socketId, 'patient' | 'doctor'>
+
+io.on('connection', (socket) => {
+  console.log(`🔌 WebSocket connected: ${socket.id}`);
+
+  // Join a signaling room (appointmentId = roomId)
+  socket.on('join-room', ({ roomId, role }) => {
+    console.log(`👤 ${socket.id} joining room ${roomId} as ${role}`);
+
+    // Leave previous room if any
+    const previousRoom = socketToRoom.get(socket.id);
+    if (previousRoom && rooms.has(previousRoom)) {
+      rooms.get(previousRoom).delete(socket.id);
+      socket.leave(previousRoom);
+    }
+
+    // Join new room
+    socket.join(roomId);
+    socketToRoom.set(socket.id, roomId);
+    socketToRole.set(socket.id, role);
+
+    if (!rooms.has(roomId)) {
+      rooms.set(roomId, new Set());
+    }
+    rooms.get(roomId).add(socket.id);
+
+    // Notify others in room
+    const roomSize = rooms.get(roomId).size;
+    socket.to(roomId).emit('peer-joined', {
+      peerId: socket.id,
+      role,
+      roomSize
+    });
+
+    console.log(`✅ Room ${roomId} now has ${roomSize} peer(s)`);
+  });
+
+  // Handle unified signal event (offer/answer/ICE)
+  socket.on('signal', ({ roomId, type, payload }) => {
+    console.log(`📡 Signal from ${socket.id}: ${type} to room ${roomId}`);
+
+    const room = rooms.get(roomId);
+    if (!room) {
+      console.log(`❌ Room ${roomId} not found`);
+      return;
+    }
+
+    // Forward to all other peers in room
+    room.forEach((peerId) => {
+      if (peerId !== socket.id) {
+        console.log(`  → Forwarding ${type} to ${peerId}`);
+        io.to(peerId).emit('signal', {
+          type,
+          payload,
+          from: socket.id,
+        });
+      }
+    });
+  });
+
+  // Handle disconnect
+  socket.on('disconnect', () => {
+    console.log(`❌ WebSocket disconnected: ${socket.id}`);
+
+    const roomId = socketToRoom.get(socket.id);
+    const role = socketToRole.get(socket.id);
+
+    if (roomId && rooms.has(roomId)) {
+      rooms.get(roomId).delete(socket.id);
+
+      // Notify others in room
+      socket.to(roomId).emit('peer-left', {
+        peerId: socket.id,
+        role
+      });
+
+      // Clean up empty rooms
+      if (rooms.get(roomId).size === 0) {
+        rooms.delete(roomId);
+        console.log(`🗑️  Room ${roomId} deleted (empty)`);
+      } else {
+        console.log(`📉 Room ${roomId} now has ${rooms.get(roomId).size} peer(s)`);
+      }
+    }
+
+    socketToRoom.delete(socket.id);
+    socketToRole.delete(socket.id);
+  });
+
+  // Leave room explicitly
+  socket.on('leave-room', ({ roomId }) => {
+    const role = socketToRole.get(socket.id);
+    console.log(`👋 ${socket.id} (${role}) leaving room ${roomId}`);
+
+    if (rooms.has(roomId)) {
+      rooms.get(roomId).delete(socket.id);
+      socket.leave(roomId);
+      socket.to(roomId).emit('peer-left', {
+        peerId: socket.id,
+        role
+      });
+    }
+
+    socketToRoom.delete(socket.id);
+    socketToRole.delete(socket.id);
+  });
+});
+
+server.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('╔════════════════════════════════════════════════════════╗');
   console.log('║                                                        ║');
-  console.log('║        🏥  SEHATCONNECT BACKEND SERVER STARTED  🏥     ║');
+  console.log('║        🏥  SEHATCONNECT BACKEND SERVER STARTED 🏥       ║');
   console.log('║                                                        ║');
   console.log('╚════════════════════════════════════════════════════════╝');
   console.log('');
-  console.log(`🚀 Server running in ${process.env.NODE_ENV} mode`);
+  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode`);
   console.log(`🌐 Server URL: http://localhost:${PORT}`);
   console.log(`💚 Health Check: http://localhost:${PORT}/health`);
   console.log(`📡 API Endpoint: http://localhost:${PORT}/api`);
+  console.log(`🎥 WebSocket (WebRTC): ws://localhost:${PORT}`);
   console.log('');
   console.log('Press Ctrl+C to stop the server');
   console.log('');

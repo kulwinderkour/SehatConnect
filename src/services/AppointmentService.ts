@@ -4,12 +4,13 @@
  */
 
 import apiService from './ApiService';
+import { AppointmentType } from '../types/health';
 
 export interface BookAppointmentData {
   doctorId: string;
   appointmentDate: string;
   appointmentTime: string;
-  type: 'video' | 'in_person';
+  type: AppointmentType;
   reason: string;
   symptoms?: string[];
   familyMemberId?: string;

@@ -71,7 +71,7 @@ export default function DoctorProfileScreen() {
         {/* Doctor Profile Header */}
         <View style={styles.profileHeader}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handlePhotoPress}>
-            <Image 
+            <Image
               source={typeof userProfile.profileImage === 'string' ? { uri: userProfile.profileImage } : userProfile.profileImage}
               style={styles.avatar}
               resizeMode="contain"
@@ -80,7 +80,7 @@ export default function DoctorProfileScreen() {
               <Text style={styles.editIconText}>📷</Text>
             </View>
           </TouchableOpacity>
-          <Text style={styles.name}>Dr. {user?.fullName || userProfile.fullName}</Text>
+          <Text style={styles.name}>{user?.fullName || userProfile.fullName}</Text>
           <Text style={styles.specialty}>{user?.specialty || 'General Medicine'}</Text>
           <Text style={styles.hospital}>{user?.hospital || 'SehatConnect Hospital'}</Text>
           <Text style={styles.doctorId}>Doctor ID: {user?.patientId || 'DOC001'}</Text>
@@ -90,7 +90,7 @@ export default function DoctorProfileScreen() {
         {/* Professional Information */}
         <View style={styles.menuSection}>
           <Text style={styles.sectionTitle}>Professional Information</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Medical License')}
           >
@@ -100,7 +100,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Specialization')}
           >
@@ -110,7 +110,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Experience')}
           >
@@ -120,7 +120,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Availability')}
           >
@@ -135,7 +135,7 @@ export default function DoctorProfileScreen() {
         {/* Account Settings */}
         <View style={styles.menuSection}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Personal Information')}
           >
@@ -145,7 +145,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Contact Details')}
           >
@@ -155,7 +155,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Banking Information')}
           >
@@ -170,7 +170,7 @@ export default function DoctorProfileScreen() {
         {/* App Settings */}
         <View style={styles.menuSection}>
           <Text style={styles.sectionTitle}>App Settings</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Notification Settings')}
           >
@@ -180,7 +180,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Privacy & Security')}
           >
@@ -190,7 +190,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Language')}
           >
@@ -205,7 +205,7 @@ export default function DoctorProfileScreen() {
         {/* Support & Help */}
         <View style={styles.menuSection}>
           <Text style={styles.sectionTitle}>Support & Help</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Help & Support')}
           >
@@ -215,7 +215,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('About SehatConnect')}
           >
@@ -225,7 +225,7 @@ export default function DoctorProfileScreen() {
             </View>
             <Text style={styles.menuArrow}>›</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => handleMenuPress('Logout')}
           >
@@ -255,10 +255,10 @@ export default function DoctorProfileScreen() {
                   style={styles.photoOption}
                   onPress={() => handlePhotoSelect(photo)}
                 >
-                  <Image 
-                    source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri} 
-                    style={styles.photoPreview} 
-                    resizeMode="contain" 
+                  <Image
+                    source={typeof photo.uri === 'string' ? { uri: photo.uri } : photo.uri}
+                    style={styles.photoPreview}
+                    resizeMode="contain"
                   />
                   <Text style={styles.photoName}>{photo.name}</Text>
                   <Text style={styles.photoDimensions}>

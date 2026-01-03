@@ -8,10 +8,10 @@ import { Platform } from 'react-native';
 // For Android Emulator: use 10.0.2.2 to access host machine's localhost
 // For iOS Simulator: use localhost
 // For Physical Device: use your computer's IP address (e.g., 192.168.x.x)
-const API_BASE_URL = __DEV__ 
-  ? Platform.OS === 'android' 
-    ? 'http://10.0.2.2:5000/api' // Android Emulator - Backend runs on port 5000
-    : 'http://localhost:5000/api' // iOS Simulator
+const API_BASE_URL = __DEV__
+  ? Platform.OS === 'android'
+    ? 'http://192.168.1.13:5001/api' // Physical Device & Emulator (if bridged)
+    : 'http://localhost:5001/api' // iOS Simulator
   : 'https://your-production-api.com/api'; // Production
 
 // API response types
@@ -50,7 +50,7 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const config: RequestInit = {
       ...options,
       headers: {
@@ -81,7 +81,7 @@ class ApiService {
         }
         throw fetchError;
       }
-      
+
       // Check if response is JSON before parsing
       let data;
       const contentType = response.headers.get('content-type');
@@ -99,13 +99,13 @@ class ApiService {
 
       if (!response.ok) {
         const errorMessage = data.error || data.message || `HTTP error! status: ${response.status}`;
-        
+
         // Don't log errors for expected failures - silently handle them
         // Only log 500 errors as they indicate server issues
         if (__DEV__ && response.status >= 500) {
           console.warn('⚠️ Server error:', { endpoint, status: response.status });
         }
-        
+
         // Return error response instead of throwing
         return {
           success: false,
@@ -126,7 +126,7 @@ class ApiService {
           });
         }
       }
-      
+
       // Return error response instead of throwing
       return {
         success: false,
@@ -171,7 +171,7 @@ class ApiService {
   // File upload
   async uploadFile<T>(endpoint: string, file: FormData): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {
