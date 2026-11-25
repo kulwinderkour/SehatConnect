@@ -6,7 +6,7 @@ SehatConnect is a React Native healthcare application backed by an Express and M
 
 ## Key Features
 
-- Mobile app built with React Native and TypeScript for Android and iOS.
+- React Native and TypeScript mobile app for Android and iOS.
 - Login and user profile features, including family-member and doctor information.
 - Appointment booking and pharmacy search/order flows.
 - Health metrics, prescriptions, and medicine reminder features.
@@ -24,11 +24,11 @@ No application screenshots are currently included in this repository. Add verifi
 
 ```mermaid
 flowchart LR
-    User[Patient / app user] --> Mobile[React Native mobile app\nTypeScript]
-    Mobile -->|REST API| Express[Express API\nNode.js]
+    User[Patient / app user] --> Mobile[React Native mobile app<br/>TypeScript]
+    Mobile -->|REST API| Express[Express API<br/>Node.js]
     Express -->|Mongoose| Mongo[(MongoDB)]
-    Mobile -->|Symptom chat API| FastAPI[FastAPI chatbot\nSentence Transformers]
-    FastAPI --> Data[Symptom dataset\nand cached embeddings]
+    Mobile -->|Symptom chat API| FastAPI[FastAPI chatbot<br/>Sentence Transformers]
+    FastAPI --> Data[Symptom dataset<br/>and cached embeddings]
 ```
 
 The mobile app uses the Express service for general application data. The symptom-chat service is a separate Python service; it is not the same as the Express conversation endpoints.
@@ -104,7 +104,7 @@ python -m pip install -r requirements.txt
 python chat_api.py
 ```
 
-On Windows, activate the environment with `.venv\\Scripts\\activate` in Command Prompt or ` .venv\\Scripts\\Activate.ps1` in PowerShell (remove the leading space before the command).
+On Windows, activate the environment using `.venv\Scripts\activate.bat` in Command Prompt or `\.venv\Scripts\Activate.ps1` in PowerShell.
 
 The chatbot listens on port `8000`; its interactive API documentation is at [http://localhost:8000/docs](http://localhost:8000/docs). The service loads a Sentence Transformers model and symptom dataset during startup. The mobile chatbot service currently targets `localhost` on iOS Simulator and `10.0.2.2` on Android Emulator; a physical device needs a reachable host address configured in the app's chatbot service. The included `setup.sh` can assist with chatbot setup and dataset download on macOS/Linux.
 
@@ -142,7 +142,7 @@ The separate `backend-chatbot/chat_api.py` service exposes a FastAPI interface. 
 
 ## API Endpoints
 
-The main API base URL is `http://localhost:5000`. These routes are registered in the current backend code:
+The main API base URL is `http://localhost:5000`. These endpoints are registered by the current backend:
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -152,16 +152,26 @@ The main API base URL is `http://localhost:5000`. These routes are registered in
 | `GET` | `/api/auth/me` | Get current user |
 | `POST` | `/api/auth/logout` | Logout |
 | `GET`, `PUT` | `/api/users/profile` | Read or update profile |
-| `GET`, `POST`, `PUT`, `DELETE` | `/api/users/family-members` and `/api/users/family-members/:id` | Manage family members |
-| `GET` | `/api/users/doctors` and `/api/users/doctors/:id` | List or view doctors |
-| `GET`, `POST`, `PUT` | `/api/appointments` and `/api/appointments/:id` | List, book, and update appointments; `PUT /:id/cancel` and `PUT /:id/complete` change appointment status |
-| `GET`, `POST`, `PUT` | `/api/pharmacies` and pharmacy subpaths | Search/nearby pharmacies and manage orders; see `backend/routes/pharmacyRoutes.js` |
+| `GET`, `POST` | `/api/users/family-members` | List or add family members |
+| `PUT`, `DELETE` | `/api/users/family-members/:id` | Update or remove a family member |
+| `GET` | `/api/users/doctors`, `/api/users/doctors/:id` | List or view doctors |
+| `GET`, `POST` | `/api/appointments` | List or book appointments |
+| `GET`, `PUT` | `/api/appointments/:id` | Read or update an appointment; `PUT /:id/cancel` and `PUT /:id/complete` change status |
+| `GET` | `/api/pharmacies`, `/api/pharmacies/nearby`, `/api/pharmacies/:id` | Search or view pharmacies |
+| `GET`, `POST` | `/api/pharmacies/orders` | List or place orders |
+| `GET` | `/api/pharmacies/orders/:id` | View an order |
+| `PUT` | `/api/pharmacies/orders/:id/cancel` | Cancel an order |
 | `GET`, `POST` | `/api/health/metrics` | Read or add health metrics |
-| `GET`, `POST`, `PUT`, `DELETE` | `/api/health/reminders` and `/api/health/reminders/:id` | Manage health reminders |
-| `GET`, `POST`, `PUT` | `/api/chatbot/conversations` and conversation subpaths | Manage conversations, messages, and conversation status |
-| `GET` | `/api/emergency` and `/api/emergency/nearby` | List or find nearby emergency services |
-| `GET`, `PUT` | `/api/schemes` and scheme subpaths | Browse schemes and update bookmarks/application counts |
-| Various | `/api/reminders`, `/api/prescriptions`, `/api/intake` | Medicine reminders, prescriptions, and intake records; see their route files for exact operations |
+| `GET`, `POST` | `/api/health/reminders` | List or create health reminders |
+| `PUT`, `DELETE` | `/api/health/reminders/:id` | Update or delete a health reminder |
+| `GET`, `POST` | `/api/chatbot/conversations` | List or start conversations |
+| `GET` | `/api/chatbot/conversations/:sessionId` | Read a conversation |
+| `POST` | `/api/chatbot/conversations/:sessionId/messages` | Send a message |
+| `PUT` | `/api/chatbot/conversations/:sessionId/end` | End a conversation |
+| `GET` | `/api/emergency`, `/api/emergency/nearby` | List or find nearby emergency services |
+| `GET` | `/api/schemes`, `/api/schemes/bookmarked`, `/api/schemes/category/:category`, `/api/schemes/:id` | Browse schemes |
+| `PUT` | `/api/schemes/:id/bookmark`, `/api/schemes/:id/apply` | Update scheme bookmark or application count |
+| Various | `/api/reminders`, `/api/prescriptions`, `/api/intake` | Medicine reminders, prescriptions, and intake records; see `backend/routes/` for exact methods and paths |
 
 The independent symptom-chatbot API uses port `8000`:
 
@@ -200,22 +210,28 @@ The chatbot test script sends requests to `http://localhost:8000` and checks the
 ├── ios/                     # iOS project
 ├── src/
 │   ├── components/          # Reusable UI components
-│   ├── contexts/ hooks/     # State and shared hooks
-│   ├── i18n/                # Localization resources
-│   ├── navigation/          # App navigation
-│   ├── screens/             # App screens
-│   ├── services/            # API and device services
-│   ├── types/ utils/        # Types and helpers
-│   └── assets/              # App assets
+│   ├── contexts/             # React contexts
+│   ├── hooks/                # Custom hooks
+│   ├── i18n/                 # Localization resources
+│   ├── navigation/           # App navigation
+│   ├── screens/              # App screens
+│   ├── services/             # API and device services
+│   ├── types/                # TypeScript types
+│   ├── utils/                # Helpers
+│   └── assets/               # App assets
 ├── backend/
-│   ├── config/ controllers/ middleware/
-│   ├── models/ routes/ utils/
-│   └── server.js            # Express API entry point
+│   ├── config/               # Database and app configuration
+│   ├── controllers/          # API request handlers
+│   ├── middleware/           # Express middleware
+│   ├── models/               # Mongoose models
+│   ├── routes/               # API routes
+│   ├── utils/                # Backend helpers
+│   └── server.js             # Express API entry point
 ├── backend-chatbot/
-│   ├── chat_api.py          # FastAPI chatbot entry point
-│   ├── medical_chatbot.py   # Model and symptom matching logic
-│   └── test_backend.py      # Chatbot API checks
-└── __tests__/               # Mobile app tests
+│   ├── chat_api.py           # FastAPI chatbot entry point
+│   ├── medical_chatbot.py    # Model and symptom matching logic
+│   └── test_backend.py       # Chatbot API checks
+└── __tests__/                # Mobile app tests
 ```
 
 ## Personal Contribution
