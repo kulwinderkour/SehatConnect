@@ -145,33 +145,19 @@ The separate `backend-chatbot/chat_api.py` service exposes a FastAPI interface. 
 The main API base URL is `http://localhost:5000`. These endpoints are registered by the current backend:
 
 | Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/health` | Backend health status |
-| `GET` | `/api` | API information and route groups |
-| `POST` | `/api/auth/login` | Login |
+|---|---|---|
+| `GET` | `/health`, `/api` | Health check and API information |
+| `POST` | `/api/auth/login` | User login |
 | `GET` | `/api/auth/me` | Get current user |
-| `POST` | `/api/auth/logout` | Logout |
-| `GET`, `PUT` | `/api/users/profile` | Read or update profile |
-| `GET`, `POST` | `/api/users/family-members` | List or add family members |
-| `PUT`, `DELETE` | `/api/users/family-members/:id` | Update or remove a family member |
-| `GET` | `/api/users/doctors`, `/api/users/doctors/:id` | List or view doctors |
-| `GET`, `POST` | `/api/appointments` | List or book appointments |
-| `GET`, `PUT` | `/api/appointments/:id` | Read or update an appointment; `PUT /:id/cancel` and `PUT /:id/complete` change status |
-| `GET` | `/api/pharmacies`, `/api/pharmacies/nearby`, `/api/pharmacies/:id` | Search or view pharmacies |
-| `GET`, `POST` | `/api/pharmacies/orders` | List or place orders |
-| `GET` | `/api/pharmacies/orders/:id` | View an order |
-| `PUT` | `/api/pharmacies/orders/:id/cancel` | Cancel an order |
-| `GET`, `POST` | `/api/health/metrics` | Read or add health metrics |
-| `GET`, `POST` | `/api/health/reminders` | List or create health reminders |
-| `PUT`, `DELETE` | `/api/health/reminders/:id` | Update or delete a health reminder |
-| `GET`, `POST` | `/api/chatbot/conversations` | List or start conversations |
-| `GET` | `/api/chatbot/conversations/:sessionId` | Read a conversation |
-| `POST` | `/api/chatbot/conversations/:sessionId/messages` | Send a message |
-| `PUT` | `/api/chatbot/conversations/:sessionId/end` | End a conversation |
-| `GET` | `/api/emergency`, `/api/emergency/nearby` | List or find nearby emergency services |
-| `GET` | `/api/schemes`, `/api/schemes/bookmarked`, `/api/schemes/category/:category`, `/api/schemes/:id` | Browse schemes |
-| `PUT` | `/api/schemes/:id/bookmark`, `/api/schemes/:id/apply` | Update scheme bookmark or application count |
-| Various | `/api/reminders`, `/api/prescriptions`, `/api/intake` | Medicine reminders, prescriptions, and intake records; see `backend/routes/` for exact methods and paths |
+| `GET`, `PUT` | `/api/users/profile` | View or update profile |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/users/family-members` | Manage family members |
+| `GET`, `POST`, `PUT` | `/api/appointments` | Manage appointments |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/pharmacies` | Browse pharmacies and manage orders |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/health` | Manage health metrics and reminders |
+| `GET`, `POST`, `PUT` | `/api/chatbot` | Manage AI chatbot conversations |
+| `GET` | `/api/emergency` | Find emergency services |
+| `GET`, `PUT` | `/api/schemes` | Browse and manage healthcare schemes |
+| `Various` | `/api/reminders`, `/api/prescriptions`, `/api/intake` | Manage medicines, prescriptions, and intake records |
 
 The independent symptom-chatbot API uses port `8000`:
 
