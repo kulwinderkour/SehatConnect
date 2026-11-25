@@ -1,606 +1,227 @@
-# SehatConnect - Healthcare Mobile App
+# SehatConnect
 
-A comprehensive React Native healthcare application that provides telemedicine, pharmacy services, health records management, emergency features, and **AI-powered medical chatbot**.
+## Project Overview
 
-## 🏥 Features
+SehatConnect is a React Native healthcare application backed by an Express and MongoDB API, with a separate FastAPI service for AI-assisted symptom queries. The repository contains the mobile client, backend services, and supporting setup and test scripts.
 
-- **AI Medical Chatbot**: Intelligent symptom checker powered by ML
-- **Backend API Server**: RESTful API with JWT authentication
-- **User Authentication**: Secure login/register with OTP verification
-- **Telemedicine**: Video consultations with healthcare providers
-- **Pharmacy Services**: Medicine ordering and delivery
-- **Health Records**: Digital health record management
-- **Emergency Services**: Quick access to emergency contacts
-- **Multi-language Support**: English, Hindi, and Punjabi
-- **Offline Support**: Works without internet connection
-- **Profile Management**: User profile and photo management
+## Key Features
 
-## 🤖 AI Chatbot Setup (For Team Members)
+- Mobile app built with React Native and TypeScript for Android and iOS.
+- Login and user profile features, including family-member and doctor information.
+- Appointment booking and pharmacy search/order flows.
+- Health metrics, prescriptions, and medicine reminder features.
+- Emergency-service lookup and government health-scheme browsing.
+- Chat conversations through the Node.js API and a separate symptom-chatbot service.
+- English, Hindi, and Punjabi localization resources.
 
-This project includes an AI medical chatbot backend. When you clone/pull the repo:
+> The chatbot provides informational symptom matching, not medical diagnosis. Seek advice from a qualified healthcare professional.
 
-1. **Find your IP address:**
-   ```bash
-   ./get-ip.sh
-   ```
+## Screenshots
 
-2. **Update the backend IP** in `src/services/ChatbotService.ts` (line 22) with YOUR IP
+No application screenshots are currently included in this repository. Add verified screenshots here when they are available; the repository logo is not a screenshot of the running app.
 
-3. **Start the chatbot backend:**
-   ```bash
-   cd backend-chatbot
-   python3 chat_api.py
-   ```
+## Architecture
 
-## � Backend Server Setup
-
-The project includes a Node.js/Express backend with MongoDB for authentication and data management.
-
-### Backend Features
-- RESTful API with Express.js
-- MongoDB database with Mongoose ODM
-- JWT-based authentication (access & refresh tokens)
-- OTP verification via email/SMS
-- Password hashing with bcrypt
-- User roles (Patient & Doctor)
-- File upload support (Cloudinary)
-- Error handling middleware
-
-### Quick Backend Setup
-
-1. **Install MongoDB** (choose one):
-   ```bash
-   # Option A: Local MongoDB (macOS)
-   brew tap mongodb/brew
-   brew install mongodb-community
-   brew services start mongodb-community
-   
-   # Option B: Use MongoDB Atlas (cloud) - get connection string from mongodb.com
-   ```
-
-2. **Configure environment variables:**
-   ```bash
-   cd backend
-   cp .env.example .env
-   # Edit .env with your settings (MongoDB URI, JWT secrets, etc.)
-   ```
-
-3. **Install backend dependencies:**
-   ```bash
-   cd backend
-   npm install
-   ```
-
-4. **Start the backend server:**
-   ```bash
-   npm start
-   # Or for development with auto-reload:
-   npm run dev
-   ```
-
-5. **Test the backend:**
-   ```bash
-   # Health check
-   curl http://localhost:5000/health
-   
-   # API info
-   curl http://localhost:5000/api
-   ```
-
-### Backend API Endpoints
-
-**Authentication:**
-- `POST /api/auth/register` - Register new user with OTP
-- `POST /api/auth/verify-otp` - Verify OTP code
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/refresh-token` - Refresh access token
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password` - Reset password
-- `GET /api/auth/me` - Get current user (protected)
-- `POST /api/auth/logout` - Logout user (protected)
-
-**Other Endpoints:**
-- `/api/users` - User management
-- `/api/appointments` - Appointment booking
-- `/api/pharmacies` - Pharmacy services
-- `/api/health` - Health metrics tracking
-- `/api/chatbot` - Chatbot integration
-- `/api/emergency` - Emergency services
-- `/api/schemes` - Government schemes
-
-See `backend/README.md` for detailed API documentation.
-
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following installed on your system:
-
-### Required Software (All Platforms)
-
-1. **Node.js** (v20 or higher)
-   ```bash
-   # Check your Node.js version
-   node --version
-   ```
-
-2. **npm** (comes with Node.js)
-   ```bash
-   # Check your npm version
-   npm --version
-   ```
-
-3. **Python 3** (for AI chatbot backend)
-   ```bash
-   # Check your Python version
-   python3 --version
-   ```
-
-3. **React Native CLI**
-   ```bash
-   npm install -g @react-native-community/cli
-   ```
-
-4. **Java Development Kit (JDK) 17)**
-   - **Windows**: Download from [Oracle](https://www.oracle.com/java/technologies/downloads/) or use [OpenJDK](https://adoptium.net/)
-   - **macOS**: Use Homebrew: `brew install openjdk@17`
-   - Set `JAVA_HOME` environment variable
-
-5. **Android Studio** (for Android development)
-   - Download from [Android Studio](https://developer.android.com/studio)
-   - Install Android SDK (API level 33 or higher)
-   - Set up Android emulator or connect physical device
-
-### Platform-Specific Requirements
-
-#### For macOS Users:
-6. **Xcode** (for iOS development)
-   - Download from Mac App Store
-   - Install Xcode Command Line Tools: `xcode-select --install`
-
-7. **CocoaPods** (for iOS dependencies)
-   ```bash
-   sudo gem install cocoapods
-   ```
-
-8. **Ruby** (v2.6.10 or higher)
-   - Usually pre-installed on macOS
-   - If not: `brew install ruby`
-
-#### For Windows Users:
-6. **Ruby** (v2.6.10 or higher)
-   - Download from [RubyInstaller](https://rubyinstaller.org/)
-   - Choose Ruby+Devkit version
-   - Follow installation wizard
-
-7. **Git for Windows**
-   - Download from [Git for Windows](https://git-scm.com/download/win)
-   - Use Git Bash for terminal commands
-
-8. **Windows Build Tools**
-   ```bash
-   npm install -g windows-build-tools
-   ```
-
-## 🚀 Quick Start
-
-### 1. Clone the Repository
-
-```bash
-git clone <your-repository-url>
-cd SehatConnet
+```mermaid
+flowchart LR
+    User[Patient / app user] --> Mobile[React Native mobile app\nTypeScript]
+    Mobile -->|REST API| Express[Express API\nNode.js]
+    Express -->|Mongoose| Mongo[(MongoDB)]
+    Mobile -->|Symptom chat API| FastAPI[FastAPI chatbot\nSentence Transformers]
+    FastAPI --> Data[Symptom dataset\nand cached embeddings]
 ```
 
-### 2. Install Dependencies
+The mobile app uses the Express service for general application data. The symptom-chat service is a separate Python service; it is not the same as the Express conversation endpoints.
+
+## Technology Stack
+
+- **Mobile:** React Native 0.81, React 19, TypeScript, React Navigation.
+- **Main backend:** Node.js 20+, Express, Mongoose, MongoDB.
+- **Symptom chatbot:** Python, FastAPI, Sentence Transformers, pandas, scikit-learn, and PyTorch (see `backend-chatbot/requirements.txt`).
+- **Testing and tooling:** Jest, React Test Renderer, ESLint, npm.
+
+## Setup and Installation
+
+### Prerequisites
+
+- Node.js 20 or newer and npm.
+- MongoDB locally, or a MongoDB Atlas connection string.
+- Python 3 and pip for the optional symptom-chatbot service.
+- **Android:** Android Studio, Android SDK, JDK 17, and an emulator or device.
+- **iOS:** macOS, Xcode, and CocoaPods.
+
+### 1. Clone the repository
 
 ```bash
-# Install Node.js dependencies
-npm install
-
-# Install iOS dependencies (macOS only)
-cd ios && bundle install && bundle exec pod install && cd ..
+git clone https://github.com/kulwinderkour/SehatConnect.git
+cd SehatConnect
 ```
 
-### 3. Platform-Specific Quick Start
+### 2. Install mobile app dependencies
 
-#### For Windows Users:
-```cmd
-# 1. Open Command Prompt or PowerShell as Administrator
-# 2. Navigate to project directory
-cd SehatConnet
-
-# 3. Install dependencies
+```bash
 npm install
+```
 
-# 4. Start Metro bundler
+For iOS, install CocoaPods dependencies as well:
+
+```bash
+cd ios
+bundle install
+bundle exec pod install
+cd ..
+```
+
+### 3. Configure and start the Express backend
+
+In a second terminal:
+
+```bash
+cd backend
+cp .env.example .env
+```
+
+Edit `backend/.env` and set `MONGODB_URI` to your local MongoDB or Atlas URI. The example also lists optional email, Cloudinary, JWT, and frontend-origin settings; use your own values where needed and do not commit credentials. By default, the API listens on port `5000`.
+
+Install packages and start the service:
+
+```bash
+npm install
+npm run dev
+```
+
+Use `npm start` for the non-watch start command. MongoDB must be reachable by the API. Confirm the service is responding at [http://localhost:5000/health](http://localhost:5000/health).
+
+### 4. Start the symptom-chatbot service (optional)
+
+In another terminal at the repository root:
+
+```bash
+cd backend-chatbot
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python chat_api.py
+```
+
+On Windows, activate the environment with `.venv\\Scripts\\activate` in Command Prompt or ` .venv\\Scripts\\Activate.ps1` in PowerShell (remove the leading space before the command).
+
+The chatbot listens on port `8000`; its interactive API documentation is at [http://localhost:8000/docs](http://localhost:8000/docs). The service loads a Sentence Transformers model and symptom dataset during startup. The mobile chatbot service currently targets `localhost` on iOS Simulator and `10.0.2.2` on Android Emulator; a physical device needs a reachable host address configured in the app's chatbot service. The included `setup.sh` can assist with chatbot setup and dataset download on macOS/Linux.
+
+### 5. Run the mobile app
+
+Keep Metro running in a terminal at the repository root:
+
+```bash
 npm start
+```
 
-# 5. In a new terminal, run Android
+Then use another terminal to launch a configured emulator/device:
+
+```bash
 npm run android
-```
-
-#### For macOS Users:
-```bash
-# 1. Open Terminal
-# 2. Navigate to project directory
-cd SehatConnet
-
-# 3. Install dependencies
-npm install
-
-# 4. Install iOS dependencies (if developing for iOS)
-cd ios && bundle install && bundle exec pod install && cd ..
-
-# 5. Start Metro bundler
-npm start
-
-# 6. In a new terminal, run your preferred platform
-npm run android  # For Android
-npm run ios      # For iOS
-```
-
-### 4. Environment Setup
-
-#### For iOS (macOS only):
-Create a local environment file for Xcode:
-```bash
-# Create .xcode.env.local file
-echo 'export NODE_BINARY=$(command -v node)' > ios/.xcode.env.local
-```
-
-#### For Android (All Platforms):
-Ensure your Android SDK is properly configured and `ANDROID_HOME` is set:
-
-**On macOS/Linux:**
-```bash
-# Add to your ~/.bashrc or ~/.zshrc
-export ANDROID_HOME=$HOME/Android/Sdk
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/tools
-export PATH=$PATH:$ANDROID_HOME/tools/bin
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-```
-
-**On Windows:**
-```cmd
-# Add to your system environment variables
-ANDROID_HOME=C:\Users\%USERNAME%\AppData\Local\Android\Sdk
-PATH=%PATH%;%ANDROID_HOME%\emulator
-PATH=%PATH%;%ANDROID_HOME%\tools
-PATH=%PATH%;%ANDROID_HOME%\tools\bin
-PATH=%PATH%;%ANDROID_HOME%\platform-tools
-```
-
-**Alternative for Windows (PowerShell):**
-```powershell
-# Add to your PowerShell profile
-$env:ANDROID_HOME = "C:\Users\$env:USERNAME\AppData\Local\Android\Sdk"
-$env:PATH += ";$env:ANDROID_HOME\emulator;$env:ANDROID_HOME\tools;$env:ANDROID_HOME\tools\bin;$env:ANDROID_HOME\platform-tools"
-```
-
-### 5. Start Metro Bundler
-
-```bash
-npm start
-```
-
-### 6. Run the Application
-
-#### For Android:
-```bash
-# In a new terminal window
-npm run android
-
-# OR use npx directly
-npx react-native run-android
-```
-
-#### For iOS (macOS only):
-```bash
-# In a new terminal window
+# macOS with Xcode:
 npm run ios
-
-# OR use npx directly
-npx react-native run-ios
 ```
 
-## 📱 Platform-Specific Setup
+Local service URLs:
 
-### Android Setup (All Platforms)
+| Service | URL |
+| --- | --- |
+| Metro bundler | `http://localhost:8081` |
+| Express API | `http://localhost:5000` |
+| Express health check | `http://localhost:5000/health` |
+| Symptom chatbot (optional) | `http://localhost:8000` |
+| Chatbot API docs | `http://localhost:8000/docs` |
 
-1. **Install Android Studio**
-   - **Windows**: Download from [Android Studio](https://developer.android.com/studio)
-   - **macOS**: Download from [Android Studio](https://developer.android.com/studio) or use Homebrew: `brew install --cask android-studio`
+## Backend Implementation
 
-2. **Configure Android SDK**:
-   - Open Android Studio
-   - Go to SDK Manager (Tools > SDK Manager)
-   - Install Android SDK Platform 33
-   - Install Android SDK Build-Tools 33.0.0
-   - Install Android SDK Platform-Tools
-   - Install Android SDK Command-line Tools
+The main backend entry point is `backend/server.js`. It loads environment settings, connects to MongoDB through Mongoose, and configures Express middleware for security headers, CORS, JSON parsing, compression, and request logging. It mounts route modules for authentication, users, appointments, pharmacies, health metrics, chatbot conversations, emergency services, schemes, reminders, prescriptions, and intake records. Controllers implement request handling and Mongoose models persist application data.
 
-3. **Set up Android Emulator**:
-   - Open AVD Manager in Android Studio (Tools > AVD Manager)
-   - Create a new Virtual Device
-   - Choose a device definition (e.g., Pixel 6)
-   - Select a system image (API 33)
-   - Finish setup
+The separate `backend-chatbot/chat_api.py` service exposes a FastAPI interface. At startup it loads the `all-MiniLM-L6-v2` sentence-transformer model, the symptom dataset, and cached or newly built embeddings. It compares a submitted symptom message against the dataset and returns a text response with a confidence value. This is informational symptom matching, not clinical advice.
 
-4. **Enable Developer Options** (for physical device):
-   - Go to Settings > About Phone
-   - Tap "Build Number" 7 times
-   - Go back to Settings > Developer Options
-   - Enable "USB Debugging"
+## API Endpoints
 
-### iOS Setup (macOS only)
+The main API base URL is `http://localhost:5000`. These routes are registered in the current backend code:
 
-1. **Install Xcode** from Mac App Store
-2. **Install Xcode Command Line Tools**:
-   ```bash
-   xcode-select --install
-   ```
-3. **Install CocoaPods**:
-   ```bash
-   sudo gem install cocoapods
-   ```
-4. **Install iOS dependencies**:
-   ```bash
-   cd ios && bundle exec pod install && cd ..
-   ```
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Backend health status |
+| `GET` | `/api` | API information and route groups |
+| `POST` | `/api/auth/login` | Login |
+| `GET` | `/api/auth/me` | Get current user |
+| `POST` | `/api/auth/logout` | Logout |
+| `GET`, `PUT` | `/api/users/profile` | Read or update profile |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/users/family-members` and `/api/users/family-members/:id` | Manage family members |
+| `GET` | `/api/users/doctors` and `/api/users/doctors/:id` | List or view doctors |
+| `GET`, `POST`, `PUT` | `/api/appointments` and `/api/appointments/:id` | List, book, and update appointments; `PUT /:id/cancel` and `PUT /:id/complete` change appointment status |
+| `GET`, `POST`, `PUT` | `/api/pharmacies` and pharmacy subpaths | Search/nearby pharmacies and manage orders; see `backend/routes/pharmacyRoutes.js` |
+| `GET`, `POST` | `/api/health/metrics` | Read or add health metrics |
+| `GET`, `POST`, `PUT`, `DELETE` | `/api/health/reminders` and `/api/health/reminders/:id` | Manage health reminders |
+| `GET`, `POST`, `PUT` | `/api/chatbot/conversations` and conversation subpaths | Manage conversations, messages, and conversation status |
+| `GET` | `/api/emergency` and `/api/emergency/nearby` | List or find nearby emergency services |
+| `GET`, `PUT` | `/api/schemes` and scheme subpaths | Browse schemes and update bookmarks/application counts |
+| Various | `/api/reminders`, `/api/prescriptions`, `/api/intake` | Medicine reminders, prescriptions, and intake records; see their route files for exact operations |
 
-### Windows-Specific Setup
+The independent symptom-chatbot API uses port `8000`:
 
-1. **Install Visual Studio Build Tools**:
-   - Download from [Visual Studio](https://visualstudio.microsoft.com/downloads/)
-   - Install "C++ build tools" workload
-   - Or install Visual Studio Community with C++ development tools
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/` | Chatbot service information |
+| `GET` | `/health` | Chatbot/model/dataset readiness status |
+| `POST` | `/chat` | Submit a symptom message; returns a reply and confidence |
+| `GET` | `/stats` | Dataset and model statistics |
+| `GET` | `/docs` | Interactive FastAPI documentation |
 
-2. **Configure Windows Defender**:
-   - Add your project folder to Windows Defender exclusions
-   - This prevents build performance issues
+## Testing
 
-3. **Use Git Bash or PowerShell**:
-   - Use Git Bash for Unix-like commands
-   - Or use PowerShell with proper PATH configuration
-
-## 🛠️ Development
-
-### Available Scripts
+From the repository root, run the mobile Jest test and linter:
 
 ```bash
-# Start Metro bundler
-npm start
-
-# Run on Android
-npm run android
-# OR
-npx react-native run-android
-
-# Run on iOS (macOS only)
-npm run ios
-# OR
-npx react-native run-ios
-
-# Run tests
 npm test
-
-# Run linter
 npm run lint
 ```
 
-### Project Structure
+The backend package currently defines `npm test` as an explicit “no test specified” failure; it is not a backend test suite. For the chatbot's integration checks, start the chatbot service first, then in another terminal run:
 
-```
-src/
-├── components/          # Reusable UI components
-│   ├── common/         # Common components (Button, Input, etc.)
-│   ├── consultations/  # Consultation-related components
-│   ├── home/          # Home screen components
-│   ├── pharmacy/      # Pharmacy components
-│   └── profile/       # Profile components
-├── contexts/          # React contexts for state management
-├── hooks/             # Custom React hooks
-├── i18n/              # Internationalization files
-├── navigation/        # Navigation configuration
-├── screens/           # Screen components
-├── services/          # API and service layer
-├── store/             # Redux store and slices
-├── types/             # TypeScript type definitions
-└── utils/             # Utility functions
-
-backend/
-├── config/            # Database and app configuration
-├── controllers/       # Request handlers
-│   ├── authController.js      # Authentication logic
-│   ├── userController.js      # User management
-│   ├── appointmentController.js
-│   ├── pharmacyController.js
-│   └── healthController.js
-├── middleware/        # Express middleware
-│   ├── authMiddleware.js      # JWT verification
-│   └── errorHandler.js        # Error handling
-├── models/            # Mongoose schemas
-│   ├── User.js               # User model (Patient/Doctor)
-│   ├── Appointment.js
-│   ├── Prescription.js
-│   └── HealthMetric.js
-├── routes/            # API routes
-├── utils/             # Utility functions
-│   ├── jwtUtils.js           # Token generation/verification
-│   ├── emailService.js       # Email sending (OTP, etc.)
-│   └── smsService.js         # SMS sending
-└── server.js          # Express app entry point
-
-backend-chatbot/
-├── chat_api.py        # Flask API for chatbot
-├── medical_chatbot.py # ML chatbot logic
-└── symptom2disease.csv # Training data
-```
-
-## 🌐 Internationalization
-
-The app supports multiple languages:
-- English (en)
-- Hindi (hi)
-- Punjabi (pa)
-
-Language files are located in `src/i18n/` directory.
-
-## 📸 Profile Photos
-
-To add profile photos:
-
-1. Place your photo in `src/assets/images/profile-photos/`
-2. Follow the naming convention: `username.jpg`
-3. Recommended size: 400x400 pixels
-4. Supported formats: JPG, PNG, WebP
-
-See `PROFILE_PHOTO_GUIDE.md` for detailed instructions.
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-#### Metro bundler issues:
 ```bash
-# Clear Metro cache
-npx react-native start --reset-cache
+cd backend-chatbot
+python test_backend.py
 ```
 
-#### Android build issues:
-```bash
-# Clean Android build
-cd android && ./gradlew clean && cd ..
+The chatbot test script sends requests to `http://localhost:8000` and checks the service, health, chat, stats, and edge cases. **No test execution results are recorded here:** tests have not been run as part of this README update.
+
+## Project Structure
+
+```text
+.
+├── App.tsx                  # React Native app entry point
+├── android/                 # Android project
+├── ios/                     # iOS project
+├── src/
+│   ├── components/          # Reusable UI components
+│   ├── contexts/ hooks/     # State and shared hooks
+│   ├── i18n/                # Localization resources
+│   ├── navigation/          # App navigation
+│   ├── screens/             # App screens
+│   ├── services/            # API and device services
+│   ├── types/ utils/        # Types and helpers
+│   └── assets/              # App assets
+├── backend/
+│   ├── config/ controllers/ middleware/
+│   ├── models/ routes/ utils/
+│   └── server.js            # Express API entry point
+├── backend-chatbot/
+│   ├── chat_api.py          # FastAPI chatbot entry point
+│   ├── medical_chatbot.py   # Model and symptom matching logic
+│   └── test_backend.py      # Chatbot API checks
+└── __tests__/               # Mobile app tests
 ```
 
-#### iOS build issues (macOS only):
-```bash
-# Clean iOS build
-cd ios && xcodebuild clean && cd ..
-# Reinstall pods
-cd ios && rm -rf Pods && bundle exec pod install && cd ..
-```
+## Personal Contribution
 
-#### Node version issues:
-```bash
-# Use Node Version Manager (nvm)
-nvm install 20
-nvm use 20
-```
+The repository's available Git history attributes its listed commits to **@kulwinderkour**. The commit subjects include the initial project, authentication changes and fixes, reminder work, and cleanup. This summarizes the visible commit history; it does not claim individual authorship for every file or contribution beyond what that history establishes.
 
-#### Windows-specific issues:
+## License
 
-**PowerShell execution policy:**
-```powershell
-# Run as Administrator
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-**Long path issues on Windows:**
-```cmd
-# Enable long paths in Windows
-git config --global core.longpaths true
-```
-
-**Build tools not found:**
-```bash
-# Install Windows build tools
-npm install -g windows-build-tools
-# Or install Visual Studio Build Tools manually
-```
-
-**Android SDK not found:**
-```cmd
-# Check if ANDROID_HOME is set
-echo %ANDROID_HOME%
-# If not set, add to system environment variables
-```
-
-### Environment Variables
-
-#### For iOS (macOS only):
-If you encounter issues with Node.js path on iOS:
-1. Create `ios/.xcode.env.local`
-2. Add: `export NODE_BINARY=$(command -v node)`
-
-#### For Windows:
-If you encounter PATH issues:
-1. Add Node.js to system PATH: `C:\Program Files\nodejs\`
-2. Add Android SDK to system PATH
-3. Restart your terminal/IDE after changing environment variables
-
-#### For macOS:
-If you encounter permission issues:
-```bash
-# Fix npm permissions
-sudo chown -R $(whoami) ~/.npm
-```
-
-## 📦 Dependencies
-
-### Frontend Dependencies
-- React Native 0.81.4
-- React Navigation 7.x
-- React Native Bootsplash
-- React Native Linear Gradient
-- React Native Gesture Handler
-- React Native Safe Area Context
-- React Native Screens
-- Axios (API client)
-
-### Backend Dependencies
-- Express.js 4.18.2
-- Mongoose 8.0.3 (MongoDB ODM)
-- bcryptjs 2.4.3 (Password hashing)
-- jsonwebtoken 9.0.2 (JWT authentication)
-- nodemailer 6.9.7 (Email service)
-- cloudinary 1.41.0 (File upload)
-- helmet 7.1.0 (Security headers)
-- cors 2.8.5 (CORS middleware)
-- morgan 1.10.0 (Logging)
-- joi 17.13.3 (Validation)
-
-### Chatbot Dependencies
-- Flask (Python web framework)
-- scikit-learn (ML library)
-- pandas (Data processing)
-- numpy (Numerical computing)
-
-### Development Dependencies
-- TypeScript 5.8.3
-- ESLint
-- Prettier
-- Jest
-- Babel
-- nodemon (Backend dev server)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Run tests: `npm test`
-5. Run linter: `npm run lint`
-6. Commit your changes: `git commit -m 'Add feature'`
-7. Push to the branch: `git push origin feature-name`
-8. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 Support
-
-If you encounter any issues:
-
-1. Check the troubleshooting section above
-2. Search existing issues in the repository
-3. Create a new issue with detailed information about your problem
-4. Include your system information (OS, Node.js version, etc.)
-
-## 📞 Contact
-
-For questions or support, please contact the development team.
-
----
-
-**Happy Coding! 🚀**
+The repository includes a `LICENSE` file; refer to it for the project's license terms.
